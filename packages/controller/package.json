@@ -1,0 +1,28 @@
+{
+  "name": "@nexodesk/controller",
+  "version": "0.1.0",
+  "private": true,
+  "description": "NexoDesk Controlador - aplicativo usado pelo tecnico de suporte para acessar computadores remotos.",
+  "main": "dist/main/index.js",
+  "scripts": {
+    "build": "npm run build:main && npm run build:renderer",
+    "build:main": "tsc -p tsconfig.json",
+    "build:renderer": "node scripts/build-renderer.mjs",
+    "dev": "npm run build && electron .",
+    "start": "electron .",
+    "test": "node --test --import tsx test/*.test.ts",
+    "lint": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.renderer.json --noEmit"
+  },
+  "dependencies": {
+    "@nexodesk/shared": "0.1.0",
+    "jsonwebtoken": "^9.0.2"
+  },
+  "devDependencies": {
+    "electron": "^32.0.0",
+    "esbuild": "^0.23.0",
+    "tsx": "^4.16.2",
+    "typescript": "^5.5.4",
+    "@types/node": "^20.14.10",
+    "@types/jsonwebtoken": "^9.0.6"
+  }
+}
