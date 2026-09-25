@@ -6,8 +6,8 @@ const api: EditorApi = {
   openFolderPath: (folderPath) => ipcRenderer.invoke('folder:open', folderPath),
   getPathForFile: (file) => webUtils.getPathForFile(file),
   readImage: (name) => ipcRenderer.invoke('image:read', name),
-  resolveOutputName: (fileName, replaceName) =>
-    ipcRenderer.invoke('output:resolveName', fileName, replaceName),
+  resolveOutputName: (fileName, replaceName, numbered) =>
+    ipcRenderer.invoke('output:resolveName', fileName, replaceName, numbered),
   saveImage: (request) => ipcRenderer.invoke('image:save', request),
   openOutputFolder: () => ipcRenderer.invoke('output:open')
 }

@@ -122,6 +122,40 @@ button {
   box-shadow: 0 6px 16px -6px rgba(255, 116, 16, 0.7);
 }
 
+.topbar-status {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: var(--text-dim);
+  font-size: 13px;
+  animation: status-in 0.35s ease;
+}
+.topbar-status svg {
+  flex: none;
+  color: var(--success);
+}
+.topbar-status span {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.topbar-status strong {
+  color: var(--text);
+}
+.topbar-status em {
+  font-style: normal;
+  color: #ffc48d;
+}
+@keyframes status-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+
 .topbar-progress {
   display: flex;
   align-items: center;
@@ -192,6 +226,15 @@ button {
   letter-spacing: 0.09em;
   text-transform: uppercase;
   color: var(--text-faint);
+}
+
+.sub-option {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-left: 18px;
+  padding-left: 14px;
+  border-left: 2px solid var(--border-strong);
 }
 
 .folder-path {
@@ -768,7 +811,9 @@ input[type='range'] {
 }
 .thumb canvas {
   display: block;
-  height: 60px;
+  height: 64px;
+  min-width: 56px;
+  object-fit: cover;
   width: auto;
   opacity: 0;
   transition: opacity 0.25s;
@@ -779,13 +824,28 @@ input[type='range'] {
 .thumb-number {
   position: absolute;
   left: 4px;
-  bottom: 4px;
+  top: 4px;
   padding: 1px 5px;
   border-radius: 4px;
   background: rgba(0, 0, 0, 0.65);
   font-size: 10.5px;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
+}
+.thumb-label {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 2px 4px;
+  background: rgba(8, 10, 14, 0.78);
+  color: #d9f7e9;
+  font-size: 10.5px;
+  font-weight: 600;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .thumb-saved {
   position: absolute;
@@ -957,6 +1017,35 @@ input[type='range'] {
   justify-content: flex-end;
   gap: 8px;
 }
+.prompt-no-color {
+  margin-right: auto;
+  color: var(--text-dim);
+}
+.prompt-guess {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 9px 12px;
+  border-radius: 10px;
+  background: var(--accent-soft);
+  border: 1px solid rgba(255, 138, 31, 0.35);
+  color: #ffc48d;
+  font-size: 13px;
+}
+.prompt-guess svg {
+  flex: none;
+}
+.prompt-guess strong {
+  color: #ffd9b3;
+}
+.prompt-guess.dim {
+  background: var(--bg);
+  border-color: var(--border);
+  color: var(--text-dim);
+}
+.prompt-guess.dim strong {
+  color: var(--text);
+}
 
 @keyframes fade-in {
   from {
@@ -1060,10 +1149,10 @@ input[type='range'] {
 
 /* ---------- Toasts ---------- */
 
-/* Embaixo, no centro da área da foto: os códigos ficam no topo e não são cobertos. */
+/* No topo, no centro da área da foto: não cobre a janela da cor, que fica embaixo. */
 .toasts {
   position: fixed;
-  bottom: 150px;
+  top: 72px;
   left: calc(340px + (100vw - 340px) / 2);
   transform: translateX(-50%);
   z-index: 50;
@@ -1126,6 +1215,6 @@ input[type='range'] {
 @keyframes slide-in {
   from {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(-10px);
   }
 }

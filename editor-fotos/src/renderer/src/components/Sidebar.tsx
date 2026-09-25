@@ -187,7 +187,8 @@ export function Sidebar({ onSelectFolder }: { onSelectFolder(): void }) {
   const update = actions.updateSettings
 
   const codeTexts = codes.map((c) => c.value.trim()).filter(Boolean)
-  const example = buildOutputFileName('Preto', codeTexts.length ? codeTexts : ['AB123'], settings.codeInFileName, 'x.jpg')
+  const exampleBase = buildOutputFileName('Preto', codeTexts.length ? codeTexts : ['AB123'], settings.codeInFileName, 'x.jpg')
+  const example = settings.numberByColor ? exampleBase.replace(/(\.[^.]+)$/, ' 1$1') : exampleBase
 
   return (
     <aside className="sidebar">
@@ -233,20 +234,55 @@ export function Sidebar({ onSelectFolder }: { onSelectFolder(): void }) {
       </Section>
 
       <Section title="Nome do arquivo (cor)">
-        <p className="hint">
-          Ao clicar em <strong>Próximo</strong>, o programa pergunta a cor do modelo. Ela vira o nome do arquivo
-          salvo.
-        </p>
         <Toggle
-          checked={settings.colorSuggestions}
-          onChange={(colorSuggestions) => update({ colorSuggestions })}
-          label="Sugerir cores ao digitar"
+          checked={settings.askColor}
+          onChange={(askColor) => update({ askColor })}
+          label="Perguntar a cor ao clicar em Próximo"
         />
-        <Toggle
-          checked={settings.colorOnPhoto}
-          onChange={(colorOnPhoto) => update({ colorOnPhoto })}
-          label="Também escrever essa cor na foto"
-        />
+        {settings.askColor ? (
+          <>
+            <p className="hint">
+              A cor vira o nome do arquivo. Na janela também tem <strong>Salvar sem cor</strong>, que usa o nome
+              original da foto.
+            </p>
+            <Toggle
+              checked={settings.numberByColor}
+              onChange={(numberByColor) => update({ numberByColor })}
+              label="Numerar por cor (Branco 1, Branco 2…)"
+            />
+            <Toggle
+              checked={settings.recognizeColor}
+              onChange={(recognizeColor) => update({ recognizeColor })}
+              label="Reconhecer a cor pelas fotos já salvas"
+            />
+            {settings.recognizeColor && (
+              <div className="sub-option">
+                <Toggle
+                  checked={settings.autoSaveRecognized}
+                  onChange={(autoSaveRecognized) => update({ autoSaveRecognized })}
+                  label="Salvar direto quando tiver certeza"
+                />
+                <p className="hint">
+                  {settings.autoSaveRecognized
+                    ? 'Fotos da mesma cor são salvas sem perguntar. Cores novas continuam sendo perguntadas.'
+                    : 'Desligado: a cor reconhecida já vem preenchida e você só aperta Enter.'}
+                </p>
+              </div>
+            )}
+            <Toggle
+              checked={settings.colorSuggestions}
+              onChange={(colorSuggestions) => update({ colorSuggestions })}
+              label="Sugerir cores ao digitar"
+            />
+            <Toggle
+              checked={settings.colorOnPhoto}
+              onChange={(colorOnPhoto) => update({ colorOnPhoto })}
+              label="Também escrever essa cor na foto"
+            />
+          </>
+        ) : (
+          <p className="hint">Desligado: o Próximo salva direto, com o nome original da foto.</p>
+        )}
       </Section>
 
       <Section title="Texto">

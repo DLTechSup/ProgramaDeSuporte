@@ -44,6 +44,35 @@ async function uniqueOutputName(dir: string, fileName: string, replaceName?: str
   }
 }
 
+const NUMBERED = /^(.*) (\d+)$/
+
+/**
+ * "Branco.jpg" vira "Branco 1.jpg", "Branco 2.jpg"... continuando do maior número que já existe
+ * na pasta. Refazer uma foto da mesma cor mantém o número dela.
+ */
+async function numberedOutputName(dir: string, fileName: string, replaceName?: string): Promise<string> {
+  const { name: color, ext } = parse(fileName)
+  const sameColor = (candidate: string): number | null => {
+    const match = parse(candidate).name.match(NUMBERED)
+    return match && match[1].toLowerCase() === color.toLowerCase() ? Number(match[2]) : null
+  }
+
+  const kept = replaceName ? sameColor(replaceName) : null
+  if (kept !== null) return `${color} ${kept}${ext}`
+
+  const entries = await fs.readdir(dir).catch(() => [] as string[])
+  let highest = 0
+  for (const entry of entries) {
+    if (entry.toLowerCase() === replaceName?.toLowerCase()) continue
+    highest = Math.max(highest, sameColor(entry) ?? 0)
+  }
+  return `${color} ${highest + 1}${ext}`
+}
+
+function outputName(dir: string, fileName: string, replaceName: string | undefined, numbered: boolean) {
+  return numbered ? numberedOutputName(dir, fileName, replaceName) : uniqueOutputName(dir, fileName, replaceName)
+}
+
 async function openFolder(path: string): Promise<FolderInfo | null> {
   const stat = await fs.stat(path).catch(() => null)
   if (!stat) return null
@@ -77,8 +106,8 @@ function registerIpc(): void {
     fs.readFile(join(requireFolder(), plainFileName(name)))
   )
 
-  ipcMain.handle('output:resolveName', (_event, fileName: string, replaceName?: string) =>
-    uniqueOutputName(outputDir(), plainFileName(fileName), replaceName && plainFileName(replaceName))
+  ipcMain.handle('output:resolveName', (_event, fileName: string, replaceName?: string, numbered?: boolean) =>
+    outputName(outputDir(), plainFileName(fileName), replaceName && plainFileName(replaceName), Boolean(numbered))
   )
 
   ipcMain.handle('image:save', async (_event, request: SaveRequest) => {
@@ -86,7 +115,7 @@ function registerIpc(): void {
     await fs.mkdir(dir, { recursive: true })
     const fileName = plainFileName(request.fileName)
     const replaceName = request.replaceName && plainFileName(request.replaceName)
-    const finalName = await uniqueOutputName(dir, fileName, replaceName)
+    const finalName = await outputName(dir, fileName, replaceName, Boolean(request.numbered))
     await fs.writeFile(join(dir, finalName), request.data)
     if (replaceName && replaceName.toLowerCase() !== finalName.toLowerCase()) {
       await fs.rm(join(dir, replaceName), { force: true })

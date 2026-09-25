@@ -2,6 +2,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   ArrowRight,
   ChevronLeft,
+  CircleCheck,
+  LoaderCircle,
   Images,
   RotateCw,
   SkipForward,
@@ -11,8 +13,10 @@ import {
 } from 'lucide-react'
 import { OUTPUT_FOLDER_NAME, type FolderInfo } from '@shared/api'
 import { buildTextItems, positionsFor, useEditor, type TextPosition } from './store'
-import { buildOutputFileName } from './lib/fileName'
-import { clearBitmapCache, loadBitmap, renderFinalPhoto, rotateBitmap } from './lib/images'
+import { plannedOutput } from './lib/fileName'
+import { clearImageCaches, loadBitmap, renderFinalPhoto, rotateBitmap } from './lib/images'
+import { clearColorSignatures, prepareColorRecognition, recognizeColor } from './lib/colorRecognition'
+import type { ColorGuess } from './lib/colorMatch'
 import { errorMessage, toast } from './toasts'
 import { Sidebar } from './components/Sidebar'
 import { PhotoCanvas } from './components/PhotoCanvas'
@@ -41,6 +45,10 @@ export default function App() {
   const [photo, setPhoto] = useState<LoadedPhoto | null>(null)
   const [promptOpen, setPromptOpen] = useState(false)
   const [colorBeforePrompt, setColorBeforePrompt] = useState('')
+  const [guess, setGuess] = useState<ColorGuess | null>(null)
+  const [busy, setBusy] = useState(false)
+  const [lastSaved, setLastSaved] = useState<{ name: string; note?: string } | null>(null)
+  const busyRef = useRef(false)
 
   const images = folder?.images ?? []
   const imageName = images[index] ?? null
@@ -48,7 +56,6 @@ export default function App() {
   const rotation = imageName ? (rotations[imageName] ?? 0) : 0
   const photoKey = folder && imageName ? `${folder.folderPath}|${imageName}|${rotation}` : null
   const bitmap = photo && photo.key === photoKey ? photo.bitmap : null
-  const savedNames = useMemo(() => new Set(Object.keys(results)), [results])
 
   useEffect(() => {
     if (!photoKey || !imageName) return
@@ -76,9 +83,12 @@ export default function App() {
     try {
       const info = await pick()
       if (!info) return
-      clearBitmapCache()
+      clearImageCaches()
+      clearColorSignatures()
       setPromptOpen(false)
+      setLastSaved(null)
       useEditor.getState().loadFolder(info)
+      if (useEditor.getState().settings.recognizeColor) prepareColorRecognition(info.images)
       const alreadySaved = Object.keys(useEditor.getState().results).length
       if (alreadySaved > 0) {
         toast.info(
@@ -106,17 +116,6 @@ export default function App() {
 
   const canEdit = Boolean(folder && imageName && !finished)
 
-  const openPrompt = useCallback(() => {
-    if (!canEdit || !bitmap) return
-    setColorBeforePrompt(useEditor.getState().currentColor)
-    setPromptOpen(true)
-  }, [canEdit, bitmap])
-
-  const cancelPrompt = () => {
-    useEditor.getState().setCurrentColor(colorBeforePrompt)
-    setPromptOpen(false)
-  }
-
   const advance = () => {
     const state = useEditor.getState()
     const total = state.folder?.images.length ?? 0
@@ -124,9 +123,14 @@ export default function App() {
     else state.setFinished(true)
   }
 
-  const saveCurrent = async (color: string) => {
+  /** Salva a foto atual; cor vazia = nome original do arquivo. */
+  const savePhoto = async (typedColor: string, recognized?: ColorGuess) => {
     const state = useEditor.getState()
     if (!imageName) return
+    const codeTexts = state.codes.map((c) => c.value.trim()).filter(Boolean)
+    const knownColors = Object.values(state.results).map((r) => r.color)
+    const { color, fileName, numbered } = plannedOutput(typedColor, codeTexts, state.settings, imageName, knownColors)
+
     const loaded = await rotateBitmap(await loadBitmap(imageName), state.rotations[imageName] ?? 0)
     const data = await renderFinalPhoto({
       imageName,
@@ -137,17 +141,76 @@ export default function App() {
       positions: positionsFor(state, imageName),
       mainColor: color
     })
-    const codeTexts = state.codes.map((c) => c.value.trim()).filter(Boolean)
-    const fileName = buildOutputFileName(color, codeTexts, state.settings.codeInFileName, imageName)
     const savedName = await window.api.saveImage({
       fileName,
       data,
-      replaceName: state.results[imageName]?.savedName
+      replaceName: state.results[imageName]?.savedName,
+      numbered
     })
-    state.recordResult(imageName, { savedName, color, side: state.settings.align })
+    state.recordResult(imageName, {
+      savedName,
+      color,
+      side: state.settings.align,
+      multiColor: state.extraColors.some((c) => c.value.trim() !== '')
+    })
     setPromptOpen(false)
-    toast.success('Foto salva', `${OUTPUT_FOLDER_NAME}/${savedName}`)
+    setLastSaved({
+      name: savedName,
+      note: recognized
+        ? `cor reconhecida, ${Math.round(recognized.similarity * 100)}% parecida com a foto ${images.indexOf(recognized.imageName) + 1}`
+        : undefined
+    })
     advance()
+  }
+
+  const withBusy = async <T,>(task: () => Promise<T>): Promise<T> => {
+    busyRef.current = true
+    setBusy(true)
+    try {
+      return await task()
+    } finally {
+      busyRef.current = false
+      setBusy(false)
+    }
+  }
+
+  const handleNext = async () => {
+    if (!canEdit || !bitmap || !imageName || !folder || busyRef.current) return
+    const state = useEditor.getState()
+    const { settings } = state
+    const saveFailed = (error: unknown) => toast.error('Não foi possível salvar a foto', errorMessage(error))
+
+    if (!settings.askColor) {
+      await withBusy(() => savePhoto('')).catch(saveFailed)
+      return
+    }
+
+    const found =
+      settings.recognizeColor && !state.results[imageName]
+        ? await withBusy(() => recognizeColor(imageName, folder.images, state.results)).catch(() => null)
+        : null
+
+    if (found?.confident && settings.autoSaveRecognized) {
+      try {
+        await withBusy(() => savePhoto(found.color, found))
+        return
+      } catch (error) {
+        saveFailed(error)
+      }
+    }
+
+    const current = useEditor.getState().currentColor
+    setColorBeforePrompt(current)
+    if (found && !current.trim()) useEditor.getState().setCurrentColor(found.color)
+    setGuess(found)
+    setPromptOpen(true)
+  }
+  const handleNextRef = useRef(handleNext)
+  handleNextRef.current = handleNext
+
+  const cancelPrompt = () => {
+    useEditor.getState().setCurrentColor(colorBeforePrompt)
+    setPromptOpen(false)
   }
 
   // Botão que ficou focado por um clique do mouse não deve "roubar" o Enter (ex.: repetir "Pular").
@@ -167,7 +230,7 @@ export default function App() {
       const keyboardOnButton = button !== null && button !== clickedButton.current
       if (event.ctrlKey || (!typing && !keyboardOnButton)) {
         event.preventDefault()
-        openPrompt()
+        handleNextRef.current()
       }
     }
     window.addEventListener('pointerdown', onPointerDown, true)
@@ -176,7 +239,7 @@ export default function App() {
       window.removeEventListener('pointerdown', onPointerDown, true)
       window.removeEventListener('keydown', onKeyDown)
     }
-  }, [promptOpen, openPrompt])
+  }, [promptOpen])
 
   useEffect(() => {
     const prevent = (event: DragEvent) => event.preventDefault()
@@ -193,7 +256,7 @@ export default function App() {
     }
   }, [openFolder])
 
-  const savedCount = savedNames.size
+  const savedCount = Object.keys(results).length
   const progress = images.length ? (savedCount / images.length) * 100 : 0
 
   let stage
@@ -239,6 +302,19 @@ export default function App() {
             <span>Códigos e Cores</span>
           </div>
         </div>
+        {lastSaved && (
+          <div
+            className="topbar-status"
+            key={lastSaved.name}
+            title={`${OUTPUT_FOLDER_NAME}/${lastSaved.name}. Se algo saiu errado, clique na miniatura da foto para refazer.`}
+          >
+            <CircleCheck size={16} />
+            <span>
+              Salva: <strong>{lastSaved.name}</strong>
+              {lastSaved.note && <em> · {lastSaved.note}</em>}
+            </span>
+          </div>
+        )}
         {folder && images.length > 0 && (
           <div className="topbar-progress">
             <div className="topbar-folder" title={folder.folderPath}>
@@ -266,8 +342,10 @@ export default function App() {
               imageName={imageName}
               position={index + 1}
               total={images.length}
+              guess={guess}
+              guessPhotoNumber={guess ? images.indexOf(guess.imageName) + 1 : null}
               onCancel={cancelPrompt}
-              onConfirm={saveCurrent}
+              onConfirm={(color) => savePhoto(color)}
             />
           )}
         </div>
@@ -278,7 +356,7 @@ export default function App() {
               folderPath={folder.folderPath}
               images={images}
               index={finished ? -1 : index}
-              savedNames={savedNames}
+              results={results}
               rotations={rotations}
               onSelect={(i) => {
                 if (promptOpen) cancelPrompt()
@@ -330,10 +408,10 @@ export default function App() {
               <button
                 type="button"
                 className="button button-primary button-next"
-                onClick={openPrompt}
-                disabled={!canEdit || promptOpen || !bitmap}
+                onClick={handleNext}
+                disabled={!canEdit || promptOpen || !bitmap || busy}
               >
-                Próximo <ArrowRight size={18} />
+                Próximo {busy ? <LoaderCircle size={18} className="spin" /> : <ArrowRight size={18} />}
               </button>
             </div>
           </footer>

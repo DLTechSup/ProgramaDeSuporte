@@ -1,30 +1,14 @@
 import { memo, useEffect, useRef, useState } from 'react'
 import { Check } from 'lucide-react'
-import type { Rotation } from '../store'
-import { drawRotated, loadThumbnail } from '../lib/images'
-
-const THUMB_HEIGHT = 112
-let running = 0
-const waiting: Array<() => void> = []
-
-// Lê no máximo 2 miniaturas por vez para não travar a foto principal.
-async function queued<T>(task: () => Promise<T>, isCancelled: () => boolean): Promise<T | null> {
-  if (running >= 2) await new Promise<void>((resolve) => waiting.push(resolve))
-  running++
-  try {
-    return isCancelled() ? null : await task()
-  } finally {
-    running--
-    waiting.shift()?.()
-  }
-}
+import type { PhotoResult, Rotation } from '../store'
+import { drawRotated, loadSmall } from '../lib/images'
 
 const Thumb = memo(function Thumb({
   name,
   folderPath,
   number,
   active,
-  saved,
+  savedName,
   rotation,
   onClick
 }: {
@@ -32,7 +16,7 @@ const Thumb = memo(function Thumb({
   folderPath: string
   number: number
   active: boolean
-  saved: boolean
+  savedName?: string
   rotation: Rotation
   onClick(): void
 }) {
@@ -42,12 +26,8 @@ const Thumb = memo(function Thumb({
 
   useEffect(() => {
     let cancelled = false
-    queued(() => loadThumbnail(name, THUMB_HEIGHT), () => cancelled)
-      .then((loaded) => {
-        if (!loaded) return
-        if (cancelled) loaded.close()
-        else setBitmap(loaded)
-      })
+    loadSmall(name)
+      .then((loaded) => !cancelled && setBitmap(loaded))
       .catch(() => undefined)
     return () => {
       cancelled = true
@@ -67,20 +47,25 @@ const Thumb = memo(function Thumb({
     if (active) buttonRef.current?.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' })
   }, [active])
 
+  const label = savedName?.replace(/\.[^.]+$/, '')
+
   return (
     <button
       ref={buttonRef}
       type="button"
-      className={`thumb ${active ? 'active' : ''} ${saved ? 'saved' : ''}`}
+      className={`thumb ${active ? 'active' : ''} ${savedName ? 'saved' : ''}`}
       onClick={onClick}
-      title={name}
+      title={savedName ? `${name} → ${savedName}` : name}
     >
-      <canvas ref={canvasRef} width={90} height={THUMB_HEIGHT} className={bitmap ? 'loaded' : undefined} />
+      <canvas ref={canvasRef} width={90} height={112} className={bitmap ? 'loaded' : undefined} />
       <span className="thumb-number">{number}</span>
-      {saved && (
-        <span className="thumb-saved">
-          <Check size={12} strokeWidth={3} />
-        </span>
+      {savedName && (
+        <>
+          <span className="thumb-saved">
+            <Check size={12} strokeWidth={3} />
+          </span>
+          <span className="thumb-label">{label}</span>
+        </>
       )}
     </button>
   )
@@ -90,12 +75,12 @@ interface Props {
   folderPath: string
   images: string[]
   index: number
-  savedNames: Set<string>
+  results: Record<string, PhotoResult>
   rotations: Record<string, Rotation>
   onSelect(index: number): void
 }
 
-export function Filmstrip({ folderPath, images, index, savedNames, rotations, onSelect }: Props) {
+export function Filmstrip({ folderPath, images, index, results, rotations, onSelect }: Props) {
   return (
     <div className="filmstrip">
       {images.map((name, i) => (
@@ -105,7 +90,7 @@ export function Filmstrip({ folderPath, images, index, savedNames, rotations, on
           folderPath={folderPath}
           number={i + 1}
           active={i === index}
-          saved={savedNames.has(name)}
+          savedName={results[name]?.savedName}
           rotation={rotations[name] ?? 0}
           onClick={() => onSelect(i)}
         />

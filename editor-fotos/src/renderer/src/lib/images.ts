@@ -24,16 +24,47 @@ export function loadBitmap(name: string): Promise<ImageBitmap> {
   return pending
 }
 
-export function clearBitmapCache(): void {
-  cache.clear()
+const SMALL_HEIGHT = 112
+const smallCache = new Map<string, Promise<ImageBitmap>>()
+let generation = 0
+let running = 0
+const waiting: Array<() => void> = []
+
+// No máximo 2 leituras por vez, para não atrasar a foto principal.
+async function limited<T>(task: () => Promise<T>): Promise<T> {
+  if (running >= 2) await new Promise<void>((resolve) => waiting.push(resolve))
+  running++
+  try {
+    return await task()
+  } finally {
+    running--
+    waiting.shift()?.()
+  }
 }
 
-export async function loadThumbnail(name: string, height: number): Promise<ImageBitmap> {
-  const bytes = await window.api.readImage(name)
-  return createImageBitmap(new Blob([bytes as Uint8Array<ArrayBuffer>]), {
-    resizeHeight: height,
-    resizeQuality: 'medium'
+/** Versão pequena da foto, usada nas miniaturas e no reconhecimento de cor. */
+export function loadSmall(name: string): Promise<ImageBitmap> {
+  const existing = smallCache.get(name)
+  if (existing) return existing
+  const startedIn = generation
+  const pending = limited(async () => {
+    if (startedIn !== generation) throw new Error('A pasta foi trocada.')
+    const bytes = await window.api.readImage(name)
+    return createImageBitmap(new Blob([bytes as Uint8Array<ArrayBuffer>]), {
+      resizeHeight: SMALL_HEIGHT,
+      resizeQuality: 'medium'
+    })
   })
+  pending.catch(() => smallCache.get(name) === pending && smallCache.delete(name))
+  smallCache.set(name, pending)
+  return pending
+}
+
+/** Esquece as fotos da pasta anterior. */
+export function clearImageCaches(): void {
+  cache.clear()
+  smallCache.clear()
+  generation++
 }
 
 function createCanvas(width: number, height: number): HTMLCanvasElement {

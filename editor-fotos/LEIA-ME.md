@@ -16,19 +16,35 @@ criada dentro da mesma pasta das fotos.
    - Duplo clique num texto: ele volta para o lugar padrão.
    - Setas do teclado: ajuste fino do texto selecionado (Shift + seta anda 10px).
 5. Clique em **Próximo** (ou aperte **Enter**). O programa pergunta **a cor do modelo**:
-   digite, aperte **Enter**, e a foto é salva como `FOTOS COM CODIGOS/Preto.jpg`.
+   digite só a cor (ex.: `Branco`), aperte **Enter**, e a foto é salva como
+   `FOTOS COM CODIGOS/Branco 1.jpg`. A próxima foto do mesmo branco vira `Branco 2.jpg`, e assim por diante.
    A próxima foto aparece em seguida.
+   - **Salvar sem cor**: botão na mesma janela; salva com o nome original da foto.
 6. No fim aparece o botão **Abrir pasta das fotos prontas**.
 
 Outros detalhes:
 
-- Se já existir um arquivo com o mesmo nome (duas fotos pretas, por exemplo), a janela avisa e salva
-  como `Preto (2).jpg`.
+- A numeração continua do maior número que já existe na pasta (se já tem `Preto 3.jpg`, a próxima é
+  `Preto 4.jpg`). Digitar `preto` ou `Preto 5` dá no mesmo: vira `Preto` com o próximo número.
+- A última foto salva aparece na barra de cima, e cada miniatura mostra o nome com que foi salva.
 - Para corrigir uma foto, clique na miniatura dela embaixo e clique em **Próximo** de novo.
   A foto antiga é **substituída**, sem criar arquivo duplicado.
 - **Pular** avança sem salvar. **Anterior** volta uma foto. **Girar** gira a foto 90°.
 - **Restaurar posições** volta os textos da foto atual para o lugar padrão.
 - Ao voltar numa foto já salva, ela reabre com a cor e o lado em que foi salva.
+
+### Reconhecimento da cor
+
+Depois que você nomeia a primeira foto de uma cor, o programa compara as próximas fotos com as que já
+foram salvas. Quando reconhece, a cor já vem preenchida na janela ("Parece Branco: 91% parecida com a
+foto 2") e é só apertar **Enter**. Cor nova (ou quando ele não tem certeza) continua sendo perguntada.
+
+- Ligue **Salvar direto quando tiver certeza** para ele salvar sem abrir a janela quando reconhecer a
+  cor. A barra de cima mostra o que foi salvo; se errar, clique na miniatura e refaça a foto.
+- Ele compara as cores da foto, não entende o formato do calçado. Cores bem diferentes (preto, branco,
+  mocca, caramelo) funcionam bem; tons muito parecidos (off white × bege, nude × cor da pele) podem
+  confundir, e aí ele pergunta.
+- Fotos com **Cores escritas na foto** (a capa com várias cores) não entram na comparação.
 
 ### Foto de capa com as cores
 
@@ -42,6 +58,10 @@ Tudo abaixo é opcional e fica na barra lateral. As opções que mudam a foto v�
 
 | Opção | Onde | Padrão |
 | --- | --- | --- |
+| Perguntar a cor ao clicar em Próximo (desligado: salva com o nome original) | Nome do arquivo (cor) | Ligado |
+| Numerar por cor (Branco 1, Branco 2…) | Nome do arquivo (cor) | Ligado |
+| Reconhecer a cor pelas fotos já salvas (já preenche a cor) | Nome do arquivo (cor) | Ligado |
+| Salvar direto quando tiver certeza da cor | Nome do arquivo (cor) | Desligado |
 | Sugerir cores ao digitar (Tab completa) | Nome do arquivo (cor) | Ligado |
 | Também escrever a cor perguntada na foto | Nome do arquivo (cor) | Desligado |
 | Negrito | Texto | Desligado |
@@ -83,4 +103,6 @@ npm run build:win    # gera o instalador e a versão portátil em dist/
     por isso o que aparece na tela é exatamente o que é salvo.
   - `components/PhotoCanvas.tsx`: a foto e o arrastar dos textos.
   - `components/ColorPrompt.tsx`: a janela que pergunta a cor.
+  - `lib/colorMatch.ts`: o reconhecimento da cor (compara as cores das fotos, ignorando as cores que
+    aparecem em todas, como parede, chão e pele).
 - `build/icon.png`: ícone do programa.

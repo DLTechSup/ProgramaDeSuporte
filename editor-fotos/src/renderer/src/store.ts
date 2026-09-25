@@ -27,6 +27,12 @@ export interface Settings {
   jpegQuality: number
   colorSuggestions: boolean
   rememberProgress: boolean
+  /** Desligado: o Próximo salva direto com o nome original da foto. */
+  askColor: boolean
+  /** "Branco" vira "Branco 1", "Branco 2"... */
+  numberByColor: boolean
+  recognizeColor: boolean
+  autoSaveRecognized: boolean
 }
 
 export interface TextEntry {
@@ -48,6 +54,8 @@ export interface PhotoResult {
   color: string
   /** Lado usado ao salvar: ao voltar na foto para corrigir, ela reabre do mesmo lado. */
   side?: Side
+  /** Foto com cores escritas (capa): não serve de referência para reconhecer a cor. */
+  multiColor?: boolean
 }
 
 interface FolderMemory {
@@ -77,7 +85,11 @@ export const DEFAULT_SETTINGS: Settings = {
   maxSize: 1600,
   jpegQuality: 85,
   colorSuggestions: true,
-  rememberProgress: true
+  rememberProgress: true,
+  askColor: true,
+  numberByColor: true,
+  recognizeColor: true,
+  autoSaveRecognized: false
 }
 
 const REMEMBERED_FOLDERS = 30
@@ -246,10 +258,9 @@ export const useEditor = create<EditorState>()(
       recordResult: (imageName, result) =>
         set((s) => ({
           ...remember(s, { results: { ...s.results, [imageName]: result } }),
-          recentColors: [
-            result.color,
-            ...s.recentColors.filter((c) => c.toLowerCase() !== result.color.toLowerCase())
-          ].slice(0, 12)
+          recentColors: result.color
+            ? [result.color, ...s.recentColors.filter((c) => c.toLowerCase() !== result.color.toLowerCase())].slice(0, 12)
+            : s.recentColors
         })),
       rotate: (imageName) =>
         set((s) => {
