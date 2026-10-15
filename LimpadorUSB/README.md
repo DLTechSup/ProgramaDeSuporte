@@ -43,6 +43,7 @@ npm run web      # só a interface no navegador (dados de demonstração, sem Wi
 npm run dev      # Electron + Vite com recarga (no Windows)
 npm run cli      # imprime as listas em JSON (no Windows): npm run cli -- filas
 npm run dist     # gera release/LimpadorUSB-x64.exe e LimpadorUSB-ia32.exe
+build.bat        # (Windows) mesmo resultado com um duplo clique; aceita x64 ou ia32
 ```
 
 Estrutura: `electron/` (processo principal: PowerShell/pnputil, estado, log, backup, detecção) e `src/`
