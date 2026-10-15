@@ -27,8 +27,18 @@ jobs:
         with:
           name: LimpadorUSB
           path: LimpadorUSB/release/*.exe
+      - name: Versão
+        id: versao
+        shell: bash
+        run: echo "v=$(node -p \"require('./package.json').version\")" >> "$GITHUB_OUTPUT"
       - name: Publicar release
-        if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ github.ref_type == 'tag' && github.ref_name || format('limpadorusb-v{0}', steps.versao.outputs.v) }}
+          target_commitish: ${{ github.sha }}
+          name: LimpadorUSB ${{ steps.versao.outputs.v }}
+          body: |
+            Limpador USB de Impressoras para Windows 10 e 11 (não precisa instalar; abre pedindo administrador).
+            - `LimpadorUSB-x64.exe` — Windows de 64 bits
+            - `LimpadorUSB-ia32.exe` — Windows de 32 bits
           files: LimpadorUSB/release/*.exe
