@@ -249,16 +249,18 @@ class MyTheme {
   MyTheme._();
 
   static const Color grayBg = Color(0xFFF3F6FA);
-  static const Color accent = Color(0xFF0E8EE9);
-  static const Color accent50 = Color(0x770E8EE9);
-  static const Color accent80 = Color(0xAA0E8EE9);
+  static const Color brandGold = Color(0xFFF0B429);
+  static const Color brandGray = Color(0xFF606060);
+  static const Color accent = Color(0xFF00A9E0);
+  static const Color accent50 = Color(0x7700A9E0);
+  static const Color accent80 = Color(0xAA00A9E0);
   static const Color canvasColor = Color(0xFF212121);
   static const Color border = Color(0xFFCCCCCC);
-  static const Color idColor = Color(0xFF0E8EE9);
+  static const Color idColor = Color(0xFF00A9E0);
   static const Color darkGray = Color.fromARGB(255, 148, 148, 148);
   static const Color cmIdColor = Color(0xFF21790B);
   static const Color dark = Colors.black87;
-  static const Color button = Color(0xFF0E8EE9);
+  static const Color button = Color(0xFF00A9E0);
   static const Color hoverBorder = Color(0xFF999999);
 
   // ListTile
@@ -3848,7 +3850,7 @@ class _LogoState extends State<_Logo> {
             },
           );
           return Container(
-            constraints: BoxConstraints(maxWidth: 300, maxHeight: 60),
+            constraints: BoxConstraints(maxWidth: 260, maxHeight: 100),
             child: image,
           ).marginOnly(left: 12, right: 12, top: 12);
         }
