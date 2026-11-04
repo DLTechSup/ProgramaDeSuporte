@@ -90,12 +90,12 @@ BEGIN
         BLOCK "040904e4"
         BEGIN
             VALUE "CompanyName", "Informax" "\0"
-            VALUE "FileDescription", "Informax Suporte Remoto" "\0"
+            VALUE "FileDescription", "Suporte Informax" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
             VALUE "InternalName", "rustdesk" "\0"
             VALUE "LegalCopyright", "Copyright © 2026 Informax. Baseado no RustDesk (AGPL-3.0)." "\0"
             VALUE "OriginalFilename", "rustdesk.exe" "\0"
-            VALUE "ProductName", "Informax Suporte" "\0"
+            VALUE "ProductName", "Suporte Informax" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END

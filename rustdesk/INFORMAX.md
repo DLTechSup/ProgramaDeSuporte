@@ -1,4 +1,4 @@
-# Informax Suporte — duas edições
+# Suporte Informax — duas edições
 
 O mesmo código gera dois programas, escolhidos na compilação:
 

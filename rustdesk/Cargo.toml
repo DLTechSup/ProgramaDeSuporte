@@ -4,7 +4,7 @@ version = "1.5.1"
 authors = ["rustdesk <info@rustdesk.com>"]
 edition = "2021"
 build= "build.rs"
-description = "Informax Suporte Remoto"
+description = "Suporte Informax"
 default-run = "rustdesk"
 rust-version = "1.75"
 
