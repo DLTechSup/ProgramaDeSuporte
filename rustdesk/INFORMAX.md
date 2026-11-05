@@ -17,3 +17,12 @@ python3 build.py --flutter --feature informax-client
 Implementação: `src/informax.rs` define o modo (`conn-type`) no início do programa,
 e a interface já esconde os painéis correspondentes.
 Licença: AGPL-3.0 (herdada do RustDesk) — veja `LICENCE`.
+
+## Compilação automática (GitHub Actions)
+
+O arquivo `.github/workflows/build-windows.yml` (na raiz do repositório) compila as duas edições
+para Windows 64 bits. Rode em **Actions > Build Suporte Informax (Windows) > Run workflow**
+(também roda a cada push em `rustdesk/`). Os `.zip` ficam em **Artifacts** ao final.
+
+Observação: o arquivo executável interno continua `rustdesk.exe`; o nome "Suporte Informax"
+aparece na janela e nas propriedades do arquivo.
