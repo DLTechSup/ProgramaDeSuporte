@@ -374,8 +374,10 @@ class _DesktopHomePageState extends State<DesktopHomePage>
                               ).marginOnly(right: 8, top: 4),
                             ),
                           ),
-                          onTap: () => DesktopSettingPage.switch2page(
-                              SettingsTabKey.safety),
+                          onTap: () => bind.isIncomingOnly()
+                              ? setPasswordDialog()
+                              : DesktopSettingPage.switch2page(
+                                  SettingsTabKey.safety),
                           onHover: (value) => editHover.value = value,
                         ),
                     ],
