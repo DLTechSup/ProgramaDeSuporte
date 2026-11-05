@@ -10,8 +10,8 @@ O mesmo código gera dois programas, escolhidos na compilação:
 Compilar (Windows, Flutter):
 
 ```bash
-python3 build.py --flutter --feature informax-tech
-python3 build.py --flutter --feature informax-client
+INFORMAX_EDITION=informax-tech python3 build.py --portable --flutter
+INFORMAX_EDITION=informax-client python3 build.py --portable --flutter
 ```
 
 Implementação: `src/informax.rs` define o modo (`conn-type`) no início do programa,

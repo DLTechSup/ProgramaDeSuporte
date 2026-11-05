@@ -320,6 +320,8 @@ def get_features(args):
         features.append('vram')
     if args.flutter:
         features.append('flutter')
+    if os.environ.get('INFORMAX_EDITION') in ('informax-client', 'informax-tech'):
+        features.append(os.environ['INFORMAX_EDITION'])
     if args.unix_file_copy_paste:
         features.append('unix-file-copy-paste')
     if args.drm:

@@ -165,8 +165,11 @@ jobs:
 
       - name: Build Suporte Informax
         working-directory: rustdesk
+        env:
+          INFORMAX_EDITION: ${{ matrix.edition.feature }}
         run: |
-          python3 .\build.py --portable --flutter --skip-portable-pack --feature ${{ matrix.edition.feature }}
+          python3 .\build.py --portable --flutter
+          Get-ChildItem -Filter "rustdesk-*-install.exe" | Select-Object -First 1 | ForEach-Object { Move-Item $_.FullName "../SuporteInformax-${{ matrix.edition.label }}-instalador.exe" }
           mv ./flutter/build/windows/x64/runner/Release ./SuporteInformax
 
       - name: Package
@@ -178,4 +181,6 @@ jobs:
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: SuporteInformax-${{ matrix.edition.label }}-windows-x64
-          path: SuporteInformax-${{ matrix.edition.label }}-windows-x64.zip
+          path: |
+            SuporteInformax-${{ matrix.edition.label }}-instalador.exe
+            SuporteInformax-${{ matrix.edition.label }}-windows-x64.zip
