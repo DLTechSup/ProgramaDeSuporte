@@ -167,6 +167,8 @@ jobs:
         working-directory: rustdesk
         env:
           INFORMAX_EDITION: ${{ matrix.edition.feature }}
+          INFORMAX_SERVER: ${{ vars.INFORMAX_SERVER }}
+          INFORMAX_KEY: ${{ vars.INFORMAX_KEY }}
         run: |
           python3 .\build.py --portable --flutter
           Get-ChildItem -Filter "rustdesk-*-install.exe" | Select-Object -First 1 | ForEach-Object { Move-Item $_.FullName "../SuporteInformax-${{ matrix.edition.label }}-instalador.exe" }

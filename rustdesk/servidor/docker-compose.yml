@@ -1,0 +1,21 @@
+# Servidor próprio do Suporte Informax (RustDesk Server OSS, gratuito).
+# Suba em uma VPS Linux com IP fixo:  docker compose up -d
+# Depois leia a chave pública:        cat data/id_ed25519.pub
+services:
+  hbbs:
+    container_name: hbbs
+    image: rustdesk/rustdesk-server:latest
+    command: hbbs
+    volumes:
+      - ./data:/root
+    network_mode: host
+    depends_on: [hbbr]
+    restart: unless-stopped
+  hbbr:
+    container_name: hbbr
+    image: rustdesk/rustdesk-server:latest
+    command: hbbr
+    volumes:
+      - ./data:/root
+    network_mode: host
+    restart: unless-stopped

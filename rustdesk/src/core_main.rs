@@ -48,6 +48,7 @@ pub fn core_main() -> Option<CoreMainAction> {
     }
     crate::load_custom_client();
     crate::informax::apply_edition();
+    crate::informax::apply_server();
     #[cfg(windows)]
     if !crate::platform::windows::bootstrap() {
         // return None to terminate the process
