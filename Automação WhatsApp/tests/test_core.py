@@ -83,3 +83,25 @@ def test_seen_persiste(tmp_path):
     s = core.Seen(tmp_path / "v.json")
     s.add("a")
     assert "a" in core.Seen(tmp_path / "v.json")
+
+
+def test_pesquisa_e_agrupamento():
+    its = [
+        {"brand": "DAKOTA", "ref": "777-1", "sender": "Ana", "site": False, "atacado": False},
+        {"brand": "BEIRA RIO", "ref": "8513.115", "sender": "Camilo", "site": True, "atacado": True},
+        {"brand": "BEIRA RIO", "ref": "8562.213", "sender": "Camilo", "site": False, "atacado": False},
+        {"brand": "", "ref": "Vizzano 9", "sender": "Ana", "site": False, "atacado": False},
+    ]
+    g = core.group_by_brand(its)
+    assert [b for b, _ in g] == ["SEM MARCA (revisar)", "BEIRA RIO", "DAKOTA"]
+    assert [i["ref"] for i in g[1][1]] == ["8562.213", "8513.115"]  # pendente antes da pronta
+    assert [b for b, _ in core.group_by_brand(its, "beira 8562")] == ["BEIRA RIO"]
+    assert core.group_by_brand(its, "xyz") == []
+    assert core.matches(its[0], "dakota") and core.matches(its[0], "777") and core.matches(its[0], "")
+
+
+def test_caption_has_ref():
+    assert core.caption_has_ref("BEIRA RIO 8513.115", "8513.115")
+    assert core.caption_has_ref("bebece T3533-150", "BEBECÊ t3533-150")
+    assert not core.caption_has_ref("BEIRA RIO 8513.1155", "8513.115")
+    assert not core.caption_has_ref("qualquer", "")

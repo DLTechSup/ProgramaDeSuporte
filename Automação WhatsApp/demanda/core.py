@@ -42,6 +42,10 @@ DEFAULT_CONFIG = {
     "pastas_ignoradas": ["nova pasta*", "fotos variadas"],
     "fixar_na_frente": True,
     "lista_destacada": False,
+    "agrupar_por_marca": True,
+    "marcas_recolhidas": [],
+    "inicio_ref": "",  # "Estou fazendo": só entra o que chegar a partir desta referência
+    "inicio_ok": False,  # já achou a referência no grupo?
     "largura_lista": 380,
     "geometria": "",
 }
@@ -390,3 +394,37 @@ def summary_text(items: list[dict]) -> str:
     pend, done = sum(1 for i in items if not Store.is_done(i)), sum(1 for i in items if Store.is_done(i))
     out.append(f"Pendentes: {pend} · Prontas: {done}")
     return "\n".join(out)
+
+
+# ----------------------------------------------- pesquisa e agrupamento
+
+def matches(item: dict, query: str) -> bool:
+    """Todas as palavras da pesquisa têm que aparecer em marca/referência/remetente."""
+    q = norm(query)
+    if not q:
+        return True
+    alvo = norm(f"{item.get('brand', '')} {item.get('ref', '')} {item.get('sender', '')}")
+    return all(t in alvo for t in q.split())
+
+
+def group_by_brand(items: list[dict], query: str = "") -> list[tuple[str, list[dict]]]:
+    """[(marca, [itens])]: sem marca primeiro (precisa de revisão), depois A-Z.
+
+    Dentro de cada marca: pendentes por ordem de chegada, prontas no fim.
+    """
+    groups: dict[str, list[dict]] = {}
+    for it in items:
+        if matches(it, query):
+            groups.setdefault(it.get("brand") or "", []).append(it)
+    out = []
+    for brand in sorted(groups, key=lambda b: (b != "", norm(b))):
+        its = groups[brand]
+        its = [i for i in its if not Store.is_done(i)] + [i for i in its if Store.is_done(i)]
+        out.append((brand or "SEM MARCA (revisar)", its))
+    return out
+
+
+def caption_has_ref(caption: str, start: str) -> bool:
+    """A legenda contém a referência marcada em "Estou fazendo"?"""
+    a, b = norm(caption), norm(start)
+    return bool(b) and f" {b} " in f" {a} "

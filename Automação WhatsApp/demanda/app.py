@@ -126,13 +126,15 @@ class MainWindow(QMainWindow):
         self.view = make_view(self.profile, self)
         handlers = {"toggle": self.h_toggle, "open": self.h_open, "copy": self.h_copy,
                     "edit": self.h_edit, "remove": self.h_remove, "album": self.h_album}
-        self.panel = ui.DemandPanel(self.store, handlers)
+        self.panel = ui.DemandPanel(self.store, handlers, self.cfg)
         self.panel.open_painel.connect(self.show_painel)
         self.panel.open_config.connect(self.show_settings)
         self.panel.toggle_detach.connect(self.toggle_detach)
         self.panel.add_manual.connect(self.add_manual)
         self.panel.import_current.connect(self.import_current)
         self.panel.reconnect.connect(self.reconnect)
+        self.panel.mark_ref.connect(self.mark_ref)
+        self.panel.clear_start.connect(self.clear_start)
 
         self.split = QSplitter(Qt.Horizontal)
         self.split.addWidget(self.view)
@@ -242,6 +244,35 @@ class MainWindow(QMainWindow):
         self.monitor.complete_album(did)
 
     # ------------------------------------------------------------ diálogos
+    def mark_ref(self, texto):
+        """"Estou fazendo": põe a referência na lista e só adiciona o que vier a partir dela."""
+        root = self.cfg["pasta_marcas"]
+        if not root:
+            return self.show_settings()
+        brand, ref, score = core.split_caption(texto, self.brands())
+        existing = self.store.find_open(brand, ref) if brand else None
+        if not existing:
+            folder = core.target_folder(root, brand, ref, texto)
+            folder.mkdir(parents=True, exist_ok=True)
+            warn = [] if brand and score >= 1.0 else (
+                ["⚠ revisar marca e referência"] if brand else ["⚠ marca não reconhecida"])
+            self.store.add(brand=brand or "", ref=ref, folder=str(folder), sender="marcada",
+                           photos=core.count_photos(folder), warn=warn)
+            self.hist.add("Marcada (estou fazendo)", brand or "(sem marca)", ref,
+                          core.count_photos(folder), str(folder))
+        self.cfg["inicio_ref"] = texto
+        self.cfg["inicio_ok"] = False
+        self.panel.refresh()
+        self.panel.status.setText(
+            f"Marcada: {texto}" if brand else
+            f"Marca não reconhecida em “{texto}”. Digite com a marca (ex.: BEIRA RIO 8513.115).")
+
+    def clear_start(self):
+        self.cfg["inicio_ref"] = ""
+        self.cfg["inicio_ok"] = False
+        self.hist.add("Ponto de partida removido")
+        self.panel.refresh()
+
     def add_manual(self):
         if not self.cfg["pasta_marcas"]:
             return self.show_settings()
@@ -292,7 +323,9 @@ class MainWindow(QMainWindow):
             self.hist.add("Configurações salvas")
             if antes != (self.cfg["sessao"], self.cfg["modo"], self.cfg["grupo_dedicado"]):
                 self.setup_monitor()
-            if self.float:
+            if bool(dlg.destacar.isChecked()) != bool(self.float):
+                self.toggle_detach()
+            elif self.float:
                 self._apply_float_flags()
 
     def _criar_mon(self):
@@ -332,6 +365,7 @@ class MainWindow(QMainWindow):
         if g:
             self.float.restoreGeometry(QByteArray.fromHex(g.encode()))
         self._apply_float_flags()
+        self.panel.btn_detach.setText("Encaixar lista")
         self.cfg["lista_destacada"] = True
 
     def dock(self):
@@ -343,6 +377,7 @@ class MainWindow(QMainWindow):
         self.float.hide()
         self.float.deleteLater()
         self.float = None
+        self.panel.btn_detach.setText("Destacar lista")
         self.cfg["lista_destacada"] = False
 
     # ----------------------------------------------------------- fechar

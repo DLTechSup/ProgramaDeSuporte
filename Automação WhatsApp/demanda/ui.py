@@ -33,6 +33,9 @@ QPushButton:hover {{ background: #404560; }}
 QPushButton#primario {{ background: {ACCENT}; color: white; font-weight: 600; }}
 QPushButton#primario:hover {{ background: #6a9dff; }}
 QPushButton#mini {{ padding: 5px 9px; font-size: 12px; }}
+QPushButton#marca {{ background: transparent; text-align: left; font-weight: 700;
+                    color: {ACCENT}; padding: 8px 4px 2px 4px; }}
+QPushButton#marca:hover {{ color: #8ab3ff; }}
 QPushButton#x {{ padding: 2px 8px; background: transparent; color: {SOFT}; font-size: 15px; }}
 QPushButton#x:hover {{ color: {RED}; }}
 QCheckBox {{ spacing: 8px; font-size: 14px; font-weight: 600; }}
@@ -134,18 +137,20 @@ class DemandCard(QFrame):
 
 # ----------------------------------------------------------------- painel
 class DemandPanel(QWidget):
-    """Cabeçalho + contador + lista rolável + rodapé."""
+    """Cabeçalho + "Estou fazendo" + pesquisa + lista por marca + rodapé."""
     open_painel = Signal()
     open_config = Signal()
     toggle_detach = Signal()
     add_manual = Signal()
     import_current = Signal()
     reconnect = Signal()
+    mark_ref = Signal(str)
+    clear_start = Signal()
 
-    def __init__(self, store, handlers):
+    def __init__(self, store, handlers, cfg):
         super().__init__()
         self.setObjectName("raiz")
-        self.store, self.h = store, handlers
+        self.store, self.h, self.cfg = store, handlers, cfg
         root = QVBoxLayout(self)
         root.setContentsMargins(10, 10, 10, 10)
         root.setSpacing(8)
@@ -162,12 +167,14 @@ class DemandPanel(QWidget):
         bar.setSpacing(6)
         for text, sig, tip in (("Painel", self.open_painel, "Histórico e atividade"),
                                ("⚙", self.open_config, "Configurações"),
-                               ("⧉", self.toggle_detach, "Destacar/encaixar a lista")):
+                               ("Destacar lista", self.toggle_detach,
+                                "Abre a lista numa janela separada, sempre na frente (e encaixa de volta)")):
             b = QPushButton(text)
             b.setObjectName("mini")
             b.setToolTip(tip)
             b.clicked.connect(sig)
             bar.addWidget(b)
+        self.btn_detach = bar.itemAt(2).widget()
         self.btn_reconnect = QPushButton("Reconectar")
         self.btn_reconnect.setObjectName("mini")
         self.btn_reconnect.clicked.connect(self.reconnect)
@@ -175,6 +182,44 @@ class DemandPanel(QWidget):
         bar.addWidget(self.btn_reconnect)
         bar.addStretch(1)
         root.addLayout(bar)
+
+        # "Estou fazendo": marca a referência e só entra o que chegar a partir dela
+        fz = QHBoxLayout()
+        fz.setSpacing(6)
+        self.fazendo = QLineEdit()
+        self.fazendo.setPlaceholderText("Estou fazendo: ex. BEIRA RIO 8513.115")
+        self.fazendo.returnPressed.connect(self._marcar)
+        mk = QPushButton("Marcar")
+        mk.setObjectName("primario")
+        mk.setToolTip("Coloca esta referência na lista e passa a adicionar só o que chegar no grupo a partir dela")
+        mk.clicked.connect(self._marcar)
+        fz.addWidget(self.fazendo, 1)
+        fz.addWidget(mk)
+        root.addLayout(fz)
+        ini = QHBoxLayout()
+        self.inicio = QLabel("")
+        self.inicio.setObjectName("soft")
+        self.inicio.setWordWrap(True)
+        self.btn_limpar = QPushButton("limpar")
+        self.btn_limpar.setObjectName("mini")
+        self.btn_limpar.clicked.connect(self.clear_start)
+        ini.addWidget(self.inicio, 1)
+        ini.addWidget(self.btn_limpar)
+        root.addLayout(ini)
+
+        # pesquisa + agrupar
+        pr = QHBoxLayout()
+        pr.setSpacing(8)
+        self.busca = QLineEdit()
+        self.busca.setPlaceholderText("Pesquisar referência ou marca...")
+        self.busca.setClearButtonEnabled(True)
+        self.busca.textChanged.connect(lambda _t: self.refresh())
+        self.chk_marca = QCheckBox("Por marca")
+        self.chk_marca.setChecked(bool(cfg["agrupar_por_marca"]))
+        self.chk_marca.toggled.connect(self._set_group)
+        pr.addWidget(self.busca, 1)
+        pr.addWidget(self.chk_marca)
+        root.addLayout(pr)
 
         self.counter = QLabel("")
         self.counter.setStyleSheet("font-weight: 600; font-size: 14px;")
@@ -194,7 +239,6 @@ class DemandPanel(QWidget):
 
         foot = QHBoxLayout()
         add = QPushButton("+ Adicionar")
-        add.setObjectName("primario")
         add.clicked.connect(self.add_manual)
         imp = QPushButton("Importar demanda atual")
         imp.clicked.connect(self.import_current)
@@ -204,28 +248,86 @@ class DemandPanel(QWidget):
         self.set_status("Iniciando...", "wait")
         self.refresh()
 
+    # ---------------------------------------------------------- ações
+    def _marcar(self):
+        t = self.fazendo.text().strip()
+        if t:
+            self.mark_ref.emit(t)
+            self.fazendo.clear()
+
+    def _set_group(self, v):
+        self.cfg["agrupar_por_marca"] = bool(v)
+        self.refresh()
+
+    def _toggle_brand(self, brand):
+        rec = list(self.cfg["marcas_recolhidas"])
+        rec.remove(brand) if brand in rec else rec.append(brand)
+        self.cfg["marcas_recolhidas"] = rec
+        self.refresh()
+
     def set_status(self, text: str, level: str) -> None:
         color = {"ok": GREEN, "wait": ORANGE, "err": RED}.get(level, ORANGE)
         self.dot.setStyleSheet(f"color: {color}; font-size: 16px;")
         self.status.setText(text)
         self.btn_reconnect.setVisible(level == "err")
 
+    # --------------------------------------------------------- lista
+    def _brand_header(self, brand, items, collapsed):
+        pend = sum(1 for i in items if not core.Store.is_done(i))
+        pronta = len(items) - pend
+        partes = []
+        if pend:
+            partes.append(f"{pend} pendente{'s' if pend != 1 else ''}")
+        if pronta:
+            partes.append(f"{pronta} pronta{'s' if pronta != 1 else ''}")
+        b = QPushButton(f"{'▸' if collapsed else '▾'}  {brand}      {' · '.join(partes)}")
+        b.setObjectName("marca")
+        b.setCursor(Qt.PointingHandCursor)
+        b.clicked.connect(lambda _=False, br=brand: self._toggle_brand(br))
+        return b
+
     def refresh(self) -> None:
         pos = self.scroll.verticalScrollBar().value()
         while self.lay.count() > 1:
             it = self.lay.takeAt(0)
-            if it.widget():
-                it.widget().deleteLater()
-        items = self.store.ordered()
-        if not items:
-            vazio = QLabel("Nenhuma demanda ainda.\nQuando chegar um álbum no grupo,\nele aparece aqui.")
+            w = it.widget()
+            if w is not None:
+                w.setParent(None)  # some na hora
+                w.deleteLater()
+        q = self.busca.text().strip()
+        todos = self.store.ordered()
+        shown = 0
+        w = []
+        if self.chk_marca.isChecked():
+            rec = set(self.cfg["marcas_recolhidas"])
+            for brand, its in core.group_by_brand(todos, q):
+                collapsed = brand in rec and not q
+                w.append(self._brand_header(brand, its, collapsed))
+                if not collapsed:
+                    w += [DemandCard(d, self.h) for d in its]
+                shown += len(its)
+        else:
+            its = [d for d in todos if core.matches(d, q)]
+            w = [DemandCard(d, self.h) for d in its]
+            shown = len(its)
+        if not w:
+            msg = (f"Nada encontrado para “{q}”." if q else
+                   "Nenhuma demanda ainda.\nQuando chegar um álbum no grupo,\nele aparece aqui.")
+            vazio = QLabel(msg)
             vazio.setObjectName("soft")
             vazio.setAlignment(Qt.AlignCenter)
-            self.lay.insertWidget(0, vazio)
-        for i, d in enumerate(items):
-            self.lay.insertWidget(i, DemandCard(d, self.h))
+            w = [vazio]
+        for i, x in enumerate(w):
+            self.lay.insertWidget(i, x)
         p, r = self.store.counts()
-        self.counter.setText(f"Pendentes: {p} · Prontas hoje: {r}")
+        extra = f"  ·  {shown} encontrada(s)" if q else ""
+        self.counter.setText(f"Pendentes: {p} · Prontas hoje: {r}{extra}")
+        ini = (self.cfg["inicio_ref"] or "").strip()
+        self.inicio.setText("" if not ini else
+                            (f"▶ Acompanhando a partir de: {ini}" if self.cfg["inicio_ok"]
+                             else f"⏳ Aguardando “{ini}” aparecer no grupo..."))
+        self.inicio.setVisible(bool(ini))
+        self.btn_limpar.setVisible(bool(ini))
         self.scroll.verticalScrollBar().setValue(pos)
 
 
@@ -317,6 +419,9 @@ class SettingsDialog(QDialog):
         r2.addWidget(self.espera)
         r2.addStretch(1)
         lay.addLayout(r2)
+        self.destacar = QCheckBox("Abrir a lista numa janela separada (além da janela principal)")
+        self.destacar.setChecked(bool(cfg["lista_destacada"]))
+        lay.addWidget(self.destacar)
         self.fixar = QCheckBox("Fixar a lista na frente quando destacada")
         self.fixar.setChecked(bool(cfg["fixar_na_frente"]))
         lay.addWidget(self.fixar)

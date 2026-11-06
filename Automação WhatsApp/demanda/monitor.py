@@ -132,10 +132,27 @@ class Monitor(QObject):
         if not root or not Path(root).is_dir():
             self.status.emit("Escolha a pasta das marcas (⚙ Configurações).", "err")
             return self._free()
+        msgs = res["msgs"]
+        inicio = (self.cfg["inicio_ref"] or "").strip()
+        if inicio and not self.cfg["inicio_ok"]:
+            idx = next((i for i, m in enumerate(msgs)
+                        if m["caption"] and core.caption_has_ref(m["caption"], inicio)), None)
+            if idx is None:
+                self.status.emit(f"Aguardando “{inicio}” aparecer no grupo...", "wait")
+                return self._free()
+            prev = msgs[idx - 1] if idx > 0 else None
+            if (prev and prev["photos"] and not prev["caption"] and not msgs[idx]["photos"]
+                    and prev["sender"] == msgs[idx]["sender"]):
+                idx -= 1  # fotos vieram antes da legenda
+            for m in msgs[:idx]:
+                self.seen.add(m["id"])
+            self.cfg["inicio_ok"] = True
+            self.log.emit(f"Ponto de partida encontrado: {inicio}")
+            msgs = msgs[idx:]
         self.status.emit(f"Acompanhando: {title}", "ok")
         hoje = core.today()
         fila = []
-        for m in res["msgs"]:
+        for m in msgs:
             if m["id"] in self.seen:
                 continue
             if m["date"] and m["date"] != hoje:

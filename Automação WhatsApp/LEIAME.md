@@ -28,13 +28,22 @@ Você usa o WhatsApp normalmente na parte esquerda da janela.
 
 ## A lista
 
+- **Por marca:** a lista vem organizada por marca (A–Z), cada uma com o número de pendentes e
+  prontas. Clique no nome da marca para recolher/abrir. Demandas de marca não reconhecida ficam
+  no topo, em "SEM MARCA (revisar)". A caixa "Por marca" liga/desliga o agrupamento.
+- **Pesquisa:** a barra no topo filtra por referência, marca ou quem mandou (ex.: `beira 8562`).
+- **Estou fazendo:** digite a referência em que você está (ex.: `BEIRA RIO 8513.115`) e clique
+  em **Marcar**. Ela entra na lista e, **a partir dela**, o programa passa a adicionar o que
+  chegar no grupo; o que veio antes dela no grupo é ignorado. O programa mostra "Aguardando
+  “…” aparecer no grupo" até achar a mensagem, e "limpar" volta ao normal (adiciona tudo de hoje).
+- **Janela da lista separada:** o botão **Destacar lista** abre a lista numa janela própria,
+  sempre na frente (como um bloco de notas), além da janela do programa. Em ⚙ Configurações
+  dá para deixar isso ligado ao abrir o programa.
 - Cada cartão: marca + referência, nº de fotos, hora e quem mandou, avisos em amarelo,
   as caixas **Site** e **Atacado**, e os botões **Abrir pasta**, **Copiar ref**, **Editar**
   (muda marca/referência e move a pasta junto) e **✕** (tira da lista; não apaga nada).
 - **+ Adicionar** cria uma demanda na mão. **Importar demanda atual** traz o que você já
   estava fazendo (escolhendo das pastas ou colando uma lista, uma por linha).
-- **⧉** destaca a lista numa janelinha sempre na frente (para usar em outra tela/canto) e
-  encaixa de volta.
 - **Painel**: histórico de hoje (duplo clique abre a pasta), atividade ao vivo e o botão
   **Resumo do dia** (gera `Resumo DD-MM-AAAA.txt` e copia para colar no Note Deck).
 - Fechar no X pede confirmação.
@@ -54,12 +63,13 @@ captura o resto). No modo dedicado isso é automático.
 
 ## O que foi testado (e o que não foi)
 
-Testado aqui, sem o seu WhatsApp (`python -m pytest tests`, 16 testes):
+Testado aqui, sem o seu WhatsApp (`python -m pytest tests`, 20 testes):
 - regras de marca/referência (todos os exemplos do plano), pastas, fotos sem duplicar,
   mover/mesclar pasta, lista, ordem, prontas, histórico;
 - o monitor rodando de verdade (Qt WebEngine) contra uma **página que imita o WhatsApp Web**:
   cria as demandas, baixa as fotos, manda marca desconhecida para `_REVISAR`, ignora "bom dia",
   e abre um álbum com "+7" na sessão dedicada;
+- pesquisa, agrupamento por marca e "Estou fazendo" (ignora o que veio antes);
 - a janela principal abre, destaca e encaixa a lista (`tools/fumaca.py`).
 
 **Não testado:** o WhatsApp Web real. Os seletores seguem o plano, mas o WhatsApp muda a

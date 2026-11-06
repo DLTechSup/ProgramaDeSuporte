@@ -21,7 +21,7 @@ from demanda.monitor import Monitor  # noqa: E402
 FIXTURE = Path(__file__).parent / "fixtures" / "fake_wa.html"
 
 
-def _rodar(tmp_path, dedicated):
+def _rodar(tmp_path, dedicated, inicio="", esperado=3):
     app = QtWidgets.QApplication.instance() or QtWidgets.QApplication([])
     root = tmp_path / "LANÇAMENTOS"
     for b in ("BEIRA RIO", "BEBECÊ", "DAKOTA"):
@@ -30,6 +30,7 @@ def _rodar(tmp_path, dedicated):
     cfg["pasta_marcas"] = str(root)
     cfg["intervalo_seg"] = 0.5
     cfg["espera_texto_seg"] = 10
+    cfg["inicio_ref"] = inicio
     store = core.Store(tmp_path / "lista.json")
     hist = core.History(tmp_path / "h.jsonl")
     seen = core.Seen(tmp_path / "v.json")
@@ -49,7 +50,7 @@ def _rodar(tmp_path, dedicated):
 
     def check():
         state["n"] += 1
-        if len(store.items) >= 3 or state["n"] > 90:
+        if len(store.items) >= esperado or state["n"] > 90:
             app.quit()
         else:
             QTimer.singleShot(500, check)
@@ -79,6 +80,16 @@ def cenario_compartilhado(tmp_path):
     assert "false_1203@g.us_A2_5511@c.us" in seen  # "bom dia" ignorado, mas marcado como visto
 
 
+def cenario_inicio(tmp_path):
+    """"Estou fazendo T3533-150": a BEIRA RIO (anterior) é ignorada; o resto entra."""
+    root, store, seen = _rodar(tmp_path, dedicated=False, inicio="bebece T3533-150", esperado=2)
+    marcas = sorted(d["brand"] for d in store.items)
+    assert marcas == ["", "BEBECÊ"], marcas
+    assert "false_1203@g.us_A1_5511@c.us" in seen  # pulada: veio antes do ponto de partida
+    assert not (root / "BEIRA RIO" / "BEIRA RIO 8513.115").exists()
+    assert core.Config(tmp_path / "config.json")["inicio_ok"] is True
+
+
 def cenario_dedicado(tmp_path):
     """Com a sessão dedicada, o álbum "+7" é aberto e todas as fotos são salvas."""
     root, store, seen = _rodar(tmp_path, dedicated=True)
@@ -98,6 +109,10 @@ def _em_processo_separado(nome, tmp_path):
 
 def test_monitor_cria_demandas(tmp_path):
     _em_processo_separado("cenario_compartilhado", tmp_path)
+
+
+def test_estou_fazendo_ignora_o_que_veio_antes(tmp_path):
+    _em_processo_separado("cenario_inicio", tmp_path)
 
 
 def test_sessao_dedicada_pega_album_completo(tmp_path):
