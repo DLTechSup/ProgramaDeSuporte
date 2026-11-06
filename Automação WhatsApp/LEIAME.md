@@ -1,3 +1,6 @@
+> **Versão atual: `demanda-react/` (React + Electron, com instalador).** Veja `demanda-react/LEIAME.md`.
+> O restante desta pasta (Python/Qt) é a versão anterior, mantida só como referência.
+
 # Demanda do Dia — Automação WhatsApp
 
 Programa para Windows. Mostra o **WhatsApp Web dentro da própria janela** (à esquerda) e a

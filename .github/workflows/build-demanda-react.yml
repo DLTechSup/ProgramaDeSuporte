@@ -1,0 +1,54 @@
+name: Build Demanda do Dia (React/Electron)
+
+# Gera o INSTALADOR do Demanda do Dia (pasta "Automação WhatsApp/demanda-react") para Windows.
+# Baixe em Actions > (execução) > Artifacts.
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [claude/jolly-goldberg-fkl1qj, main, master]
+    paths: ["Automação WhatsApp/demanda-react/**", ".github/workflows/build-demanda-react.yml"]
+
+jobs:
+  windows:
+    runs-on: windows-2022
+    defaults:
+      run:
+        working-directory: "Automação WhatsApp/demanda-react"
+    env:
+      CSC_IDENTITY_AUTO_DISCOVERY: "false"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+
+      - name: Instalar Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: "Automação WhatsApp/demanda-react/package-lock.json"
+
+      - name: Instalar dependências
+        run: npm ci
+
+      - name: Testes (núcleo, interface e monitor contra página simulada)
+        shell: bash
+        run: |
+          npm i --no-save playwright
+          npx playwright install chromium
+          npm test
+
+      - name: Gerar o instalador
+        run: npm run dist
+
+      - name: Conferir
+        shell: pwsh
+        run: |
+          Get-ChildItem release -Filter *.exe | ForEach-Object { "$($_.Name)  $([math]::Round($_.Length/1MB,1)) MB" }
+          if (-not (Get-ChildItem release -Filter *.exe)) { throw "instalador não foi gerado" }
+
+      - name: Enviar
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: DemandaDoDia-Instalador
+          path: Automação WhatsApp/demanda-react/release/*.exe

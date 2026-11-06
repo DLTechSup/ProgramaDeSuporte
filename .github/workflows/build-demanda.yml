@@ -1,13 +1,11 @@
-name: Build Demanda do Dia (Windows)
+name: Build Demanda do Dia - Python (antiga)
 
 # Gera o programa "Demanda do Dia" (pasta "Automação WhatsApp") para Windows.
 # Baixe em Actions > (execução) > Artifacts.
 
+# VERSÃO ANTIGA (Python/Qt). A versão atual é a em React: "Build Demanda do Dia (React/Electron)".
 on:
   workflow_dispatch:
-  push:
-    branches: [claude/jolly-goldberg-fkl1qj, main, master]
-    paths: ["Automação WhatsApp/**", ".github/workflows/build-demanda.yml"]
 
 jobs:
   windows:
