@@ -1,30 +1,91 @@
-# Automação WhatsApp — Demanda do Dia
+# Demanda do Dia — Automação WhatsApp
 
-Projeto novo, separado do Suporte Informax (`../rustdesk`).
+Programa para Windows. Mostra o **WhatsApp Web dentro da própria janela** (à esquerda) e a
+**lista da demanda do dia** ao lado (à direita). Ele só **lê**: nunca envia mensagem e nunca
+apaga pastas ou fotos.
 
-Monitora o WhatsApp Web (somente leitura), baixa as fotos dos álbuns de lançamento,
-cria a pasta `MARCA\MARCA REFERÊNCIA` e mantém uma lista da demanda do dia com dois OKs
-por produto: **Site** e **Atacado**.
+Quando chega um álbum de lançamento no grupo, o programa baixa as fotos, cria a pasta
+`MARCA\MARCA REFERÊNCIA` dentro da pasta das marcas e coloca o produto na lista, com duas
+caixas para marcar: **Site** e **Atacado**. As duas marcadas = pronto (cartão verde, riscado,
+vai para o fim da lista).
 
-## Situação
+## Como rodar
 
-- `PLANO.md` — plano completo (problema, pastas, regras de legenda, arquitetura,
-  interface, testes). É a fonte da verdade do projeto.
-- **Falta** o protótipo `demanda_whatsapp.py` (versão 5) e os arquivos
-  `iniciar.bat` e `criar_exe.bat`. Eles não vieram junto com o plano; só o texto veio.
-  Quando você colocar esses arquivos nesta pasta, o trabalho segue a seção 6 do plano.
+**Opção 1 — Python instalado:** dê dois cliques em `iniciar.bat` (instala o que faltar e abre).
 
-## Ordem de trabalho (seção 6 do plano)
+**Opção 2 — programa pronto (.exe):** baixe o `DemandaWhatsApp-windows-x64.zip` na aba
+**Actions** do GitHub (fluxo "Build Demanda do Dia (Windows)"), descompacte e abra
+`DemandaWhatsApp.exe`.
 
-1. Interface bonita (customtkinter), legível num canto da tela (~360 px).
-2. Integração com o Note Deck (precisa ler o código do Note Deck na máquina do DLTechSup).
-3. Gerar o `.exe` com PyInstaller.
-4. Testar no WhatsApp Web real (roteiro na seção 6.4; ponto mais incerto: contagem de
-   fotos do álbum com `+N`).
+**Primeira vez:**
+1. Na janela de configurações que abre sozinha, escolha a **Pasta principal das marcas**
+   (a pasta `LANÇAMENTOS`). O programa mostra quantas marcas encontrou.
+2. Escaneie o **QR code** do WhatsApp com o celular (só uma vez; o login fica salvo na
+   pasta `perfil_whatsapp`, ao lado do programa).
+3. Abra o grupo das demandas. O ponto verde no topo da lista mostra "Acompanhando: <grupo>".
 
-## Regras que não podem ser quebradas
+Você usa o WhatsApp normalmente na parte esquerda da janela.
 
-- Tudo em português do Brasil.
-- **Nunca enviar** mensagem no WhatsApp.
-- **Nunca apagar** pastas ou fotos do usuário (o ✕ só tira da lista).
-- A pasta principal das marcas é a fonte da verdade.
+## A lista
+
+- Cada cartão: marca + referência, nº de fotos, hora e quem mandou, avisos em amarelo,
+  as caixas **Site** e **Atacado**, e os botões **Abrir pasta**, **Copiar ref**, **Editar**
+  (muda marca/referência e move a pasta junto) e **✕** (tira da lista; não apaga nada).
+- **+ Adicionar** cria uma demanda na mão. **Importar demanda atual** traz o que você já
+  estava fazendo (escolhendo das pastas ou colando uma lista, uma por linha).
+- **⧉** destaca a lista numa janelinha sempre na frente (para usar em outra tela/canto) e
+  encaixa de volta.
+- **Painel**: histórico de hoje (duplo clique abre a pasta), atividade ao vivo e o botão
+  **Resumo do dia** (gera `Resumo DD-MM-AAAA.txt` e copia para colar no Note Deck).
+- Fechar no X pede confirmação.
+
+## E se eu estiver numa outra conversa?
+
+Há dois modos (⚙ Configurações → Acompanhamento):
+
+| Modo | Como funciona | Limite |
+|---|---|---|
+| **Compartilhado** (padrão) | Acompanha o grupo **que estiver aberto** na tela. | Se você abrir outra conversa, a captura **pausa** até voltar ao grupo. O WhatsApp só mostra na página a conversa aberta. |
+| **Dedicado** | Cria uma **segunda sessão** do WhatsApp Web, só para o grupo, que roda escondida. Você usa a janela principal à vontade e as demandas continuam chegando. | Ocupa um "aparelho conectado" da sua conta e precisa de um segundo QR code (botão "Mostrar a sessão do monitor"). Vale também para álbuns grandes (+N), que nesta sessão são abertos automaticamente. |
+
+No modo compartilhado, álbuns com **"+N"** têm só as fotos visíveis capturadas e o cartão
+mostra um aviso com o botão **Pegar fotos restantes do álbum** (abre o álbum na sua tela e
+captura o resto). No modo dedicado isso é automático.
+
+## O que foi testado (e o que não foi)
+
+Testado aqui, sem o seu WhatsApp (`python -m pytest tests`, 16 testes):
+- regras de marca/referência (todos os exemplos do plano), pastas, fotos sem duplicar,
+  mover/mesclar pasta, lista, ordem, prontas, histórico;
+- o monitor rodando de verdade (Qt WebEngine) contra uma **página que imita o WhatsApp Web**:
+  cria as demandas, baixa as fotos, manda marca desconhecida para `_REVISAR`, ignora "bom dia",
+  e abre um álbum com "+7" na sessão dedicada;
+- a janela principal abre, destaca e encaixa a lista (`tools/fumaca.py`).
+
+**Não testado:** o WhatsApp Web real. Os seletores seguem o plano, mas o WhatsApp muda a
+página de tempos em tempos e pode ser preciso ajustar `demanda/js.py`. Pontos mais incertos:
+- a contagem de fotos dos álbuns "+N" (ajuste `album_extra` em `config.json`: +1 / −1);
+- a qualidade das fotos (o programa pega a imagem carregada na conversa);
+- o modo **dedicado** (sessão escondida fora da tela) e o botão **Pegar fotos restantes**,
+  que dependem de como o visualizador de fotos do WhatsApp responde.
+
+O WhatsApp não tem API oficial para isso; o programa lê a página como um usuário, mas use
+por sua conta e risco.
+
+## Para quem for mexer no código
+
+- `demanda/core.py` — regras sem interface (testadas).
+- `demanda/js.py` — JavaScript que **lê** o WhatsApp Web (os seletores ficam aqui).
+- `demanda/monitor.py` — ciclo de leitura e criação das demandas.
+- `demanda/ui.py` / `demanda/app.py` — interface e janela principal.
+- `tools/preview.py` gera imagens da interface; `tools/fumaca.py` abre a janela e sai.
+- `PLANO.md` — plano original (a interface agora usa Qt com o WhatsApp embutido, em vez de
+  Chrome + Playwright + customtkinter, para o WhatsApp rodar dentro da janela).
+- Dados (`config.json`, `lista.json`, `vistos.json`, `historico.jsonl`, `perfil_whatsapp\`)
+  ficam ao lado do programa.
+
+## Falta (precisa de você)
+
+- **Integração com o Note Deck**: preciso do código dele, ou do formato em que guarda as notas.
+  Até lá, o **Resumo do dia** copia o texto para colar.
+- Ícone próprio do `.exe`.

@@ -1,0 +1,14 @@
+__pycache__/
+.pytest_cache/
+build/
+dist/
+*.spec
+# dados do usuário, gerados ao rodar
+config.json
+lista.json
+vistos.json
+historico.jsonl
+log.txt
+perfil_whatsapp/
+Resumo *.txt
+previews/

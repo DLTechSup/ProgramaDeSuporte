@@ -1,0 +1,63 @@
+<!doctype html><html><body style="margin:0;font-family:sans-serif">
+<div id="app" style="display:flex;width:1100px;height:800px">
+ <div id="pane-side" style="width:300px"><span title="PROGRAMAÇÃO">PROGRAMAÇÃO</span></div>
+ <div id="main" style="width:800px">
+  <header><span title="PROGRAMAÇÃO ✨📷💰" dir="auto">PROGRAMAÇÃO</span></header>
+  <div id="msgs"></div>
+ </div>
+</div>
+<script>
+const hoje = new Date();
+const d2 = n => String(n).padStart(2, '0');
+const data = d2(hoje.getDate()) + '/' + d2(hoje.getMonth() + 1) + '/' + hoje.getFullYear();
+function foto(cor, n) {
+  return new Promise(ok => {
+    const c = document.createElement('canvas'); c.width = 600; c.height = 600;
+    const x = c.getContext('2d'); x.fillStyle = cor; x.fillRect(0, 0, 600, 600);
+    x.fillStyle = '#fff'; x.font = '60px sans-serif';
+    for (let i = 0; i < 400; i++) { x.fillStyle = `hsl(${(i * 7 + n * 40) % 360},70%,50%)`;
+      x.fillRect((i * 37) % 560, (i * 91) % 560, 30, 30); }
+    c.toBlob(b => ok(URL.createObjectURL(b)), 'image/jpeg', 0.95);
+  });
+}
+async function msg(id, sender, hora, fotos, legenda, plus) {
+  const m = document.createElement('div'); m.setAttribute('data-id', id);
+  m.style.cssText = 'width:420px;margin:6px';
+  let html = '';
+  for (let i = 0; i < fotos; i++) {
+    const u = await foto('#' + (i * 3 + 1) + 'a8', i + id.length);
+    html += `<div style="display:inline-block;position:relative"><img src="${u}" width="200" height="200">` +
+      (plus && i === fotos - 1 ? `<div style="position:absolute;top:80px;left:80px"><span>+${plus}</span></div>` : '') + `</div>`;
+  }
+  if (legenda) {
+    html += `<div class="copyable-text" data-pre-plain-text="[${hora}, ${data}] ${sender}: ">` +
+            `<span class="selectable-text"><span>${legenda}</span></span></div>`;
+  } else if (!fotos) html += '<span class="selectable-text">bom dia</span>';
+  m.innerHTML = html;
+  document.getElementById('msgs').appendChild(m);
+  if (plus) {
+    const fotosAlbum = [];
+    for (let i = 0; i < plus; i++) fotosAlbum.push(await foto('#c' + (i % 10) + '0', 50 + i));
+    const tile = [...m.querySelectorAll('span')].find(e => /^\+\d+$/.test(e.textContent));
+    tile.addEventListener('click', () => {
+      let idx = 0;
+      const v = document.createElement('div'); v.id = 'viewer';
+      v.style.cssText = 'position:fixed;left:0;top:0;width:1100px;height:800px;background:#000;z-index:9';
+      v.innerHTML = `<img id="big" src="${fotosAlbum[0]}" width="900" height="700">` +
+        `<button id="nx"><span data-icon="chevron-right">&gt;</span></button>`;
+      document.body.appendChild(v);
+      v.querySelector('#nx').addEventListener('click', () => {
+        idx = Math.min(idx + 1, fotosAlbum.length - 1); v.querySelector('#big').src = fotosAlbum[idx]; });
+      const esc = e => { if (e.key === 'Escape') { v.remove(); document.removeEventListener('keydown', esc); } };
+      document.addEventListener('keydown', esc);
+    });
+  }
+}
+(async () => {
+  await msg('false_1203@g.us_A1_5511@c.us', 'Camilo', '16:49', 3, 'BEIRA RIO 8513.115', 0);
+  await msg('false_1203@g.us_A2_5511@c.us', 'Camilo', '16:50', 0, 'bom dia pessoal', 0);
+  await msg('false_1203@g.us_A3_5522@c.us', 'Ana', '16:52', 4, 'bebece T3533-150', 7);
+  await msg('false_1203@g.us_A4_5522@c.us', 'Ana', '16:53', 2, 'Vizzano 99', 0);
+  window.pronto = true;
+})();
+</script></body></html>
