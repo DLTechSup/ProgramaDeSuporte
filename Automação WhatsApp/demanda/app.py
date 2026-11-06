@@ -40,7 +40,7 @@ class WaPage(QWebEnginePage):
 
 
 def make_profile(name: str, parent) -> QWebEngineProfile:
-    base = core.app_dir() / "perfil_whatsapp" / name
+    base = core.data_dir() / "perfil_whatsapp" / name
     base.mkdir(parents=True, exist_ok=True)
     p = QWebEngineProfile(name, parent)
     p.setPersistentStoragePath(str(base / "dados"))
@@ -109,7 +109,7 @@ class FloatWin(QWidget):
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        data = core.app_dir()
+        data = core.data_dir()
         self.cfg = core.Config(data / "config.json")
         self.store = core.Store(data / "lista.json")
         self.hist = core.History(data / "historico.jsonl")
@@ -119,7 +119,7 @@ class MainWindow(QMainWindow):
         self.mon_win = None
         self.monitor = None
         self.float = None
-        self.setWindowTitle("Suporte Informax — Demanda do dia")
+        self.setWindowTitle("Demanda do Dia")
         self.resize(1400, 860)
 
         self.profile = make_profile("principal", self)
@@ -145,6 +145,8 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(self.split)
         if self.cfg["geometria"]:
             self.restoreGeometry(QByteArray.fromHex(self.cfg["geometria"].encode()))
+        self.view.loadFinished.connect(self._on_load)
+        self.view.page().renderProcessTerminated.connect(self._on_render_dead)
         self.setup_monitor()
         if self.cfg["lista_destacada"]:
             QTimer.singleShot(300, self.toggle_detach)
@@ -168,6 +170,16 @@ class MainWindow(QMainWindow):
         self.monitor.changed.connect(self.panel.refresh)
         self.monitor.log.connect(self.on_log)
         self.monitor.start()
+
+    def _on_load(self, ok):
+        self.on_log("WhatsApp Web carregado." if ok else
+                    "Não consegui carregar o WhatsApp Web (sem internet?). Use “Recarregar”.")
+        if not ok:
+            self.panel.set_status("Sem conexão com o WhatsApp Web. Use “Recarregar”.", "err")
+
+    def _on_render_dead(self, status, code):
+        self.on_log(f"O navegador embutido parou ({status}, código {code}). Recarregando...")
+        QTimer.singleShot(1000, self.view.reload)
 
     def on_log(self, text):
         line = f"{dt.datetime.now():%H:%M:%S}  {text}"
@@ -340,7 +352,7 @@ class MainWindow(QMainWindow):
     def make_summary(self):
         items = self.store.ordered()
         texto = core.summary_text(items)
-        arq = core.app_dir() / f"Resumo {dt.date.today():%d-%m-%Y}.txt"
+        arq = core.data_dir() / f"Resumo {dt.date.today():%d-%m-%Y}.txt"
         arq.write_text(texto, "utf-8")
         ui.copy_text(texto)
         self.hist.add("Resumo do dia gerado")

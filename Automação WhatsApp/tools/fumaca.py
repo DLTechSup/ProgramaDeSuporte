@@ -14,7 +14,7 @@ from PySide6.QtWidgets import QApplication
 from demanda import core, ui
 
 tmp = Path(tempfile.mkdtemp())
-core.app_dir = lambda: tmp  # não mexe nos dados reais
+core.data_dir = lambda: tmp  # não mexe nos dados reais
 import demanda.app as appmod  # noqa: E402
 
 app = QApplication([])

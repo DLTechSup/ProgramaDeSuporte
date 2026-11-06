@@ -175,10 +175,10 @@ class DemandPanel(QWidget):
             b.clicked.connect(sig)
             bar.addWidget(b)
         self.btn_detach = bar.itemAt(2).widget()
-        self.btn_reconnect = QPushButton("Reconectar")
+        self.btn_reconnect = QPushButton("Recarregar")
         self.btn_reconnect.setObjectName("mini")
+        self.btn_reconnect.setToolTip("Recarrega o WhatsApp Web e o monitor")
         self.btn_reconnect.clicked.connect(self.reconnect)
-        self.btn_reconnect.hide()
         bar.addWidget(self.btn_reconnect)
         bar.addStretch(1)
         root.addLayout(bar)
@@ -269,7 +269,6 @@ class DemandPanel(QWidget):
         color = {"ok": GREEN, "wait": ORANGE, "err": RED}.get(level, ORANGE)
         self.dot.setStyleSheet(f"color: {color}; font-size: 16px;")
         self.status.setText(text)
-        self.btn_reconnect.setVisible(level == "err")
 
     # --------------------------------------------------------- lista
     def _brand_header(self, brand, items, collapsed):
@@ -422,6 +421,9 @@ class SettingsDialog(QDialog):
         self.destacar = QCheckBox("Abrir a lista numa janela separada (além da janela principal)")
         self.destacar.setChecked(bool(cfg["lista_destacada"]))
         lay.addWidget(self.destacar)
+        self.compat = QCheckBox("Modo de compatibilidade gráfica (corrige tela cinza/branca; reabra o programa)")
+        self.compat.setChecked(bool(cfg["compat_grafica"]))
+        lay.addWidget(self.compat)
         self.fixar = QCheckBox("Fixar a lista na frente quando destacada")
         self.fixar.setChecked(bool(cfg["fixar_na_frente"]))
         lay.addWidget(self.fixar)
@@ -452,6 +454,7 @@ class SettingsDialog(QDialog):
         c["grupo_dedicado"] = self.grupo_ded.text().strip()
         c["espera_texto_seg"] = self.espera.value()
         c["fixar_na_frente"] = self.fixar.isChecked()
+        c["compat_grafica"] = self.compat.isChecked()
 
 
 class ImportDialog(QDialog):
@@ -554,7 +557,7 @@ class PainelDialog(QDialog):
         b2 = QPushButton("Abrir pasta das marcas")
         b2.clicked.connect(lambda: cfg["pasta_marcas"] and open_path(cfg["pasta_marcas"]))
         b3 = QPushButton("Abrir pasta do programa")
-        b3.clicked.connect(lambda: open_path(core.app_dir()))
+        b3.clicked.connect(lambda: open_path(core.data_dir()))
         for b in (b1, b2, b3):
             row.addWidget(b)
         lay.addLayout(row)

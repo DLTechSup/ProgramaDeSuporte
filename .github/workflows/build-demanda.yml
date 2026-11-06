@@ -31,14 +31,26 @@ jobs:
         run: python -m pytest -q tests/test_core.py
 
       - name: Gerar o programa
-        run: python -m PyInstaller --noconfirm --onedir --noconsole --name DemandaWhatsApp main.py
+        run: python -m PyInstaller --noconfirm --onedir --noconsole --name DemandaWhatsApp --icon assets/icone.ico --add-data "assets;assets" main.py
 
-      - name: Compactar
+      - name: Instalar o Inno Setup
         shell: pwsh
-        run: Compress-Archive -Path dist/DemandaWhatsApp -DestinationPath ../DemandaWhatsApp-windows-x64.zip
+        run: choco install innosetup --no-progress -y
+
+      - name: Gerar o instalador (Setup)
+        shell: pwsh
+        run: |
+          & "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" installer\demanda.iss
+          if (-not (Test-Path saida\DemandaDoDia-Instalador.exe)) { throw "instalador não foi gerado" }
+
+      - name: Compactar a versão portátil
+        shell: pwsh
+        run: Compress-Archive -Path dist/DemandaWhatsApp -DestinationPath saida/DemandaWhatsApp-portatil.zip
 
       - name: Enviar
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: DemandaWhatsApp-windows-x64
-          path: DemandaWhatsApp-windows-x64.zip
+          name: DemandaDoDia-windows-x64
+          path: |
+            Automação WhatsApp/saida/DemandaDoDia-Instalador.exe
+            Automação WhatsApp/saida/DemandaWhatsApp-portatil.zip

@@ -28,6 +28,27 @@ def app_dir() -> Path:
     return Path(__file__).resolve().parent.parent
 
 
+def data_dir() -> Path:
+    """Onde ficam config, lista, histórico e o login do WhatsApp.
+
+    Programa instalado em pasta protegida (ex.: Arquivos de Programas) não pode gravar ali,
+    então os dados vão para %LOCALAPPDATA%\\DemandaDoDia. Caso contrário ficam ao lado do programa.
+    """
+    env = os.environ.get("DEMANDA_DADOS")
+    if env:
+        return Path(env)
+    base = app_dir()
+    if getattr(sys, "frozen", False):
+        try:
+            teste = base / ".gravavel"
+            teste.write_text("ok")
+            teste.unlink()
+        except OSError:
+            root = os.environ.get("LOCALAPPDATA") or str(Path.home())
+            return Path(root) / "DemandaDoDia"
+    return base
+
+
 # ------------------------------------------------------------ configuração
 
 DEFAULT_CONFIG = {
@@ -42,6 +63,7 @@ DEFAULT_CONFIG = {
     "pastas_ignoradas": ["nova pasta*", "fotos variadas"],
     "fixar_na_frente": True,
     "lista_destacada": False,
+    "compat_grafica": True,  # desenho por software: evita a tela cinza/branca em alguns PCs
     "agrupar_por_marca": True,
     "marcas_recolhidas": [],
     "inicio_ref": "",  # "Estou fazendo": só entra o que chegar a partir desta referência

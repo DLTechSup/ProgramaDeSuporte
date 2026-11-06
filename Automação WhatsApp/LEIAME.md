@@ -13,9 +13,19 @@ vai para o fim da lista).
 
 **Opção 1 — Python instalado:** dê dois cliques em `iniciar.bat` (instala o que faltar e abre).
 
-**Opção 2 — programa pronto (.exe):** baixe o `DemandaWhatsApp-windows-x64.zip` na aba
-**Actions** do GitHub (fluxo "Build Demanda do Dia (Windows)"), descompacte e abra
-`DemandaWhatsApp.exe`.
+**Opção 2 — instalador (recomendado):** na aba **Actions** do GitHub, no fluxo
+"Build Demanda do Dia (Windows)", baixe `DemandaDoDia-windows-x64` e rode o
+`DemandaDoDia-Instalador.exe`. Ele instala só para o seu usuário (não pede administrador),
+cria o atalho no menu Iniciar e, se quiser, na Área de Trabalho. O mesmo arquivo traz também a
+versão portátil (`DemandaWhatsApp-portatil.zip`).
+
+Os dados (lista, histórico, login do WhatsApp) ficam na pasta do programa; se ela for protegida,
+vão para `%LOCALAPPDATA%\DemandaDoDia`. Atualizar = rodar o instalador novo por cima; seus dados
+ficam.
+
+**Tela cinza no lugar do WhatsApp?** O programa já abre com "modo de compatibilidade gráfica"
+ligado (desenha por software). Se mesmo assim ficar em branco, use o botão **Recarregar** e
+veja o `Painel > Atividade ao vivo`.
 
 **Primeira vez:**
 1. Na janela de configurações que abre sozinha, escolha a **Pasta principal das marcas**
@@ -92,7 +102,7 @@ por sua conta e risco.
 - `PLANO.md` — plano original (a interface agora usa Qt com o WhatsApp embutido, em vez de
   Chrome + Playwright + customtkinter, para o WhatsApp rodar dentro da janela).
 - Dados (`config.json`, `lista.json`, `vistos.json`, `historico.jsonl`, `perfil_whatsapp\`)
-  ficam ao lado do programa.
+  ficam na pasta do programa (ou em `%LOCALAPPDATA%\DemandaDoDia`).
 
 ## Falta (precisa de você)
 
