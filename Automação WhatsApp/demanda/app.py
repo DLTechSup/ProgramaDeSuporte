@@ -132,6 +132,7 @@ class MainWindow(QMainWindow):
         self.panel.toggle_detach.connect(self.toggle_detach)
         self.panel.add_manual.connect(self.add_manual)
         self.panel.import_current.connect(self.import_current)
+        self.panel.paste_demands.connect(self.paste_demands)
         self.panel.reconnect.connect(self.reconnect)
         self.panel.mark_ref.connect(self.mark_ref)
         self.panel.clear_start.connect(self.clear_start)
@@ -301,15 +302,9 @@ class MainWindow(QMainWindow):
         self.hist.add("Adicionada manualmente", brand, ref, core.count_photos(folder), str(folder))
         self.panel.refresh()
 
-    def import_current(self):
+    def _add_entries(self, entries, site, atac, evento):
+        """Cria pasta + item da lista para cada (marca, ref, pasta, legenda). Sem duplicar."""
         root = self.cfg["pasta_marcas"]
-        if not root:
-            return self.show_settings()
-        brands = self.brands()
-        dlg = ui.ImportDialog(root, brands, self)
-        if not dlg.exec():
-            return
-        entries, site, atac = dlg.entries()
         novas = ja = 0
         for brand, ref, pasta, legenda in entries:
             folder = pasta or core.target_folder(root, brand, ref, legenda)
@@ -320,11 +315,28 @@ class MainWindow(QMainWindow):
             warn = [] if brand else ["⚠ marca não reconhecida"]
             self.store.add(brand=brand or "", ref=ref, folder=str(folder), sender="importada",
                            photos=core.count_photos(folder), site=site, atacado=atac, warn=warn)
-            self.hist.add("Importada (demanda atual)", brand or "(sem marca)", ref,
-                          core.count_photos(folder), str(folder))
+            self.hist.add(evento, brand or "(sem marca)", ref, core.count_photos(folder), str(folder))
             novas += 1
         self.panel.refresh()
         self.panel.status.setText(f"{novas} adicionada(s), {ja} já estavam.")
+        return novas, ja
+
+    def import_current(self):
+        root = self.cfg["pasta_marcas"]
+        if not root:
+            return self.show_settings()
+        dlg = ui.ImportDialog(root, self.brands(), self)
+        if dlg.exec():
+            entries, site, atac = dlg.entries()
+            self._add_entries(entries, site, atac, "Importada (demanda atual)")
+
+    def paste_demands(self):
+        if not self.cfg["pasta_marcas"]:
+            return self.show_settings()
+        dlg = ui.PasteDialog(self.brands(), self.store.ordered(), self)
+        if dlg.exec():
+            entries, site, atac = dlg.entries()
+            self._add_entries(entries, site, atac, "Colada (demandas de fora)")
 
     def show_settings(self):
         dlg = ui.SettingsDialog(self.cfg, self,

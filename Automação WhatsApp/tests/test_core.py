@@ -105,3 +105,16 @@ def test_caption_has_ref():
     assert core.caption_has_ref("bebece T3533-150", "BEBECÊ t3533-150")
     assert not core.caption_has_ref("BEIRA RIO 8513.1155", "8513.115")
     assert not core.caption_has_ref("qualquer", "")
+
+
+def test_parse_lines_tira_marcadores_e_repetidas():
+    txt = "1. BEIRA RIO 8513.115\n- Dakota 777-1\n• BEBECE T3533-150\n\n  beira   rio 8513.115 \n✅ Moleca AB1"
+    assert core.parse_lines(txt) == ["BEIRA RIO 8513.115", "Dakota 777-1",
+                                     "BEBECE T3533-150", "Moleca AB1"]
+
+
+def test_plan_paste_status():
+    items = [{"brand": "BEIRA RIO", "ref": "8513.115"}]
+    r = core.plan_paste("BEIRA RIO 8513.115\nDakotta 7\nVizzano 9\nMOLECA AB1", BRANDS, items)
+    assert [x["status"] for x in r] == ["repetida", "revisar", "sem_marca", "nova"]
+    assert r[1]["brand"] == "DAKOTA" and r[1]["ref"] == "7"

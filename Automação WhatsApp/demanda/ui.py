@@ -7,9 +7,9 @@ import sys
 from pathlib import Path
 
 from PySide6.QtCore import Qt, Signal
-from PySide6.QtGui import QFont, QGuiApplication
+from PySide6.QtGui import QColor, QFont, QGuiApplication, QKeySequence, QShortcut
 from PySide6.QtWidgets import (QAbstractItemView, QCheckBox, QComboBox, QDialog, QDialogButtonBox,
-                               QFileDialog, QFrame, QHBoxLayout, QLabel, QLineEdit, QListWidget,
+                               QFileDialog, QFrame, QHBoxLayout, QLabel, QLineEdit, QListWidget, QListWidgetItem,
                                QMessageBox, QPlainTextEdit, QPushButton, QScrollArea, QSpinBox,
                                QTableWidget, QTableWidgetItem, QTabWidget, QVBoxLayout, QWidget,
                                QHeaderView)
@@ -99,6 +99,10 @@ class DemandCard(QFrame):
         top.addWidget(x, 0, Qt.AlignTop)
         lay.addLayout(top)
 
+        if done:
+            ok = QLabel("✔ PRONTO — Site e Atacado")
+            ok.setStyleSheet(f"color: {GREEN}; font-weight: 700; font-size: 12px;")
+            lay.addWidget(ok)
         info = QLabel(f"{d['photos']} foto(s) · {d['time']}" + (f" · {d['sender']}" if d["sender"] else ""))
         info.setObjectName("soft")
         lay.addWidget(info)
@@ -146,6 +150,7 @@ class DemandPanel(QWidget):
     reconnect = Signal()
     mark_ref = Signal(str)
     clear_start = Signal()
+    paste_demands = Signal()
 
     def __init__(self, store, handlers, cfg):
         super().__init__()
@@ -237,14 +242,22 @@ class DemandPanel(QWidget):
         self.scroll.setWidget(self.inner)
         root.addWidget(self.scroll, 1)
 
+        colar = QPushButton("Colar demandas")
+        colar.setObjectName("primario")
+        colar.setToolTip("Copie as demandas de qualquer lugar (uma por linha) e cole aqui  (Ctrl+Shift+V)")
+        colar.clicked.connect(self.paste_demands)
+        root.addWidget(colar)
         foot = QHBoxLayout()
-        add = QPushButton("+ Adicionar")
+        add = QPushButton("+ Adicionar uma")
         add.clicked.connect(self.add_manual)
-        imp = QPushButton("Importar demanda atual")
+        imp = QPushButton("Importar das pastas")
         imp.clicked.connect(self.import_current)
         foot.addWidget(add)
         foot.addWidget(imp, 1)
         root.addLayout(foot)
+        sc = QShortcut(QKeySequence("Ctrl+Shift+V"), self)
+        sc.setContext(Qt.WidgetWithChildrenShortcut)
+        sc.activated.connect(self.paste_demands)
         self.set_status("Iniciando...", "wait")
         self.refresh()
 
@@ -523,6 +536,63 @@ class ImportDialog(QDialog):
                 b, r, _ = core.split_caption(line, self.brands)
                 out.append((b, r, None, line))
         return out, self.c_site.isChecked(), self.c_atac.isChecked()
+
+
+class PasteDialog(QDialog):
+    """Cola demandas de fora do programa (uma por linha) e mostra a prévia antes de adicionar."""
+
+    _ROTULO = {"nova": ("✔", GREEN, "nova"),
+               "revisar": ("⚠", WARN, "confira a marca"),
+               "sem_marca": ("⚠", WARN, "marca não reconhecida → vai para Revisar"),
+               "repetida": ("↺", SOFT, "já está na lista")}
+
+    def __init__(self, brands, items, parent=None):
+        super().__init__(parent)
+        self.brands, self.items = brands, items
+        self.setWindowTitle("Colar demandas")
+        self.setMinimumSize(460, 520)
+        lay = QVBoxLayout(self)
+        lay.addWidget(QLabel("Cole aqui as demandas (uma por linha), ex.:\nBEIRA RIO 8513.115"))
+        self.texto = QPlainTextEdit()
+        self.texto.setPlaceholderText("BEIRA RIO 8513.115\nBEBECÊ T3533-150\nDAKOTA 777-1")
+        clip = QGuiApplication.clipboard().text()
+        if clip and clip.strip():
+            self.texto.setPlainText(clip)
+        self.texto.textChanged.connect(self._prever)
+        lay.addWidget(self.texto, 2)
+        self.resumo = QLabel("")
+        self.resumo.setObjectName("soft")
+        lay.addWidget(self.resumo)
+        self.previa = QListWidget()
+        self.previa.setSelectionMode(QAbstractItemView.NoSelection)
+        lay.addWidget(self.previa, 3)
+        self.c_site = QCheckBox("Já estão no Site")
+        self.c_atac = QCheckBox("Já estão no Atacado")
+        lay.addWidget(self.c_site)
+        lay.addWidget(self.c_atac)
+        self.bb = _buttons(self, "Adicionar")
+        lay.addWidget(self.bb)
+        self._prever()
+
+    def _prever(self):
+        self.plano = core.plan_paste(self.texto.toPlainText(), self.brands, self.items)
+        self.previa.clear()
+        for it in self.plano:
+            icone, cor, txt = self._ROTULO[it["status"]]
+            nome = f"{it['brand']}  {it['ref']}" if it["brand"] else it["line"]
+            item = QListWidgetItem(f"{icone}  {nome}   ·   {txt}")
+            item.setForeground(QColor(cor))
+            self.previa.addItem(item)
+        novas = sum(1 for i in self.plano if i["status"] != "repetida")
+        rep = len(self.plano) - novas
+        self.resumo.setText(f"{novas} para adicionar" + (f" · {rep} já estavam na lista" if rep else ""))
+        self.bb.button(QDialogButtonBox.Ok).setText(f"Adicionar {novas}" if novas else "Adicionar")
+        self.bb.button(QDialogButtonBox.Ok).setEnabled(novas > 0)
+
+    def entries(self):
+        """[(marca|None, referencia, None, linha)] só das linhas novas."""
+        return ([(i["brand"], i["ref"], None, i["line"]) for i in self.plano
+                 if i["status"] != "repetida"], self.c_site.isChecked(), self.c_atac.isChecked())
 
 
 class PainelDialog(QDialog):

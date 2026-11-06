@@ -450,3 +450,47 @@ def caption_has_ref(caption: str, start: str) -> bool:
     """A legenda contém a referência marcada em "Estou fazendo"?"""
     a, b = norm(caption), norm(start)
     return bool(b) and f" {b} " in f" {a} "
+
+
+# ------------------------------------------------- colar demandas de fora
+
+_BULLET = re.compile(r"^\s*(?:[-–—•*·▪●■□✔✅☑]|\d{1,3}[.)])\s*")
+
+
+def parse_lines(text: str) -> list[str]:
+    """Uma demanda por linha. Tira marcadores (-, •, 1., 2)...), espaços e repetidas."""
+    out, vistas = [], set()
+    for raw in (text or "").replace("\t", " ").splitlines():
+        line = raw.strip()
+        while True:
+            novo = _BULLET.sub("", line).strip()
+            if novo == line:
+                break
+            line = novo
+        line = re.sub(r"\s+", " ", line)
+        if line and norm(line) not in vistas:
+            vistas.add(norm(line))
+            out.append(line)
+    return out
+
+
+def plan_paste(text: str, brands: list[str], items: list[dict]) -> list[dict]:
+    """Prévia do que acontece com cada linha colada.
+
+    status: nova | revisar (marca com erro de digitação) | sem_marca | repetida
+    """
+    existentes = {(norm(i.get("brand", "")), norm(i.get("ref", ""))) for i in items}
+    out = []
+    for line in parse_lines(text):
+        brand, ref, score = split_caption(line, brands)
+        key = (norm(brand or ""), norm(ref))
+        if key in existentes:
+            status = "repetida"
+        elif not brand:
+            status = "sem_marca"
+        elif score < 1.0:
+            status = "revisar"
+        else:
+            status = "nova"
+        out.append({"line": line, "brand": brand, "ref": ref, "status": status})
+    return out

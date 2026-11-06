@@ -52,8 +52,15 @@ Você usa o WhatsApp normalmente na parte esquerda da janela.
 - Cada cartão: marca + referência, nº de fotos, hora e quem mandou, avisos em amarelo,
   as caixas **Site** e **Atacado**, e os botões **Abrir pasta**, **Copiar ref**, **Editar**
   (muda marca/referência e move a pasta junto) e **✕** (tira da lista; não apaga nada).
-- **+ Adicionar** cria uma demanda na mão. **Importar demanda atual** traz o que você já
-  estava fazendo (escolhendo das pastas ou colando uma lista, uma por linha).
+- **Colar demandas** (ou `Ctrl+Shift+V` com a lista selecionada): copie as demandas de qualquer
+  lugar (uma por linha; pode ter numeração ou marcadores, o programa limpa), cole e veja a
+  prévia de cada linha — nova, "confira a marca", "vai para Revisar" ou "já está na lista".
+  Só as novas são adicionadas, com a pasta criada. Há caixas para já entrarem com Site e/ou
+  Atacado marcados.
+- **+ Adicionar uma** cria uma demanda na mão. **Importar das pastas** traz o que você já
+  fez, escolhendo as pastas existentes.
+- **Prontas:** com Site e Atacado marcados, a demanda **continua na lista**, em verde, riscada
+  e com o selo "✔ PRONTO", no fim da sua marca. Só some no dia seguinte.
 - **Painel**: histórico de hoje (duplo clique abre a pasta), atividade ao vivo e o botão
   **Resumo do dia** (gera `Resumo DD-MM-AAAA.txt` e copia para colar no Note Deck).
 - Fechar no X pede confirmação.
@@ -73,7 +80,7 @@ captura o resto). No modo dedicado isso é automático.
 
 ## O que foi testado (e o que não foi)
 
-Testado aqui, sem o seu WhatsApp (`python -m pytest tests`, 20 testes):
+Testado aqui, sem o seu WhatsApp (`python -m pytest tests`, 24 testes):
 - regras de marca/referência (todos os exemplos do plano), pastas, fotos sem duplicar,
   mover/mesclar pasta, lista, ordem, prontas, histórico;
 - o monitor rodando de verdade (Qt WebEngine) contra uma **página que imita o WhatsApp Web**:
