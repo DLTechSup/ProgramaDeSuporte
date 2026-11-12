@@ -9,6 +9,7 @@ import customtkinter as ctk
 
 from .banco import Banco
 from .caminhos import CONFIG, LOGS
+from .validador import Contexto, Regras, validar
 
 CATEGORIAS = ["Sandália", "Rasteira", "Chinelo", "Tênis", "Sapatilha", "Scarpin", "Bota", "Sapato", "Mocassim", "Tamanco", "Anabela"]
 GENEROS = ["Feminino", "Masculino", "Unissex"]
@@ -48,6 +49,7 @@ class Janela(ctk.CTk):
         self.modo.pack(side="left")
         self.lbl_provedores = ctk.CTkLabel(topo, text="IA: nenhum provedor configurado ainda (etapa 4)")
         self.lbl_provedores.pack(side="left", padx=16)
+        ctk.CTkButton(topo, text="Checar nome", width=110, command=self._abrir_checagem).pack(side="right", padx=8)
         ctk.CTkButton(topo, text="Banco de nomes", width=130, command=self._abrir_banco_nomes).pack(side="right", padx=8)
 
     # ---- painel do produto ------------------------------------------------
@@ -141,6 +143,43 @@ class Janela(ctk.CTk):
         busca.bind("<KeyRelease>", atualizar)
         ctk.CTkButton(win, text="Exportar para .txt", command=exportar).pack(pady=8)
         atualizar()
+
+    def _contexto(self) -> Contexto:
+        return Contexto(
+            marca=self.e_marca.get(), referencia=self.e_ref.get(), categoria=self.c_cat.get(),
+            genero=self.c_gen.get(), publico=PUBLICO_BD.get(self.c_pub.get(), ""),
+            aprovados=self.banco.listar_nomes(limite=10**9))
+
+    def _abrir_checagem(self) -> None:
+        """Botao 'Checar nome': mostra cada regra com OK/ERRO e sugestao de ajuste."""
+        if not (self.e_marca.get().strip() and self.e_ref.get().strip() and self.c_cat.get().strip()):
+            messagebox.showwarning("Atenção", "Preencha marca, referência e categoria no painel do produto antes de checar.")
+            return
+        win = ctk.CTkToplevel(self)
+        win.title("Checar nome")
+        win.geometry("760x520")
+        win.after(100, win.focus)
+        ctk.CTkLabel(win, text="Cole o nome que você quer conferir:", anchor="w").pack(fill="x", padx=10, pady=(10, 2))
+        entrada = ctk.CTkEntry(win)
+        entrada.pack(fill="x", padx=10)
+        saida = ctk.CTkTextbox(win, font=("Consolas", 12))
+        saida.pack(fill="both", expand=True, padx=10, pady=10)
+        regras = Regras.carregar()
+
+        def checar():
+            res = validar(entrada.get(), self._contexto(), regras)
+            linhas = [f"{len(res.nome)} caracteres\n"]
+            for i in res.itens:
+                marca = "[OK]  " if i.ok else "[ERRO]"
+                linhas.append(f"{marca} {i.regra}" + ("" if i.ok else f" - {i.mensagem}"))
+                if i.ajuste:
+                    linhas.append(f"        Como ajustar: {i.ajuste}")
+            linhas.append("\n" + ("Nome no padrão." if res.aprovado else "Nome fora do padrão: corrija os itens com [ERRO]."))
+            saida.delete("1.0", "end")
+            saida.insert("1.0", "\n".join(linhas))
+
+        ctk.CTkButton(win, text="Checar", command=checar).pack(pady=(0, 8))
+        entrada.bind("<Return>", lambda _e: checar())
 
     def _fechar(self) -> None:
         self.banco.fechar()

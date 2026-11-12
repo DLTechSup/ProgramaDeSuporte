@@ -1,2 +1,0 @@
-Coloque aqui o arquivo de instrucoes da versao 5, com o nome:  instrucoes_v5.md
-(o arquivo calcados-atualizado-versao-5-chatgpt.md ou a versao Gemini).

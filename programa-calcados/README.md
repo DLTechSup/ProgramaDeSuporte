@@ -9,8 +9,8 @@ seguindo as regras do arquivo de instruções da versão 5. Plano completo: `PLA
 3. Dê dois cliques em `iniciar.bat` (na primeira vez ele instala o necessário).
 
 ## Estado das etapas
-- [x] 1. Base: pastas, banco SQLite, importação de `dados/semente_nomes.txt`, janela, Banco de nomes
-- [ ] 2. Validador e "Checar nome"
+- [x] 1. Base: pastas, banco SQLite, importação dos 117 nomes já criados (`dados/semente_nomes.txt`), janela, Banco de nomes
+- [x] 2. Validador (10 regras do arquivo v5) e botão "Checar nome"
 - [ ] 3. Modo offline
 - [ ] 4. Provedores e rodízio (modelos/URLs serão conferidos na documentação oficial)
 - [ ] 5. Criação online
