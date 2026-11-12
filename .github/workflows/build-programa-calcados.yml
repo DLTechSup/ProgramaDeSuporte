@@ -23,7 +23,7 @@ jobs:
         run: >
           pyinstaller --onefile --noconsole --name NomesCalcados
           --collect-all customtkinter --collect-all ddgs --collect-all primp
-          --collect-all selectolax --collect-all rapidfuzz --collect-all freelm
+          --collect-all selectolax --collect-all rapidfuzz --collect-all freelm --collect-all tkinterdnd2
           programa.py
       - name: Montar pacote
         shell: pwsh
@@ -43,6 +43,7 @@ jobs:
           if (-not $p.HasExited) { Stop-Process -Id $p.Id -Force }
           if (Test-Path pacote\selftest_erro.txt) { throw "selftest falhou (veja acima)" }
           if (-not (Test-Path pacote\selftest_ok.txt)) { throw "o .exe não terminou o selftest" }
+          if ((Get-Content pacote\selftest_ok.txt) -match "INATIVO") { throw "arrastar e soltar não funcionou dentro do .exe" }
           Remove-Item pacote\selftest_*.txt, pacote\dados\banco.db -ErrorAction SilentlyContinue
           Remove-Item pacote\.env -ErrorAction SilentlyContinue
       - name: Empacotar

@@ -13,9 +13,16 @@ from . import ui_config, ui_janelas
 from .banco import Banco
 from .caminhos import LOGS, RAIZ
 from .controlador import Controlador, inicio_para_ajuste
+from .fotos import filtrar_fotos
 from .offline import CARACTERISTICAS
 from .produto import Produto
 from .provedores import ErroIA, Provedores
+
+try:                                    # arrastar e soltar (se faltar, o botao "Anexar fotos" continua funcionando)
+    from tkinterdnd2 import DND_FILES, TkinterDnD
+    _BaseDnD = TkinterDnD.DnDWrapper
+except Exception:  # noqa: BLE001
+    DND_FILES, TkinterDnD, _BaseDnD = None, None, object
 
 CATEGORIAS = ["Sandália", "Sandália anabela", "Sandália papete", "Sandália slide", "Sandália rasteira", "Tamanco", "Tamanco anabela",
               "Tamanco flatform", "Tamanco rasteiro", "Rasteira", "Chinelo", "Chinelo slide", "Mule", "Mule anabela", "Scarpin",
@@ -41,7 +48,7 @@ def registrar_erro(e: BaseException) -> None:
         pass
 
 
-class Janela(ctk.CTk):
+class Janela(ctk.CTk, _BaseDnD):
     def report_callback_exception(self, exc, val, tb) -> None:   # erros dentro de botoes/eventos
         registrar_erro(val)
         if "--selftest" not in sys.argv:
@@ -51,6 +58,13 @@ class Janela(ctk.CTk):
         passo("1 criando janela")
         super().__init__()
         passo("2 janela criada")
+        self.dnd_ativo = False
+        if DND_FILES is not None:
+            try:
+                self.TkdndVersion = TkinterDnD._require(self)
+                self.dnd_ativo = True
+            except Exception as e:  # noqa: BLE001
+                passo(f"arrastar e soltar indisponivel: {e}")
         self.title("Nomes e Descrições de Calçados")
         self.geometry("1040x780")
         self.minsize(900, 680)
@@ -69,6 +83,7 @@ class Janela(ctk.CTk):
         self._montar_topo()
         self._montar_produto()
         self._montar_abas()
+        self._ativar_arrastar()
         self.barra = ctk.CTkLabel(self, text="", anchor="w")
         self.barra.pack(fill="x", padx=14, pady=(0, 8))
         self._atualizar_topo()
@@ -89,7 +104,7 @@ class Janela(ctk.CTk):
             p = Produto(None, "Dakota", "Z1", "Tamanco", "Feminino", "adulto", ["salto_bloco", "strass"])
             nomes = gerar_nomes_offline(self.banco, p)
             assert len(nomes) >= 8, f"modo offline gerou so {len(nomes)} nomes"
-            (RAIZ / "selftest_ok.txt").write_text(f"ok {len(nomes)} nomes", encoding="utf-8")
+            (RAIZ / "selftest_ok.txt").write_text(f"ok {len(nomes)} nomes; arrastar_e_soltar={'ativo' if self.dnd_ativo else 'INATIVO'}", encoding="utf-8")
         except Exception as e:  # noqa: BLE001
             (RAIZ / "selftest_erro.txt").write_text(f"{type(e).__name__}: {e}", encoding="utf-8")
         self.destroy()
@@ -158,7 +173,7 @@ class Janela(ctk.CTk):
         botoes.grid(row=2, column=0, columnspan=5, sticky="w", padx=6, pady=6)
         ctk.CTkButton(botoes, text="Anexar fotos", width=120, command=self._anexar_fotos).pack(side="left", padx=4)
         ctk.CTkButton(botoes, text="Pesquisar", width=120, command=self._pesquisar).pack(side="left", padx=4)
-        self.lbl_fotos = ctk.CTkLabel(botoes, text="Nenhuma foto anexada", text_color="gray40")
+        self.lbl_fotos = ctk.CTkLabel(botoes, text="Nenhuma foto anexada (você também pode arrastar as fotos para esta janela)", text_color="gray40")
         self.lbl_fotos.pack(side="left", padx=10)
         self.faixa_fotos = ctk.CTkFrame(p, fg_color="transparent")
         self.faixa_fotos.grid(row=3, column=0, columnspan=5, sticky="w", padx=6)
@@ -202,9 +217,29 @@ class Janela(ctk.CTk):
 
     def _anexar_fotos(self) -> None:
         arqs = filedialog.askopenfilenames(title="Escolha as fotos do produto", filetypes=[("Fotos", "*.jpg *.jpeg *.png *.webp *.bmp")])
-        if not arqs:
+        if arqs:
+            self._definir_fotos(filtrar_fotos(arqs))
+
+    def _ativar_arrastar(self) -> None:
+        """Registra a janela inteira como destino para soltar fotos (ou uma pasta com fotos)."""
+        if not self.dnd_ativo:
             return
-        self.ctl.fotos = [Path(a) for a in arqs]
+        for alvo in (self, self.faixa_fotos.master):
+            try:
+                alvo.drop_target_register(DND_FILES)
+                alvo.dnd_bind("<<Drop>>", self._soltou)
+            except Exception as e:  # noqa: BLE001
+                passo(f"nao registrou alvo de arrastar: {e}")
+
+    def _soltou(self, evento) -> None:
+        fotos = filtrar_fotos(self.tk.splitlist(evento.data))
+        if not fotos:
+            self._msg("Nada foi anexado: solte arquivos de foto (jpg, png, webp...) ou uma pasta com fotos.")
+            return
+        self._definir_fotos(fotos)
+
+    def _definir_fotos(self, fotos: list[Path]) -> None:
+        self.ctl.fotos = list(fotos)
         for w in self.faixa_fotos.winfo_children():
             w.destroy()
         from PIL import Image
@@ -217,6 +252,7 @@ class Janela(ctk.CTk):
             except Exception:  # noqa: BLE001
                 pass
         self.lbl_fotos.configure(text=f"{len(self.ctl.fotos)} foto(s) anexada(s)")
+        self._msg(f"{len(self.ctl.fotos)} foto(s) anexada(s).")
 
     # ------------------------------------------------------------ abas
     def _montar_abas(self) -> None:

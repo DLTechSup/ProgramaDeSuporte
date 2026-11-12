@@ -16,3 +16,11 @@ def test_semente_e_busca():
         b.aprovar_nome(pid, "NOVO NOME 1")
         assert b.total_nomes() == 3
         b.fechar()
+
+
+def test_filtrar_fotos(tmp_path):
+    from app.fotos import filtrar_fotos
+    (tmp_path / "a.JPG").write_bytes(b"x"); (tmp_path / "b.png").write_bytes(b"x"); (tmp_path / "nota.txt").write_text("x")
+    sub = tmp_path / "pasta"; sub.mkdir(); (sub / "c.webp").write_bytes(b"x")
+    r = filtrar_fotos([tmp_path / "a.JPG", tmp_path / "nota.txt", sub, "{" + str(tmp_path / "b.png") + "}", tmp_path / "a.JPG"])
+    assert [p.name for p in r] == ["a.JPG", "c.webp", "b.png"]
