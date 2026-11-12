@@ -11,7 +11,7 @@ from .prompts import linha_controle, pedido_descricao, pedido_etiqueta, pedido_n
 from .produto import Produto
 from .provedores import extrair_json
 from .texto import contem_frase, normalizar
-from .validador import Contexto, Regras, validar
+from .validador import Contexto, Regras, palavras_evitar, validar
 
 
 def ler_config() -> dict:
@@ -29,10 +29,13 @@ class ResultadoNomes:
     aviso: str = ""
 
 
-def _contexto(p: Produto, banco: Banco) -> Contexto:
+def contexto_do_produto(p: Produto, banco: Banco, evitar: str = "") -> Contexto:
+    """Contexto do validador. 'evitar' = texto do campo + correcoes EVITAR ja salvas (geral ou deste produto)."""
+    salvas = [c for c in (banco.listar_correcoes(p.id) if p.id else []) if c.upper().startswith("EVITAR:")]
     return Contexto(p.marca, p.referencia, p.categoria_completa, p.genero, p.publico,
                     aprovados=banco.listar_nomes(limite=10**9),
-                    anteriores=banco.sugestoes_do_produto(p.id) if p.id else [])
+                    anteriores=banco.sugestoes_do_produto(p.id) if p.id else [],
+                    evitar=palavras_evitar(evitar, *salvas))
 
 
 def filtrar_candidatos(candidatos: list[str], ctx: Contexto, regras: Regras, *, maximo: int,
@@ -64,7 +67,7 @@ def filtrar_candidatos(candidatos: list[str], ctx: Contexto, regras: Regras, *, 
 def gerar_nomes(ia, banco: Banco, p: Produto, *, pesquisa="", etiqueta="", fotos=None, evitar="",
                 manter_inicio="", regras: Regras | None = None, tentativas: int = 3) -> ResultadoNomes:
     cfg, regras = ler_config(), regras or Regras.carregar()
-    ctx = _contexto(p, banco)
+    ctx = contexto_do_produto(p, banco, evitar)
     correcoes = banco.listar_correcoes(p.id) if p.id else []
     lote = banco.proximo_lote(p.id) if p.id else 1
     alvo, minimo = cfg["sugestoes_exibidas"], 8
@@ -72,7 +75,7 @@ def gerar_nomes(ia, banco: Banco, p: Produto, *, pesquisa="", etiqueta="", fotos
     recomendada_bruta, motivo_ia = "", ""
     for i in range(tentativas):
         sistema, usuario = pedido_nomes(p, ctx, pesquisa=pesquisa, etiqueta=etiqueta, correcoes=correcoes, evitar=evitar,
-                                        quantidade=cfg["sugestoes_pedidas"], rejeicoes=motivos_prompt, manter_inicio=manter_inicio)
+                                        quantidade=cfg["sugestoes_pedidas"], rejeicoes=motivos_prompt, manter_inicio=manter_inicio, liberadas=regras.sob_demanda)
         resp = ia.chat(sistema, usuario, imagens=fotos if i == 0 else None)
         res.provedor = resp.provedor
         dados = extrair_json(resp.texto)

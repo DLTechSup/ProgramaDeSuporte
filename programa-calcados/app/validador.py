@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import re
 from dataclasses import dataclass, field
 
 from rapidfuzz import fuzz
@@ -30,13 +31,29 @@ class Regras:
     proibidas: list[str] = field(default_factory=list)
     moderacao: list[str] = field(default_factory=list)
     cores: list[str] = field(default_factory=list)
+    sob_demanda: list[str] = field(default_factory=list)
 
     @classmethod
     def carregar(cls) -> "Regras":
         cfg = json.loads((CONFIG / "configuracoes.json").read_text(encoding="utf-8"))
+        livres = _ler(REGRAS / "sob_demanda.json", "palavras") if (REGRAS / "sob_demanda.json").is_file() else []
+        livres_n = {normalizar(x) for x in livres}
+        tirar = lambda lista: [x for x in lista if normalizar(x) not in livres_n]
         return cls(cfg["limite_caracteres"], cfg["similaridade_minima_repeticao"],
-                   _ler(REGRAS / "proibidas.json", "palavras"), _ler(REGRAS / "moderacao.json", "palavras"),
-                   _ler(REGRAS / "cores.json", "palavras"))
+                   tirar(_ler(REGRAS / "proibidas.json", "palavras")), tirar(_ler(REGRAS / "moderacao.json", "palavras")),
+                   _ler(REGRAS / "cores.json", "palavras"), list(livres))
+
+
+def palavras_evitar(*textos: str) -> list[str]:
+    """Junta palavras de 'Evitar nesta rodada' / correcoes 'EVITAR: a, b' numa lista."""
+    out: list[str] = []
+    for t in textos:
+        t = t.split(":", 1)[1] if t.upper().startswith("EVITAR:") else t
+        for w in re.split(r"[,;]", t):
+            w = w.strip()
+            if w and w.lower() not in out:
+                out.append(w.lower())
+    return out
 
 
 @dataclass
@@ -49,6 +66,7 @@ class Contexto:
     aprovados: list[str] = field(default_factory=list)       # nomes aprovados de todos os produtos
     anteriores: list[str] = field(default_factory=list)      # sugestoes ja dadas para ESTE produto
     lote: list[str] = field(default_factory=list)            # nomes ja aceitos neste mesmo lote
+    evitar: list[str] = field(default_factory=list)          # palavras que o usuario pediu para nao usar
 
 
 @dataclass
@@ -127,6 +145,11 @@ def validar(nome: str, ctx: Contexto, regras: Regras | None = None) -> Resultado
     achadas = [p for p in r.proibidas if contem_frase(n, p)]
     add("Sem palavras proibidas", not achadas, "ok", "Contém: " + ", ".join(achadas),
         "Troque ou retire: " + ", ".join(achadas))
+
+    # 4b. palavras que o usuario pediu para evitar (inclui as "so se eu pedir")
+    pedidas = [w for w in ctx.evitar if contem_frase(n, w)]
+    add("Palavras que você pediu para evitar", not pedidas, "ok", "Contém: " + ", ".join(pedidas),
+        "Troque ou retire: " + ", ".join(pedidas))
 
     # 5. cor
     cores = [c for c in r.cores if contem_frase(n, c)]

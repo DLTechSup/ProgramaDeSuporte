@@ -62,7 +62,7 @@ def _ficha(p: Produto, pesquisa: str, etiqueta: str) -> str:
 
 
 def pedido_nomes(p: Produto, ctx: Contexto, *, pesquisa="", etiqueta="", correcoes=(), evitar="",
-                 quantidade=20, rejeicoes=(), manter_inicio="") -> tuple[str, str]:
+                 quantidade=20, rejeicoes=(), manter_inicio="", liberadas=()) -> tuple[str, str]:
     sistema = (
         "Você cria NOMES (títulos) de calçados para uma loja online brasileira. Siga rigorosamente o manual abaixo.\n"
         "Ignore as partes do manual que falam de conversa, formato de resposta em tópicos, contagem na tela ou "
@@ -88,6 +88,9 @@ def pedido_nomes(p: Produto, ctx: Contexto, *, pesquisa="", etiqueta="", correco
             partes.append("ESTRUTURAS DE FRASE EXTRAS APROVADAS PELO USUÁRIO (pode usar):\n- " + "\n- ".join(est))
     if correcoes:
         partes.append("CORREÇÕES DO USUÁRIO (valem como regra):\n- " + "\n- ".join(correcoes))
+    if liberadas:
+        partes.append("EXCEÇÃO AO MANUAL: estas palavras NÃO estão proibidas (podem ser usadas, salvo se aparecerem em \"evitar\"): "
+                      + ", ".join(liberadas))
     if evitar.strip():
         partes.append(f"EVITAR NESTA RODADA (e sinônimos diretos): {evitar.strip()}")
     if manter_inicio:

@@ -7,7 +7,7 @@ import re
 
 from .banco import Banco
 from .caminhos import CONFIG
-from .criador import Descricao, filtrar_candidatos, ler_config, validar_descricao, frases_usadas
+from .criador import contexto_do_produto, Descricao, filtrar_candidatos, ler_config, validar_descricao, frases_usadas
 from .produto import Produto
 from .texto import normalizar
 from .validador import Contexto, Regras
@@ -68,8 +68,7 @@ def gerar_nomes_offline(banco: Banco, p: Produto, *, regras: Regras | None = Non
     for peca in banco.listar_pecas():
         if peca["tipo"] in por_tipo and _permitida(peca["etiquetas"], p) and not any(e in normalizar(peca["texto"]) for e in evitar_n):
             por_tipo[peca["tipo"]].append(peca["texto"])
-    ctx = Contexto(p.marca, p.referencia, p.categoria_completa, p.genero, p.publico,
-                   aprovados=banco.listar_nomes(limite=10**9), anteriores=banco.sugestoes_do_produto(p.id) if p.id else [])
+    ctx = contexto_do_produto(p, banco, evitar)
     ac, bo, co, re_ = (por_tipo[t] for t in ("acao", "beneficio_onde", "complemento", "resultado"))
     estruturas = []
     if len(ac) >= 2: estruturas += [lambda: " E ".join(rnd.sample(ac, 2)),

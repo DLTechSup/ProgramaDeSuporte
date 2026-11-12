@@ -53,3 +53,30 @@ def test_diversidade_e_moderacao_no_lote():
     assert "Diversidade no lote" in falhas("SANDÁLIA MASCULINA BR SPORT TRAZ SOLADO COM FRISOS PARA SAIR 2290.105", lote=lote)
     lote2 = ["SANDÁLIA MASCULINA BR SPORT VAI BEM COM TODO LOOK E FACILITA A SAIDA 2290.105"]
     assert "Palavras de moderação" in falhas("SANDÁLIA MASCULINA BR SPORT LEVA ESTILO CASUAL PARA UM LOOK DE FIM DE SEMANA 2290.105", lote=lote2)
+
+
+def test_evitar_e_sob_demanda(tmp_path, monkeypatch):
+    import json, app.validador as V
+    nome = "SANDÁLIA MASCULINA BR SPORT TRAZ PRATICIDADE E COMBINA COM BERMUDA 2290.105"
+    assert "Palavras que você pediu para evitar" in falhas(nome, evitar=["bermuda"])
+    assert "Palavras que você pediu para evitar" not in falhas(nome)
+    # palavra liberada em sob_demanda.json deixa de ser proibida...
+    ruim = "SANDÁLIA MASCULINA BR SPORT TRAZ PRATICIDADE E ALIVIA A CORREIA 2290.105"
+    r = V.Regras.carregar(); r.proibidas = r.proibidas + ["correia"]
+    c = ctx()
+    assert "Sem palavras proibidas" in {i.regra for i in validar(ruim, c, r).itens if not i.ok}
+    r.proibidas.remove("correia")
+    assert "Sem palavras proibidas" not in {i.regra for i in validar(ruim, c, r).itens if not i.ok}
+    assert V.palavras_evitar("charme, Sola", "EVITAR: sola; descanso") == ["charme", "sola", "descanso"]
+
+
+def test_regras_carregar_tira_palavras_liberadas(tmp_path, monkeypatch):
+    import json, app.validador as V
+    pasta = tmp_path
+    (pasta / "proibidas.json").write_text(json.dumps({"palavras": ["rotina", "sola"]}), encoding="utf-8")
+    (pasta / "moderacao.json").write_text(json.dumps({"palavras": ["charme", "look"]}), encoding="utf-8")
+    (pasta / "cores.json").write_text(json.dumps({"palavras": ["preto"]}), encoding="utf-8")
+    (pasta / "sob_demanda.json").write_text(json.dumps({"palavras": ["Charme", "sola"]}), encoding="utf-8")
+    monkeypatch.setattr(V, "REGRAS", pasta)
+    r = V.Regras.carregar()
+    assert r.proibidas == ["rotina"] and r.moderacao == ["look"] and r.sob_demanda == ["Charme", "sola"]

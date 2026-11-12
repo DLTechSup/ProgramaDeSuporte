@@ -35,6 +35,12 @@ Troque para *Offline*, marque as características do calçado e clique em *Criar
 - **Checar nome:** cole um nome seu e veja cada regra com [OK]/[ERRO] e como ajustar.
 - **Banco de nomes:** todos os nomes já criados (117 vieram do arquivo v5), com busca e exportação.
 
+## Palavras que só saem "se você pedir"
+Palavras que **não** devem ser barradas de saída, só quando você achar repetitivo, ficam em `regras/sob_demanda.json`
+(ex.: `{"palavras": ["charme", "sola", "descanso"]}`). Elas deixam de ser proibidas/moderadas. Quando você digitar a
+palavra em **Evitar nesta rodada**, o programa passa a barrar de verdade (não só avisar a IA), e isso fica salvo
+para o produto.
+
 ## Para editar as regras
 Tudo em `regras/*.json` (proibidas, moderação, cores) e `config/*.json`. Os modelos de IA **não** ficam fixos:
 a biblioteca [freelm](https://github.com/shihabshahrier/freelm) (MIT) descobre na hora quais estão gratuitos.
