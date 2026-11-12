@@ -33,7 +33,7 @@ def test_nomes_filtra_e_refaz():
     ruins = [n("ALIVIA A ROTINA E TRAZ ESTILO"), n("VERSATILIDADE NA TIRA E CONFORTO NA BASE 2 EM 1")]
     mais = [n("MUDA O VISUAL DA PRAIA PARA A CIDADE"), n("GARANTE ESTILO CASUAL E ACOMPANHA TODO PASSEIO"),
             n("ENTREGA ALTURA COM LEVEZA E ABRACA O PEITO")]
-    with tempfile.TemporaryDirectory() as d:
+    with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as d:
         b = banco(d)
         ia = IAFalsa({"sugestoes": ruins + bons, "recomendada": 3, "motivo": "ok"}, {"sugestoes": mais, "recomendada": 0})
         r = gerar_nomes(ia, b, P, tentativas=2)
@@ -45,7 +45,7 @@ def test_nomes_filtra_e_refaz():
 
 
 def test_manter_inicio():
-    with tempfile.TemporaryDirectory() as d:
+    with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as d:
         b = banco(d)
         ini = "SANDÁLIA MASCULINA BR SPORT TRAZ PRATICIDADE"
         ia = IAFalsa({"sugestoes": [ini + " E ESTILO PARA SAIR 2290.105", n("AMORTECE O IMPACTO E DEVOLVE ENERGIA PARA TREINOS")]})
@@ -59,7 +59,7 @@ def test_descricao_valida_e_invalida():
           "paragrafo_final": "Leve o BR Sport 2290.105 e descubra um jeito leve de curtir cada programa.",
           "palavras_chave": ["sandália masculina", "br sport", "sandália casual", "chinelo masculino", "sandália praia", "2290.105", "br sport 2290.105", "sandália slide"]}
     ruim = dict(ok, paragrafo_final="Corra, últimas peças da rotina!")
-    with tempfile.TemporaryDirectory() as d:
+    with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as d:
         b = banco(d)
         ia = IAFalsa(ruim, ok)
         desc, erros = gerar_descricao(ia, b, P, "NOME FINAL X")

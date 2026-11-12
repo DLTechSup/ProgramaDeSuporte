@@ -12,7 +12,7 @@ def novo(d):
 
 
 def test_nomes_offline_passam_no_validador():
-    with tempfile.TemporaryDirectory() as d:
+    with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as d:
         b = novo(d)
         p = Produto(None, "Dakota", "Z1234", "Tamanco", "Feminino", "adulto", ["salto_bloco", "strass", "palmilha_acolchoada"])
         nomes = gerar_nomes_offline(b, p, semente=1)
@@ -23,7 +23,7 @@ def test_nomes_offline_passam_no_validador():
 
 
 def test_masculino_e_evitar():
-    with tempfile.TemporaryDirectory() as d:
+    with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as d:
         b = novo(d)
         p = Produto(None, "BR Sport", "2999.100", "Sandália", "Masculino", "adulto", ["slide", "palmilha_acolchoada"])
         nomes = gerar_nomes_offline(b, p, evitar="praia", semente=2)
@@ -31,7 +31,7 @@ def test_masculino_e_evitar():
 
 
 def test_descricao_offline_valida():
-    with tempfile.TemporaryDirectory() as d:
+    with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as d:
         b = novo(d)
         p = Produto(None, "Vizzano", "6500.101", "Sandália", "Feminino", "adulto", ["anabela", "strass"])
         desc, erros = gerar_descricao_offline(b, p, "NOME", semente=3)
@@ -40,7 +40,7 @@ def test_descricao_offline_valida():
 
 
 def test_aprende_pecas():
-    with tempfile.TemporaryDirectory() as d:
+    with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as d:
         b = novo(d)
         p = Produto(None, "Dakota", "Z1", "Tamanco", "Feminino", "adulto", ["strass"])
         antes = b.total_pecas()

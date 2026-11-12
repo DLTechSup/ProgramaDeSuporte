@@ -5,7 +5,7 @@ from app.banco import Banco
 
 
 def test_semente_e_busca():
-    with tempfile.TemporaryDirectory() as d:
+    with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as d:
         sem = Path(d) / "s.txt"
         sem.write_text("# comentario\nSANDÁLIA DAKOTA AMORTECE 1234\nSANDÁLIA DAKOTA AMORTECE 1234\nTÊNIS X LEVA VOCÊ 99\n", encoding="utf-8")
         b = Banco(Path(d) / "b.db")

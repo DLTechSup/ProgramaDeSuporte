@@ -6,7 +6,7 @@ from app.banco import Banco
 
 
 def test_analise_simples_e_aplicacao():
-    with tempfile.TemporaryDirectory() as d:
+    with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as d:
         b = Banco(Path(d) / "b.db")
         pid = b.criar_produto("Dakota", "1", "Tamanco", "Feminino", "adulto")
         for i in range(3):
@@ -25,6 +25,6 @@ def test_analise_simples_e_aplicacao():
 
 
 def test_dia_vazio():
-    with tempfile.TemporaryDirectory() as d:
+    with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as d:
         props, msg = analisar(Banco(Path(d) / "b.db"))
         assert props == [] and "Nada" in msg

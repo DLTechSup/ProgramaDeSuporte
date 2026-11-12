@@ -22,7 +22,7 @@ def novo(d, ia=None, modo="Online"):
 
 def test_sem_foto_exige_confirmacao(monkeypatch, tmp_path):
     monkeypatch.setattr(P, "LOGS", tmp_path)
-    with tempfile.TemporaryDirectory() as d:
+    with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as d:
         c = novo(d)
         c.definir_produto("BR Sport", "2282.107", "Sandália", "Masculino", "adulto")
         assert not c.pode_criar_nomes[0]
@@ -36,7 +36,7 @@ def test_foto_divergente_e_fluxo_completo(monkeypatch, tmp_path):
     nomes = [f"SANDÁLIA MASCULINA BR SPORT {m} 2282.107" for m in
              ["TRAZ PRATICIDADE E COMBINA COM BERMUDA", "DESCOMPLICA O FIM DE SEMANA COM ESTILO", "FACILITA A HORA DE SAIR E VALORIZA O VISUAL"]]
     ia = IA({"referencia": "9999.999", "cor": "CAFE 569"}, {"sugestoes": nomes, "recomendada": 1, "motivo": "m"})
-    with tempfile.TemporaryDirectory() as d:
+    with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as d:
         c = novo(d, ia)
         c.fotos = [Path("x.jpg")]
         c.definir_produto("BR Sport", "2282.107", "Sandália", "Masculino", "adulto")
@@ -49,7 +49,7 @@ def test_foto_divergente_e_fluxo_completo(monkeypatch, tmp_path):
 
 
 def test_modo_offline_sem_ia():
-    with tempfile.TemporaryDirectory() as d:
+    with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as d:
         c = novo(d, None, "Offline")
         c.definir_produto("Dakota", "Z1", "Tamanco", "Feminino", "adulto", ["salto_bloco", "strass"])
         r = c.criar_nomes()
