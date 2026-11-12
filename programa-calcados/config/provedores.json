@@ -1,8 +1,9 @@
 {
-  "_aviso": "Nomes de modelos e URLs NAO foram preenchidos de memoria. Na etapa 4 serao conferidos na documentacao oficial atual. Enquanto 'modelo' estiver vazio, o provedor fica inativo.",
+  "_aviso": "Os nomes dos MODELOS não ficam aqui de propósito: a biblioteca freelm descobre na hora quais modelos estão gratuitos (os planos gratuitos mudam toda hora). Aqui ficam só os provedores, a ordem do rodízio e os apelidos de modelo (auto, chat:fast, chat:large, vision). Os endereços das páginas de chave foram conferidos no README do freelm 0.5.2 (out/2026).",
+  "modelos": {"texto": "auto", "visao": "vision"},
   "provedores": [
-    {"nome": "Google AI Studio (Gemini)", "url_base": "", "modelo": "", "aceita_imagem": true,  "busca_integrada": true,  "prioridade": 1, "ativo": false, "variavel_chave": "GEMINI_API_KEY"},
-    {"nome": "Groq",                      "url_base": "", "modelo": "", "aceita_imagem": false, "busca_integrada": false, "prioridade": 2, "ativo": false, "variavel_chave": "GROQ_API_KEY"},
-    {"nome": "OpenRouter (modelos free)", "url_base": "", "modelo": "", "aceita_imagem": false, "busca_integrada": false, "prioridade": 3, "ativo": false, "variavel_chave": "OPENROUTER_API_KEY"}
+    {"id": "google",     "nome": "Google AI Studio (Gemini)", "classe": "GoogleAIStudio", "variavel_chave": "GEMINI_API_KEY",     "url_chaves": "https://aistudio.google.com/apikey", "aceita_imagem": true,  "prioridade": 1, "ativo": true, "obrigatorio": true},
+    {"id": "groq",       "nome": "Groq",                      "classe": "Groq",           "variavel_chave": "GROQ_API_KEY",       "url_chaves": "https://console.groq.com/keys",      "aceita_imagem": false, "prioridade": 2, "ativo": true, "obrigatorio": false},
+    {"id": "openrouter", "nome": "OpenRouter (modelos free)", "classe": "OpenRouter",     "variavel_chave": "OPENROUTER_API_KEY", "url_chaves": "https://openrouter.ai/keys",         "aceita_imagem": false, "prioridade": 3, "ativo": true, "obrigatorio": false}
   ]
 }

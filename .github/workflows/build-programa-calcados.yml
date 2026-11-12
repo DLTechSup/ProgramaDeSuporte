@@ -1,0 +1,54 @@
+name: Gerar executável (Nomes de Calçados)
+on:
+  workflow_dispatch:
+  push:
+    branches: [claude/vigilant-ramanujan-g27161]
+    paths: ["programa-calcados/**", ".github/workflows/build-programa-calcados.yml"]
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: programa-calcados
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      - run: pip install -r requirements.txt pyinstaller pytest
+      - name: Testes automáticos
+        run: python -m pytest -q tests
+      - name: Gerar .exe
+        run: >
+          pyinstaller --onefile --noconsole --name NomesCalcados
+          --collect-all customtkinter --collect-all ddgs --collect-all primp
+          --collect-all selectolax --collect-all rapidfuzz --collect-all freelm
+          programa.py
+      - name: Montar pacote
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory pacote | Out-Null
+          Copy-Item dist\NomesCalcados.exe pacote\
+          Copy-Item -Recurse config, regras, dados pacote\
+          Remove-Item pacote\dados\*.db -ErrorAction SilentlyContinue
+          Copy-Item .env.exemplo, LEIA-ME.md pacote\
+          New-Item -ItemType Directory pacote\logs | Out-Null
+      - name: Teste do .exe (abre a janela e gera nomes offline)
+        shell: pwsh
+        run: |
+          $p = Start-Process -FilePath pacote\NomesCalcados.exe -ArgumentList "--selftest" -PassThru
+          $p.WaitForExit(120000) | Out-Null
+          if (Test-Path pacote\selftest_erro.txt) { Get-Content pacote\selftest_erro.txt; throw "selftest falhou" }
+          if (-not (Test-Path pacote\selftest_ok.txt)) { throw "o .exe não terminou o selftest" }
+          Get-Content pacote\selftest_ok.txt
+          Remove-Item pacote\selftest_ok.txt, pacote\dados\banco.db -ErrorAction SilentlyContinue
+          Remove-Item pacote\.env -ErrorAction SilentlyContinue
+      - name: Empacotar
+        shell: pwsh
+        run: Compress-Archive -Path pacote\* -DestinationPath NomesCalcados-Windows.zip
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: calcados-${{ github.run_number }}
+          name: Nomes e Descrições de Calçados (Windows) #${{ github.run_number }}
+          files: programa-calcados/NomesCalcados-Windows.zip
