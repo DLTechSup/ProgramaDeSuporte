@@ -52,7 +52,7 @@ class Banco:
     def __init__(self, caminho: Path = BANCO):
         self.caminho = Path(caminho)
         self.caminho.parent.mkdir(parents=True, exist_ok=True)
-        self.con = sqlite3.connect(self.caminho)
+        self.con = sqlite3.connect(self.caminho, check_same_thread=False)
         self.con.row_factory = sqlite3.Row
         self.con.executescript(ESQUEMA)
         cols = [r["name"] for r in self.con.execute("PRAGMA table_info(sugestoes)")]

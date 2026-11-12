@@ -68,3 +68,28 @@ def test_inicio_para_ajuste_e_detectar_chave():
     assert ini == "SANDÁLIA MASCULINA BR SPORT TRAZ PRATICIDADE"
     assert detectar_chave("minha chave: AIzaSyA1234567890abcdefghijklmnopqrstuv ok", "google").startswith("AIza")
     assert detectar_chave("gsk_abcdefghijklmnopqrstuvwx", "groq") and detectar_chave("nada", "google") == ""
+
+
+def test_banco_e_controlador_funcionam_em_outra_thread(monkeypatch, tmp_path):
+    """A janela roda 'Criar nomes', 'Pesquisar' etc. em thread de segundo plano (bug real: ProgramingError do SQLite)."""
+    import threading
+    monkeypatch.setattr(P, "LOGS", tmp_path)
+    nomes = [f"SANDÁLIA MASCULINA BR SPORT {m} 2282.107" for m in
+             ["TRAZ PRATICIDADE E COMBINA COM BERMUDA", "DESCOMPLICA O FIM DE SEMANA COM ESTILO"]]
+    with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as d:
+        c = novo(d, IA({"sugestoes": nomes, "recomendada": 0}))   # banco criado na thread principal
+        c.definir_produto("BR Sport", "2282.107", "Sandália", "Masculino", "adulto")
+        c.cartoes = []
+        c.base_pagina = P.Pagina(url="https://x")
+        saida = {}
+
+        def trabalho():
+            try:
+                saida["r"] = c.criar_nomes(evitar="charme")
+                c.aprovar_nome(saida["r"].nomes[0])
+                saida["d"] = c.banco.listar_nomes()
+            except Exception as e:  # noqa: BLE001
+                saida["erro"] = e
+        t = threading.Thread(target=trabalho); t.start(); t.join()
+        assert "erro" not in saida, saida.get("erro")
+        assert saida["r"].nomes
