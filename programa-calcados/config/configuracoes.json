@@ -1,0 +1,7 @@
+{
+  "limite_caracteres": 85,
+  "sugestoes_exibidas": 10,
+  "sugestoes_pedidas": 20,
+  "similaridade_minima_repeticao": 85,
+  "modo_padrao": "online"
+}

@@ -1,0 +1,6 @@
+.env
+dados/*.db
+logs/*
+!logs/.gitkeep
+.venv/
+__pycache__/

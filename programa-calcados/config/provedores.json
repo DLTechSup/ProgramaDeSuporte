@@ -1,0 +1,8 @@
+{
+  "_aviso": "Nomes de modelos e URLs NAO foram preenchidos de memoria. Na etapa 4 serao conferidos na documentacao oficial atual. Enquanto 'modelo' estiver vazio, o provedor fica inativo.",
+  "provedores": [
+    {"nome": "Google AI Studio (Gemini)", "url_base": "", "modelo": "", "aceita_imagem": true,  "busca_integrada": true,  "prioridade": 1, "ativo": false, "variavel_chave": "GEMINI_API_KEY"},
+    {"nome": "Groq",                      "url_base": "", "modelo": "", "aceita_imagem": false, "busca_integrada": false, "prioridade": 2, "ativo": false, "variavel_chave": "GROQ_API_KEY"},
+    {"nome": "OpenRouter (modelos free)", "url_base": "", "modelo": "", "aceita_imagem": false, "busca_integrada": false, "prioridade": 3, "ativo": false, "variavel_chave": "OPENROUTER_API_KEY"}
+  ]
+}
