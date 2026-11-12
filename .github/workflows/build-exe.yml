@@ -1,0 +1,40 @@
+name: Gerar executável (Windows)
+on:
+  workflow_dispatch:
+  push:
+    branches: [claude/vigilant-ramanujan-g27161]
+    paths: ["separador.py", "separador_fotos/**", "requirements.txt", ".github/workflows/build-exe.yml"]
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      - run: pip install -r requirements.txt pyinstaller
+      - name: Gerar .exe
+        run: >
+          pyinstaller --onefile --noconsole --name SeparadorFotos
+          --collect-all rapidocr_onnxruntime --collect-all onnxruntime
+          separador.py
+      - name: Teste rápido do .exe
+        shell: pwsh
+        run: |
+          python tests/smoke_exe.py smoke
+          Start-Process -FilePath dist\SeparadorFotos.exe -ArgumentList "smoke" -Wait
+          Get-Content smoke\relatorio_separacao.csv
+          if (-not (Test-Path "smoke\Beira Rio - 123.456")) { throw "OCR/agrupamento falhou no .exe" }
+      - name: Empacotar
+        shell: pwsh
+        run: |
+          mkdir pacote
+          Copy-Item dist\SeparadorFotos.exe pacote\
+          Copy-Item marcas.txt, LEIAME.md pacote\
+          Compress-Archive pacote\* SeparadorFotos-Windows.zip
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: exe-${{ github.run_number }}
+          name: Separador de Fotos (Windows) #${{ github.run_number }}
+          files: SeparadorFotos-Windows.zip

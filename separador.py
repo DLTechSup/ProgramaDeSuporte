@@ -7,6 +7,7 @@ Uso:
 """
 from __future__ import annotations
 
+import os
 import sys
 import threading
 from pathlib import Path
@@ -100,6 +101,8 @@ def rodar_janela() -> None:
 
 
 if __name__ == "__main__":
+    if sys.stdout is None:  # executável sem console: evita erro em print/log
+        sys.stdout = sys.stderr = open(os.devnull, "w")
     if len(sys.argv) > 1:
         sys.exit(rodar_terminal(sys.argv[1]))
     rodar_janela()

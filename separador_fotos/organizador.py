@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import csv
 import shutil
+import sys
 from collections import Counter, defaultdict
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -111,7 +112,11 @@ def processar_pasta(
     fotos = listar_fotos(base)
     if not fotos:
         raise ValueError("Nenhuma foto (jpg, png, webp...) encontrada nessa pasta.")
-    marcas = carregar_marcas(Path(__file__).resolve().parent.parent / "marcas.txt")
+    if getattr(sys, "frozen", False):  # executável: marcas.txt fica ao lado do .exe
+        pasta_app = Path(sys.executable).resolve().parent
+    else:
+        pasta_app = Path(__file__).resolve().parent.parent
+    marcas = carregar_marcas(pasta_app / "marcas.txt")
     ler = ler or criar_motor()
     leituras: list[Leitura] = []
     for i, foto in enumerate(fotos, 1):
