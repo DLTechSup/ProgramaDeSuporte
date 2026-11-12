@@ -25,17 +25,44 @@ PUBLICOS = ["Adulto", "Infantil", "Bebê", "Teen"]
 PUBLICO_BD = {"Adulto": "adulto", "Infantil": "infantil", "Bebê": "bebe", "Teen": "teen"}
 
 
+def passo(texto: str) -> None:
+    """Anota em qual passo o programa esta (so no autoteste do build) para achar travamentos."""
+    if "--selftest" in sys.argv:
+        with open(RAIZ / "selftest_passos.txt", "a", encoding="utf-8") as f:
+            f.write(texto + "\n")
+
+
+def registrar_erro(e: BaseException) -> None:
+    import traceback
+    texto = "".join(traceback.format_exception(type(e), e, e.__traceback__))
+    try:
+        (RAIZ / ("selftest_erro.txt" if "--selftest" in sys.argv else "erro_programa.txt")).write_text(texto, encoding="utf-8")
+    except OSError:
+        pass
+
+
 class Janela(ctk.CTk):
+    def report_callback_exception(self, exc, val, tb) -> None:   # erros dentro de botoes/eventos
+        registrar_erro(val)
+        if "--selftest" not in sys.argv:
+            messagebox.showerror("Erro inesperado", f"{type(val).__name__}: {val}\n\nO detalhe foi salvo em erro_programa.txt")
+
     def __init__(self, selftest: bool = False) -> None:
+        passo("1 criando janela")
         super().__init__()
+        passo("2 janela criada")
         self.title("Nomes e Descrições de Calçados")
         self.geometry("1040x780")
         self.minsize(900, 680)
         ctk.set_appearance_mode("light")
+        passo("3 provedores")
         self.prov = Provedores()
+        passo("4 banco")
         self.banco = Banco()
         self.banco.importar_semente()
+        passo("5 controlador")
         self.ctl = Controlador(self.banco, self.prov)
+        passo("6 montando telas")
         self.opcoes_nomes: list[str] = []
         self.var_nome = ctk.StringVar(value="")
         self.protocol("WM_DELETE_WINDOW", self._fechar)
@@ -46,6 +73,7 @@ class Janela(ctk.CTk):
         self.barra.pack(fill="x", padx=14, pady=(0, 8))
         self._atualizar_topo()
         self._msg(f"Pronto. {self.banco.total_nomes()} nomes no banco.")
+        passo("7 telas prontas")
         if selftest:
             self.after(900, self._fim_selftest)
         elif not self.prov.tem_alguma:
@@ -54,7 +82,9 @@ class Janela(ctk.CTk):
     def _fim_selftest(self) -> None:
         """Usado pelo build: confere que a janela abre e que todas as bibliotecas vieram dentro do .exe."""
         try:
+            passo("8 selftest: importando bibliotecas")
             import ddgs, freelm, httpx, rapidfuzz, selectolax  # noqa: F401,E401
+            passo("9 selftest: gerando nomes offline")
             from .offline import gerar_nomes_offline
             p = Produto(None, "Dakota", "Z1", "Tamanco", "Feminino", "adulto", ["salto_bloco", "strass"])
             nomes = gerar_nomes_offline(self.banco, p)
@@ -424,8 +454,24 @@ class Janela(ctk.CTk):
 
 
 def main() -> None:
-    LOGS.mkdir(exist_ok=True)
-    Janela(selftest="--selftest" in sys.argv).mainloop()
+    selftest = "--selftest" in sys.argv
+    if selftest:                                   # vigia: se travar, anota onde e encerra (o build mostra o arquivo)
+        def vigia():
+            import os, time
+            time.sleep(75)
+            try:
+                (RAIZ / "selftest_erro.txt").write_text("TRAVOU: sem terminar em 75 s (veja selftest_passos.txt)", encoding="utf-8")
+            finally:
+                os._exit(2)
+        threading.Thread(target=vigia, daemon=True).start()
+    try:
+        LOGS.mkdir(exist_ok=True)
+        Janela(selftest=selftest).mainloop()
+    except Exception as e:  # noqa: BLE001
+        registrar_erro(e)
+        if not selftest:
+            messagebox.showerror("Erro ao abrir", f"{type(e).__name__}: {e}\n\nO detalhe foi salvo em erro_programa.txt")
+        sys.exit(1)
 
 
 if __name__ == "__main__":
