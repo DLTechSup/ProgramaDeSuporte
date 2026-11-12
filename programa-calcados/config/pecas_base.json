@@ -1,74 +1,457 @@
 {
   "_aviso": "Peças iniciais do modo offline, escritas no estilo do arquivo v5 (verbo + benefício, ligação verbal). Etiquetas = características que precisam estar marcadas para a peça ser usada; etiquetas com '-' na frente excluem (ex.: -masculino). O programa também aprende peças dos nomes que você aprova. Você pode editar na tela 'Banco de peças'.",
   "acao": [
-    {"t": "AMORTECE O IMPACTO", "e": ["amortecimento"]},
-    {"t": "DEVOLVE ENERGIA", "e": ["amortecimento"]},
-    {"t": "TRAZ ESTABILIDADE", "e": ["salto_bloco"]},
-    {"t": "TRAZ ESTABILIDADE", "e": ["base_anatomica"]},
-    {"t": "FACILITA A HORA DE SAIR", "e": []},
-    {"t": "DESCOMPLICA O FIM DE SEMANA", "e": ["slide"]},
-    {"t": "DESCOMPLICA A HORA DE VESTIR O LOOK", "e": ["slide"]},
-    {"t": "VALORIZA O VISUAL", "e": []},
-    {"t": "COMBINA COM VÁRIAS PRODUÇÕES", "e": []},
-    {"t": "VAI BEM COM TODO ESTILO", "e": []},
-    {"t": "LEVA VOCÊ MAIS ALTO", "e": ["salto_fino"]},
-    {"t": "LEVA VOCÊ MAIS ALTO", "e": ["plataforma"]},
-    {"t": "ACOMODA COM MACIEZ", "e": ["palmilha_acolchoada"]},
-    {"t": "ALIA MACIEZ AO ESTILO", "e": ["palmilha_acolchoada"]},
-    {"t": "ABRAÇA COM FIRMEZA", "e": ["tira_traseira"]},
-    {"t": "GARANTE AJUSTE NA MEDIDA", "e": ["velcro"]},
-    {"t": "GARANTE AJUSTE NA MEDIDA", "e": ["cadarco"]},
-    {"t": "OFERECE ADERÊNCIA", "e": ["solado_frisos"]},
-    {"t": "TRANSFORMA O VISUAL", "e": ["strass"]},
-    {"t": "ILUMINA O LOOK", "e": ["strass"]},
-    {"t": "ILUMINA O LOOK", "e": ["metais"]},
-    {"t": "DÁ ALTURA SEM PESAR", "e": ["anabela"]},
-    {"t": "DÁ ALTURA SEM PESAR", "e": ["plataforma"]},
-    {"t": "TRAZ LEVEZA PARA SAIR", "e": ["rasteira"]},
-    {"t": "DEIXA O VISUAL MAIS LEVE", "e": ["perfurados"]},
-    {"t": "MUDA DE USO EM SEGUNDOS", "e": ["2_em_1"]},
-    {"t": "VAI DA PRAIA À CIDADE", "e": ["slide"]},
-    {"t": "FACILITA A VIDA NOS PASSEIOS", "e": []},
-    {"t": "TRAZ TEXTURA E ESTILO", "e": ["camurca"]},
-    {"t": "TRAZ ACABAMENTO IMPECÁVEL", "e": ["napa"]}
+    {
+      "t": "AMORTECE O IMPACTO",
+      "e": [
+        "amortecimento"
+      ]
+    },
+    {
+      "t": "DEVOLVE ENERGIA",
+      "e": [
+        "amortecimento"
+      ]
+    },
+    {
+      "t": "TRAZ ESTABILIDADE",
+      "e": [
+        "salto_bloco"
+      ]
+    },
+    {
+      "t": "TRAZ ESTABILIDADE",
+      "e": [
+        "base_anatomica"
+      ]
+    },
+    {
+      "t": "FACILITA A HORA DE SAIR",
+      "e": []
+    },
+    {
+      "t": "DESCOMPLICA O FIM DE SEMANA",
+      "e": [
+        "slide"
+      ]
+    },
+    {
+      "t": "DESCOMPLICA A HORA DE VESTIR O LOOK",
+      "e": [
+        "slide"
+      ]
+    },
+    {
+      "t": "VALORIZA O VISUAL",
+      "e": []
+    },
+    {
+      "t": "COMBINA COM VÁRIAS PRODUÇÕES",
+      "e": []
+    },
+    {
+      "t": "VAI BEM COM TODO ESTILO",
+      "e": []
+    },
+    {
+      "t": "LEVA VOCÊ MAIS ALTO",
+      "e": [
+        "salto_fino"
+      ]
+    },
+    {
+      "t": "LEVA VOCÊ MAIS ALTO",
+      "e": [
+        "plataforma"
+      ]
+    },
+    {
+      "t": "ACOMODA COM MACIEZ",
+      "e": [
+        "palmilha_acolchoada"
+      ]
+    },
+    {
+      "t": "ALIA MACIEZ AO ESTILO",
+      "e": [
+        "palmilha_acolchoada"
+      ]
+    },
+    {
+      "t": "ABRAÇA COM FIRMEZA",
+      "e": [
+        "tira_traseira"
+      ]
+    },
+    {
+      "t": "GARANTE AJUSTE NA MEDIDA",
+      "e": [
+        "velcro"
+      ]
+    },
+    {
+      "t": "GARANTE AJUSTE NA MEDIDA",
+      "e": [
+        "cadarco"
+      ]
+    },
+    {
+      "t": "OFERECE ADERÊNCIA",
+      "e": [
+        "solado_frisos"
+      ]
+    },
+    {
+      "t": "TRANSFORMA O VISUAL",
+      "e": [
+        "strass"
+      ]
+    },
+    {
+      "t": "ILUMINA O LOOK",
+      "e": [
+        "strass"
+      ]
+    },
+    {
+      "t": "ILUMINA O LOOK",
+      "e": [
+        "metais"
+      ]
+    },
+    {
+      "t": "DÁ ALTURA SEM PESAR",
+      "e": [
+        "anabela"
+      ]
+    },
+    {
+      "t": "DÁ ALTURA SEM PESAR",
+      "e": [
+        "plataforma"
+      ]
+    },
+    {
+      "t": "TRAZ LEVEZA PARA SAIR",
+      "e": [
+        "rasteira"
+      ]
+    },
+    {
+      "t": "DEIXA O VISUAL MAIS LEVE",
+      "e": [
+        "perfurados"
+      ]
+    },
+    {
+      "t": "MUDA DE USO EM SEGUNDOS",
+      "e": [
+        "2_em_1"
+      ]
+    },
+    {
+      "t": "VAI DA PRAIA À CIDADE",
+      "e": [
+        "slide"
+      ]
+    },
+    {
+      "t": "FACILITA A VIDA NOS PASSEIOS",
+      "e": []
+    },
+    {
+      "t": "TRAZ TEXTURA E ESTILO",
+      "e": [
+        "camurca"
+      ]
+    },
+    {
+      "t": "TRAZ ACABAMENTO IMPECÁVEL",
+      "e": [
+        "napa"
+      ]
+    },
+    {
+      "t": "REALÇA CADA DETALHE DA PRODUÇÃO",
+      "e": []
+    },
+    {
+      "t": "COMBINA COM BERMUDAS E VESTIDOS",
+      "e": []
+    },
+    {
+      "t": "DEIXA O VISUAL MAIS ATUAL",
+      "e": []
+    },
+    {
+      "t": "ENTREGA ESTILO PARA TODAS AS OCASIÕES",
+      "e": []
+    },
+    {
+      "t": "TRAZ UM VISUAL CLÁSSICO",
+      "e": []
+    },
+    {
+      "t": "FACILITA A ESCOLHA DO LOOK",
+      "e": []
+    },
+    {
+      "t": "COMPLETA O VISUAL COM ELEGÂNCIA",
+      "e": []
+    },
+    {
+      "t": "DÁ UM TOQUE ATUAL AO VISUAL",
+      "e": []
+    },
+    {
+      "t": "RENOVA A PRODUÇÃO COM POUCO",
+      "e": []
+    },
+    {
+      "t": "SOBE O ASTRAL DA PRODUÇÃO",
+      "e": []
+    },
+    {
+      "t": "ENTREGA VISUAL PRONTO PARA SAIR",
+      "e": []
+    },
+    {
+      "t": "TORNA O PROGRAMA MAIS LEVE",
+      "e": []
+    },
+    {
+      "t": "APROVEITA CADA OCASIÃO COM ESTILO",
+      "e": []
+    },
+    {
+      "t": "MARCA PRESENÇA COM DISCRIÇÃO",
+      "e": []
+    },
+    {
+      "t": "SIMPLIFICA A ESCOLHA DA ROUPA",
+      "e": []
+    }
   ],
   "beneficio_onde": [
-    {"t": "CONFORTO NA BASE", "e": ["palmilha_acolchoada"]},
-    {"t": "CONFORTO NA BASE", "e": ["base_anatomica"]},
-    {"t": "PRATICIDADE NA TIRA", "e": ["slide"]},
-    {"t": "PRATICIDADE NO AJUSTE", "e": ["velcro"]},
-    {"t": "PRATICIDADE NO AJUSTE", "e": ["cadarco"]},
-    {"t": "ALTURA CONFORTÁVEL NO SALTO", "e": ["salto_bloco"]},
-    {"t": "ESTILO NOS DETALHES", "e": ["metais"]},
-    {"t": "BRILHO NAS TIRAS", "e": ["strass"]},
-    {"t": "LEVEZA NO SOLADO", "e": ["solado_frisos"]},
-    {"t": "VERSATILIDADE NO VISUAL", "e": []},
-    {"t": "MACIEZ NO TOQUE", "e": ["camurca"]},
-    {"t": "ACABAMENTO REFINADO NO CABEDAL", "e": ["napa"]},
-    {"t": "RESPIRO NO CABEDAL", "e": ["perfurados"]},
-    {"t": "LAÇO CHARMOSO NA FRENTE", "e": ["laco", "-masculino"]}
+    {
+      "t": "CONFORTO NA BASE",
+      "e": [
+        "palmilha_acolchoada"
+      ]
+    },
+    {
+      "t": "CONFORTO NA BASE",
+      "e": [
+        "base_anatomica"
+      ]
+    },
+    {
+      "t": "PRATICIDADE NA TIRA",
+      "e": [
+        "slide"
+      ]
+    },
+    {
+      "t": "PRATICIDADE NO AJUSTE",
+      "e": [
+        "velcro"
+      ]
+    },
+    {
+      "t": "PRATICIDADE NO AJUSTE",
+      "e": [
+        "cadarco"
+      ]
+    },
+    {
+      "t": "ALTURA CONFORTÁVEL NO SALTO",
+      "e": [
+        "salto_bloco"
+      ]
+    },
+    {
+      "t": "ESTILO NOS DETALHES",
+      "e": [
+        "metais"
+      ]
+    },
+    {
+      "t": "BRILHO NAS TIRAS",
+      "e": [
+        "strass"
+      ]
+    },
+    {
+      "t": "LEVEZA NO SOLADO",
+      "e": [
+        "solado_frisos"
+      ]
+    },
+    {
+      "t": "VERSATILIDADE NO VISUAL",
+      "e": []
+    },
+    {
+      "t": "MACIEZ NO TOQUE",
+      "e": [
+        "camurca"
+      ]
+    },
+    {
+      "t": "ACABAMENTO REFINADO NO CABEDAL",
+      "e": [
+        "napa"
+      ]
+    },
+    {
+      "t": "RESPIRO NO CABEDAL",
+      "e": [
+        "perfurados"
+      ]
+    },
+    {
+      "t": "LAÇO CHARMOSO NA FRENTE",
+      "e": [
+        "laco",
+        "-masculino"
+      ]
+    },
+    {
+      "t": "VISUAL ATUAL NO CABEDAL",
+      "e": []
+    },
+    {
+      "t": "DESIGN CLÁSSICO NO DETALHE",
+      "e": []
+    },
+    {
+      "t": "TOQUE ELEGANTE NO ACABAMENTO",
+      "e": []
+    },
+    {
+      "t": "ESTILO DISCRETO NA FRENTE",
+      "e": []
+    },
+    {
+      "t": "USO FÁCIL NOS PASSEIOS",
+      "e": []
+    },
+    {
+      "t": "COMBINAÇÃO FÁCIL NAS CORES DA ROUPA",
+      "e": []
+    }
   ],
   "complemento": [
-    {"t": "COM STRASS", "e": ["strass"]},
-    {"t": "COM TOQUE DOURADO", "e": ["metais"]},
-    {"t": "COM UM MAXI LAÇO RELUZENTE", "e": ["laco", "-masculino"]},
-    {"t": "COM ESTILO CASUAL", "e": ["-feminino"]},
-    {"t": "COM VISUAL ESPORTIVO", "e": ["amortecimento"]},
-    {"t": "COM RECORTE ELEGANTE", "e": ["-masculino"]},
-    {"t": "COM TEXTURA MARCANTE", "e": ["camurca"]},
-    {"t": "COM TIRA AJUSTÁVEL", "e": ["tira_traseira"]},
-    {"t": "COM TIRAS QUE VALORIZAM", "e": ["-masculino"]},
-    {"t": "COM DETALHES DOURADOS", "e": ["metais"]},
-    {"t": "COM BASE ALTA E LEVE", "e": ["plataforma"]},
-    {"t": "COM ANABELA ELEGANTE", "e": ["anabela"]},
-    {"t": "PARA FICAR ALTA COM LEVEZA", "e": ["salto_fino", "-masculino"]},
-    {"t": "PARA PASSEIOS E FINS DE SEMANA", "e": []},
-    {"t": "PARA VIAGENS E LAZER", "e": []}
+    {
+      "t": "COM STRASS",
+      "e": [
+        "strass"
+      ]
+    },
+    {
+      "t": "COM TOQUE DOURADO",
+      "e": [
+        "metais"
+      ]
+    },
+    {
+      "t": "COM UM MAXI LAÇO RELUZENTE",
+      "e": [
+        "laco",
+        "-masculino"
+      ]
+    },
+    {
+      "t": "COM ESTILO CASUAL",
+      "e": [
+        "-feminino"
+      ]
+    },
+    {
+      "t": "COM VISUAL ESPORTIVO",
+      "e": [
+        "amortecimento"
+      ]
+    },
+    {
+      "t": "COM RECORTE ELEGANTE",
+      "e": [
+        "-masculino"
+      ]
+    },
+    {
+      "t": "COM TEXTURA MARCANTE",
+      "e": [
+        "camurca"
+      ]
+    },
+    {
+      "t": "COM TIRA AJUSTÁVEL",
+      "e": [
+        "tira_traseira"
+      ]
+    },
+    {
+      "t": "COM TIRAS QUE VALORIZAM",
+      "e": [
+        "-masculino"
+      ]
+    },
+    {
+      "t": "COM DETALHES DOURADOS",
+      "e": [
+        "metais"
+      ]
+    },
+    {
+      "t": "COM BASE ALTA E LEVE",
+      "e": [
+        "plataforma"
+      ]
+    },
+    {
+      "t": "COM ANABELA ELEGANTE",
+      "e": [
+        "anabela"
+      ]
+    },
+    {
+      "t": "PARA FICAR ALTA COM LEVEZA",
+      "e": [
+        "salto_fino",
+        "-masculino"
+      ]
+    },
+    {
+      "t": "PARA PASSEIOS E FINS DE SEMANA",
+      "e": []
+    },
+    {
+      "t": "PARA VIAGENS E LAZER",
+      "e": []
+    }
   ],
   "resultado": [
-    {"t": "VAI BEM COM TODO ESTILO E FACILITA A HORA DE SAIR", "e": []},
-    {"t": "COMBINA COM VÁRIAS PRODUÇÕES E DESCOMPLICA O VISUAL", "e": []},
-    {"t": "MUDA O USO EM SEGUNDOS E ENTREGA DUAS OPÇÕES EM UM PAR", "e": ["2_em_1"]},
-    {"t": "TRAZ ESTABILIDADE E LEVA VOCÊ MAIS ALTO COM ELEGÂNCIA", "e": ["salto_bloco", "-masculino"]}
+    {
+      "t": "VAI BEM COM TODO ESTILO E FACILITA A HORA DE SAIR",
+      "e": []
+    },
+    {
+      "t": "COMBINA COM VÁRIAS PRODUÇÕES E DESCOMPLICA O VISUAL",
+      "e": []
+    },
+    {
+      "t": "MUDA O USO EM SEGUNDOS E ENTREGA DUAS OPÇÕES EM UM PAR",
+      "e": [
+        "2_em_1"
+      ]
+    },
+    {
+      "t": "TRAZ ESTABILIDADE E LEVA VOCÊ MAIS ALTO COM ELEGÂNCIA",
+      "e": [
+        "salto_bloco",
+        "-masculino"
+      ]
+    }
   ]
 }

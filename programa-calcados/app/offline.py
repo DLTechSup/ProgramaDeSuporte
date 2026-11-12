@@ -72,10 +72,10 @@ def gerar_nomes_offline(banco: Banco, p: Produto, *, regras: Regras | None = Non
                    aprovados=banco.listar_nomes(limite=10**9), anteriores=banco.sugestoes_do_produto(p.id) if p.id else [])
     ac, bo, co, re_ = (por_tipo[t] for t in ("acao", "beneficio_onde", "complemento", "resultado"))
     estruturas = []
-    if len(ac) >= 2: estruturas += [lambda: f"{rnd.choice(ac)} E {rnd.choice(ac)}",
-                                    lambda: f"{rnd.choice(ac)} E {rnd.choice(ac)} {rnd.choice(co)}" if co else None]
+    if len(ac) >= 2: estruturas += [lambda: " E ".join(rnd.sample(ac, 2)),
+                                    lambda: " E ".join(rnd.sample(ac, 2)) + " " + rnd.choice(co) if co else None]
     if ac and co: estruturas.append(lambda: f"{rnd.choice(ac)} {rnd.choice(co)}")
-    if len(bo) >= 2: estruturas.append(lambda: f"{rnd.choice(bo)} E {rnd.choice(bo)}")
+    if len(bo) >= 2: estruturas.append(lambda: " E ".join(rnd.sample(bo, 2)))
     if re_: estruturas.append(lambda: rnd.choice(re_))
     if not estruturas:
         return []

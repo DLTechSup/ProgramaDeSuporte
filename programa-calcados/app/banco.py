@@ -35,7 +35,8 @@ CREATE TABLE IF NOT EXISTS correcoes (
   escopo TEXT NOT NULL DEFAULT 'produto' CHECK (escopo IN ('produto','geral')), data TEXT
 );
 CREATE TABLE IF NOT EXISTS pecas (
-  id INTEGER PRIMARY KEY, texto TEXT NOT NULL UNIQUE, tipo TEXT NOT NULL, etiquetas TEXT DEFAULT '', origem TEXT DEFAULT 'base'
+  id INTEGER PRIMARY KEY, texto TEXT NOT NULL, tipo TEXT NOT NULL, etiquetas TEXT DEFAULT '', origem TEXT DEFAULT 'base',
+  UNIQUE (texto, etiquetas)
 );
 CREATE TABLE IF NOT EXISTS regras_versoes (
   id INTEGER PRIMARY KEY, data TEXT, resumo TEXT, conteudo_anterior TEXT
