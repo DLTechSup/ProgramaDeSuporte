@@ -24,6 +24,7 @@ class Config:
     grupos: list[Grupo] = field(default_factory=list)
     espera_legenda_seg: int = 120      # foto sem legenda espera o texto por este tempo
     incluir_hoje: bool = True          # pegar tambem o que ja chegou hoje
+    todas_do_grupo_b: bool = True      # grupo B: guarda tambem uma copia de cada foto numa pasta unica (_Todas as fotos)
     tentar_escondidas: bool = True     # album com "+N": tentar abrir e baixar as fotos escondidas
     navegador: str = "chrome"          # "chrome" ou "msedge" (o outro serve de reserva)
     notificar: bool = True             # aviso na tela a cada item salvo

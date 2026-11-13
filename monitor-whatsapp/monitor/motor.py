@@ -99,24 +99,48 @@ class Processador:
         self._vencer_pendentes()
 
     def _processar_grupo(self, g: Grupo) -> None:
-        if g.tipo == "I":
-            return self._conversa_individual(g)
-        _, msgs = self.nav.ler()
-        primeira_vez = g.nome not in self._primeiro
+        primeira = g.nome not in self._primeiro
         self._primeiro.add(g.nome)
-        for i, m in enumerate(msgs):
-            estado = self.estados[g.nome]
+        if primeira and self.cfg.incluir_hoje and hasattr(self.nav, "rolar_para_o_inicio_do_dia"):
+            self._varredura(g)                      # tudo o que chegou hoje, mesmo o que o WhatsApp nao mostra de primeira
+        else:
+            self._passada(g, ignorar_existentes=primeira and not self.cfg.incluir_hoje)
+
+    def _varredura(self, g: Grupo) -> None:
+        """Sobe ate o inicio do dia e desce tela por tela (as fotos so carregam quando aparecem), processando tudo."""
+        self.evento("log", f"{g.nome}: lendo tudo o que chegou hoje (pode levar um pouco)...")
+        self.nav.rolar_para_o_inicio_do_dia(self.hoje())
+        for _ in range(120):
+            self._passada(g)
+            if not self.nav.rolar_um_passo():
+                break
+        self._passada(g)
+        self.nav.rolar_para_o_fim()
+
+    def _passada(self, g: Grupo, ignorar_existentes: bool = False) -> None:
+        if g.tipo == "I":
+            return self._conversa_individual(g, ignorar_existentes)
+        _, msgs = self.nav.ler()
+        estado = self.estados[g.nome]
+        for m in msgs:
             if m.minha or not estado.novo(m.id):
                 continue
             if m.dia != self.hoje():
-                estado.marcar(m.id)               # antiga ou sem data: ignora para sempre
+                estado.marcar(m.id)                # antiga ou sem data: ignora para sempre
                 continue
-            if primeira_vez and not self.cfg.incluir_hoje:
+            if ignorar_existentes:
                 estado.marcar(m.id)
                 continue
             if m.blobs or m.carregando:
-                if m.carregando and self.aguardando.get(m.id, 0) < 10:   # miniatura ainda borrada: espera baixar
-                    self.aguardando[m.id] = self.aguardando.get(m.id, 0) + 1
+                espera = self.aguardando.get(m.id, 0)
+                if m.carregando:                   # foto ainda borrada: espera baixar (sem perder a foto)
+                    limite = 10 if m.blobs else 300
+                    if espera < limite:
+                        self.aguardando[m.id] = espera + 1
+                        continue
+                if not m.blobs:
+                    self.evento("log", f"{g.nome}: uma foto de {m.remetente or 'alguém'} não carregou; confira no WhatsApp.")
+                    estado.marcar(m.id)
                     continue
                 try:
                     fotos = self._fotos_da_mensagem(m)
@@ -220,6 +244,9 @@ class Processador:
                 achados.setdefault(chave, (marca or "", ref, [], completa))[2].append(f)
             else:
                 sem_leitura.append(f)
+            if self.cfg.todas_do_grupo_b:          # copia numa pasta unica, com o nome do que foi lido (confere rapido)
+                lido = f"{marca or ''} {ref}".strip() if ref else "não lida"
+                salvar_fotos(self.pastas[g.nome], "_Todas as fotos", [f], prefixo=f"{m.hora.replace(':', 'h')} - {nome_seguro(lido)} - ")
         for marca, ref, lote, completa in achados.values():
             nome = f"{marca} {ref}".strip()
             obs = " ".join(x for x in ("" if marca else "marca não identificada na foto",
@@ -230,19 +257,17 @@ class Processador:
                             "conferir", "não consegui ler a referência na foto")
 
     # ---- Conversa individual: salva o TEXTO do que a pessoa escreveu ----------
-    def _conversa_individual(self, g: Grupo) -> None:
+    def _conversa_individual(self, g: Grupo, ignorar_existentes: bool = False) -> None:
         from .texto import normalizar
         _, msgs = self.nav.ler()
         estado = self.estados[g.nome]
-        primeira_vez = g.nome not in self._primeiro
-        self._primeiro.add(g.nome)
         mensagens: list[list[str]] = []
         previa = ""
         n_fotos = 0
         for m in msgs:
             if m.minha or not estado.novo(m.id):
                 continue
-            if m.dia != self.hoje() or (primeira_vez and not self.cfg.incluir_hoje):
+            if m.dia != self.hoje() or ignorar_existentes:
                 estado.marcar(m.id)
                 continue
             if m.carregando and self.aguardando.get(m.id, 0) < 10:       # foto ainda borrada: espera baixar

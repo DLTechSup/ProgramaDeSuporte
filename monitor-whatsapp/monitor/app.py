@@ -322,12 +322,14 @@ class Janela(ctk.CTk):
         ctk.CTkLabel(c3, text="Opções", font=fonte(15, True), text_color=TEXTO).pack(anchor="w", padx=16, pady=(14, 6))
         self.v_hoje = ctk.BooleanVar(value=self.cfg.incluir_hoje)
         self.v_escond = ctk.BooleanVar(value=self.cfg.tentar_escondidas)
+        self.v_todas = ctk.BooleanVar(value=self.cfg.todas_do_grupo_b)
         self.v_aviso = ctk.BooleanVar(value=self.cfg.notificar)
         self.v_som = ctk.BooleanVar(value=self.cfg.som)
         for var, texto in ((self.v_aviso, "Avisar na tela a cada item salvo (diz de qual grupo veio)"),
                            (self.v_som, "Tocar um som junto com o aviso"),
                            (self.v_hoje, "Pegar também o que já chegou hoje (ao iniciar o monitor)"),
-                           (self.v_escond, "Álbum com \"+N\": tentar abrir e baixar todas as fotos")):
+                           (self.v_escond, "Álbum com \"+N\": tentar abrir e baixar todas as fotos"),
+                           (self.v_todas, "Grupo B: guardar também todas as fotos numa pasta só (_Todas as fotos), com o nome do que foi lido")):
             ctk.CTkCheckBox(c3, text=texto, variable=var, command=self._guardar_config, font=fonte(13), text_color=TEXTO,
                             fg_color=ACENTO, hover_color=tema.ACENTO_HOVER, corner_radius=6).pack(anchor="w", padx=16, pady=5)
         ln = ctk.CTkFrame(c3, fg_color="transparent")
@@ -404,6 +406,7 @@ class Janela(ctk.CTk):
         self.cfg.pasta_base = self.e_pasta.get().strip()
         self.cfg.incluir_hoje = bool(self.v_hoje.get())
         self.cfg.tentar_escondidas = bool(self.v_escond.get())
+        self.cfg.todas_do_grupo_b = bool(self.v_todas.get())
         self.cfg.notificar, self.cfg.som = bool(self.v_aviso.get()), bool(self.v_som.get())
         self.cfg.navegador = "msedge" if self.seg_navegador.get() == "Edge" else "chrome"
         self.notificador.ligado, self.notificador.som = self.cfg.notificar, self.cfg.som

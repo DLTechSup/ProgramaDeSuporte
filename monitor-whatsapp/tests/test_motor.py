@@ -285,3 +285,19 @@ def test_miniatura_pequena_abre_a_foto_inteira_e_foto_grande_nao_mexe(tmp_path):
     chamadas.clear()
     Processador(Config(pasta_base=str(tmp_path / "b"), grupos=[Grupo("G", "A")]), NavGrande([msg("1", "DAKOTA 1.1", blobs=("b1", "b2"))])).ciclo()
     assert chamadas == []                                          # ja era grande: nao abre o visualizador
+
+
+def test_varredura_pega_tudo_que_o_whatsapp_so_carrega_ao_rolar(nav, tmp_path):
+    """Grupo 'SUBIR PRO SITE': 60 fotos, so as 15 ultimas aparecem de primeira (como no WhatsApp real)."""
+    contador = iter(range(10**6))
+    cfg = Config(pasta_base=str(tmp_path / "saida"), grupos=[Grupo("SUBIR PRO SITE", "B")], todas_do_grupo_b=True, tentar_escondidas=False)
+    p = Processador(cfg, nav, ocr=lambda img: f"MODARE\nREF: 70{next(contador) % 90 + 10}.1")
+    p.ciclo()
+    itens = p.listas["SUBIR PRO SITE"].itens
+    dia = pasta_dia(cfg.pasta_base, "SUBIR PRO SITE")
+    todas = list((dia / "_Todas as fotos").glob("*"))
+    assert len(todas) == 60, len(todas)                                  # as 60 fotos, nenhuma perdida
+    assert all(f.name[2] == "h" or f.name[1] == "h" for f in todas) and "MODARE" in todas[0].name
+    assert len(itens) >= 50                                                # uma pasta por referencia lida
+    p.ciclo()                                                              # segunda volta: nada se repete
+    assert len(list((dia / "_Todas as fotos").glob("*"))) == 60

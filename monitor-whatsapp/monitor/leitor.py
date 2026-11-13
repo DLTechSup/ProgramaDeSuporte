@@ -57,6 +57,37 @@ async (urls) => Promise.all(urls.map(async u => {
 }))
 """
 
+# Acha a area de rolagem das mensagens (o elemento rolavel que contem as mensagens)
+_JS_ROLAVEL = r"""
+const achar = () => {
+  const m = document.querySelector('#main'); if (!m) return null;
+  const el = m.querySelector('div[data-id]'); if (!el) return null;
+  let p = el.parentElement;
+  while (p && p !== document.body) {
+    const st = getComputedStyle(p);
+    if ((st.overflowY === 'auto' || st.overflowY === 'scroll') && p.scrollHeight > p.clientHeight + 4) return p;
+    p = p.parentElement;
+  }
+  return null;
+};
+"""
+
+JS_ROLAR_TOPO = "() => {" + _JS_ROLAVEL + r"""
+  const m = document.querySelector('#main'); const r = achar(); if (r) r.scrollTop = 0;
+  const pre = m ? m.querySelector('[data-pre-plain-text]') : null;
+  return {n: m ? m.querySelectorAll('div[data-id]').length : 0, pre: pre ? pre.getAttribute('data-pre-plain-text') : '', rolavel: !!r};
+}"""
+
+JS_ROLAR_PASSO = "() => {" + _JS_ROLAVEL + r"""
+  const r = achar(); if (!r) return false;
+  if (r.scrollTop + r.clientHeight >= r.scrollHeight - 6) return false;
+  r.scrollTop = r.scrollTop + r.clientHeight * 0.8; return true;
+}"""
+
+JS_ROLAR_FIM = "() => {" + _JS_ROLAVEL + r"""
+  const r = achar(); if (r) r.scrollTop = r.scrollHeight; return !!r;
+}"""
+
 JS_CONVERSAS = r"""
 () => [...new Set([...document.querySelectorAll('#pane-side span[title]')].map(s => s.getAttribute('title')).filter(Boolean))]
 """
@@ -241,6 +272,34 @@ class Navegador:
             msgs.append(Mensagem(x["id"], x["minha"], x["legenda"], x["blobs"], x["carregando"], x["mais"], rem, dia, hora))
         completar_datas(msgs)
         return d.get("titulo", ""), msgs
+
+    def rolar_para_o_inicio_do_dia(self, hoje: date, max_voltas: int = 60) -> int:
+        """Sobe a conversa ate aparecer uma mensagem de antes de hoje (ou nao carregar mais nada). So rola; nao envia nada."""
+        parados, ultimo = 0, -1
+        for volta in range(max_voltas):
+            r = self.pagina.evaluate(JS_ROLAR_TOPO)
+            self.pagina.wait_for_timeout(900)
+            _, dia, _ = interpretar_pre(r.get("pre", ""))
+            if dia and dia < hoje:
+                return volta + 1
+            if not r.get("rolavel"):
+                return volta + 1
+            n = self.pagina.evaluate("() => document.querySelectorAll('#main div[data-id]').length")
+            parados = parados + 1 if n == ultimo else 0
+            ultimo = n
+            if parados >= 2:                       # nao carrega mais nada: chegou no comeco da conversa
+                return volta + 1
+        return max_voltas
+
+    def rolar_um_passo(self) -> bool:
+        """Desce uma tela. False quando chegou ao fim (ou nao ha rolagem)."""
+        ok = bool(self.pagina.evaluate(JS_ROLAR_PASSO))
+        self.pagina.wait_for_timeout(900)          # da tempo de as fotos da tela carregarem
+        return ok
+
+    def rolar_para_o_fim(self) -> None:
+        self.pagina.evaluate(JS_ROLAR_FIM)
+        self.pagina.wait_for_timeout(400)
 
     def baixar(self, urls: list[str]) -> list[bytes]:
         if not urls:
