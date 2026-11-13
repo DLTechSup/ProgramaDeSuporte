@@ -329,7 +329,15 @@ class Janela(ctk.CTk):
                            (self.v_escond, "Álbum com \"+N\": tentar abrir e baixar todas as fotos")):
             ctk.CTkCheckBox(c3, text=texto, variable=var, command=self._guardar_config, font=fonte(13), text_color=TEXTO,
                             fg_color=ACENTO, hover_color=tema.ACENTO_HOVER, corner_radius=6).pack(anchor="w", padx=16, pady=5)
-        ctk.CTkLabel(c3, text="", height=6).pack()
+        ln = ctk.CTkFrame(c3, fg_color="transparent")
+        ln.pack(anchor="w", padx=16, pady=(8, 0))
+        ctk.CTkLabel(ln, text="Navegador do monitor:", font=fonte(13), text_color=TEXTO).pack(side="left", padx=(0, 10))
+        self.seg_navegador = ctk.CTkSegmentedButton(ln, values=["Chrome", "Edge"], command=lambda _v: self._guardar_config(),
+                                                    selected_color=ACENTO, selected_hover_color=tema.ACENTO_HOVER, font=fonte(12))
+        self.seg_navegador.set("Edge" if self.cfg.navegador == "msedge" else "Chrome")
+        self.seg_navegador.pack(side="left")
+        ctk.CTkLabel(c3, text="É uma janela separada, com perfil próprio: não mexe no seu Chrome nem nos seus atalhos do WhatsApp.",
+                     font=fonte(12), text_color=SUAVE).pack(anchor="w", padx=16, pady=(4, 12))
         self._desenhar_grupos()
 
     def _escolher_pasta(self) -> None:
@@ -390,6 +398,7 @@ class Janela(ctk.CTk):
         self.cfg.incluir_hoje = bool(self.v_hoje.get())
         self.cfg.tentar_escondidas = bool(self.v_escond.get())
         self.cfg.notificar, self.cfg.som = bool(self.v_aviso.get()), bool(self.v_som.get())
+        self.cfg.navegador = "msedge" if self.seg_navegador.get() == "Edge" else "chrome"
         self.notificador.ligado, self.notificador.som = self.cfg.notificar, self.cfg.som
         try:
             self.cfg.salvar()

@@ -43,7 +43,7 @@ Se o Windows avisar "O Windows protegeu o computador", clique em **Mais informa�
 
 ## Como usar
 1. Abra o `MonitorDeDemandas.exe`. Na aba **Configurações**, escolha a **pasta principal** e adicione os **grupos** (nome igual ao do WhatsApp) com o tipo A ou B.
-2. Clique em **Abrir WhatsApp**. Abre uma janela de navegador (Edge) **só do monitor**: entre com o **QR code** do seu número
+2. Clique em **Abrir WhatsApp**. Abre uma janela do **Chrome** **só do monitor** (com perfil próprio, sem mexer no seu Chrome; se não achar o Chrome, usa o Edge): entre com o **QR code** do seu número
    (WhatsApp > Aparelhos conectados). Só na primeira vez. O seu atalho do WhatsApp Web e o WhatsApp instalado no Windows **não são mexidos**.
 3. Clique em **Iniciar monitor**. Pode minimizar a janela do navegador e a do programa (fechar a janela manda o programa para a **bandeja**, o ícone perto do relógio: clique nele para abrir, ou use o botão direito para pausar, abrir a pasta ou sair; para encerrar de vez use **Sair de vez**).
 4. Na aba **Demanda do dia** aparece tudo que chegou, com caixinha de "feito", pasta de cada item e avisos ⚠.

@@ -1,4 +1,4 @@
-"""Leitura do WhatsApp Web por um navegador proprio (Edge/Chrome com perfil separado). SO LE: nunca envia nada.
+"""Leitura do WhatsApp Web por um navegador proprio (Chrome, com Edge de reserva, usando um perfil separado do seu). SO LE: nunca envia nada.
 
 Os seletores ficam juntos aqui em cima porque o WhatsApp muda a tela de tempos em tempos.
 """
@@ -119,7 +119,7 @@ def completar_datas(msgs: list[Mensagem]) -> None:
 class Navegador:
     """Dono do navegador. TEM de ser usado sempre na mesma thread (regra do Playwright)."""
 
-    def __init__(self, canal: str = "msedge", executable_path: str | None = None, headless: bool = False,
+    def __init__(self, canal: str = "chrome", executable_path: str | None = None, headless: bool = False,
                  perfil: Path = PERFIL, url: str = URL) -> None:
         self.canal, self.exe, self.headless, self.perfil, self.url = canal, executable_path, headless, perfil, url
         self._pw = None
@@ -131,7 +131,8 @@ class Navegador:
         self._pw = sync_playwright().start()
         args = ["--disable-blink-features=AutomationControlled", "--no-first-run"]
         opcoes = dict(headless=self.headless, args=args, viewport=None if not self.headless else {"width": 1280, "height": 900})
-        tentativas = [{"executable_path": self.exe}] if self.exe else [{"channel": self.canal}, {"channel": "chrome"}, {}]
+        reserva = "msedge" if self.canal == "chrome" else "chrome"
+        tentativas = [{"executable_path": self.exe}] if self.exe else [{"channel": self.canal}, {"channel": reserva}, {}]
         erro = None
         for extra in tentativas:
             try:
@@ -140,7 +141,7 @@ class Navegador:
             except Exception as e:  # noqa: BLE001
                 erro = e
         if self.ctx is None:
-            raise RuntimeError(f"Não consegui abrir o navegador (Edge/Chrome): {erro}")
+            raise RuntimeError(f"Não consegui abrir o Chrome (nem o Edge): {erro}")
         self.pagina = self.ctx.pages[0] if self.ctx.pages else self.ctx.new_page()
         self.pagina.goto(self.url)
 

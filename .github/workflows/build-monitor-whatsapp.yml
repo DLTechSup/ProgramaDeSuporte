@@ -17,9 +17,9 @@ jobs:
       - uses: actions/setup-python@v5
         with: { python-version: "3.11" }
       - run: pip install -r requirements.txt pyinstaller pytest
-      - name: Testes automáticos (com o Edge de verdade, sem tela)
+      - name: Testes automáticos (com o Chrome de verdade, sem tela)
         env:
-          CHROMIUM_PATH: C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe
+          CHROMIUM_PATH: C:\Program Files\Google\Chrome\Application\chrome.exe
         run: python -m pytest -q tests
       - name: Gerar o programa (.exe com ícone e versão)
         run: >

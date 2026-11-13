@@ -25,7 +25,7 @@ class Config:
     espera_legenda_seg: int = 120      # foto sem legenda espera o texto por este tempo
     incluir_hoje: bool = True          # pegar tambem o que ja chegou hoje
     tentar_escondidas: bool = True     # album com "+N": tentar abrir e baixar as fotos escondidas
-    navegador: str = "msedge"
+    navegador: str = "chrome"          # "chrome" ou "msedge" (o outro serve de reserva)
     notificar: bool = True             # aviso na tela a cada item salvo
     som: bool = True                   # toca um som junto com o aviso
 
