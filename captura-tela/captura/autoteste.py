@@ -62,9 +62,10 @@ def rodar() -> None:
         colou = copiar_imagem(Image.new("RGB", (20, 20), "red"))
         passo(f"6 copiar para a área de transferência: {'ok' if colou else 'nao funcionou'}")
 
+        bandeja_ok = app.tem_bandeja   # ler ANTES de destroy() (ele desliga a bandeja e zera essa flag)
         app.destroy()
         (raiz / "selftest_ok.txt").write_text(f"ok; mouse={'ativo' if app.gatilho_ativo else 'INATIVO'}; "
-                                              f"bandeja={'ativa' if app.tem_bandeja else 'INATIVA'}; clipboard={'ok' if colou else 'falhou'}",
+                                              f"bandeja={'ativa' if bandeja_ok else 'INATIVA'}; clipboard={'ok' if colou else 'falhou'}",
                                               encoding="utf-8")
     except Exception:  # noqa: BLE001
         (raiz / "selftest_erro.txt").write_text(traceback.format_exc(), encoding="utf-8")
