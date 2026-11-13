@@ -13,6 +13,7 @@ from .legenda import dividir_legenda
 from .lista import Estado, ListaDoDia
 from .marcas import carregar_marcas, detectar_marca
 from .referencia import chave_referencia, extrair_referencia, nome_seguro
+from .regras_ref import RegrasReferencia
 
 CONFERIR = "_Conferir"
 APAGADA = {"ESTA MENSAGEM FOI APAGADA", "VOCE APAGOU ESTA MENSAGEM", "THIS MESSAGE WAS DELETED", "YOU DELETED THIS MESSAGE", "MENSAGEM APAGADA"}
@@ -44,10 +45,11 @@ def ler_etiqueta(ler, dados: bytes, marcas) -> tuple[str | None, str | None]:
 
 class Processador:
     def __init__(self, cfg: Config, nav, *, ocr=None, evento: Callable[[str, object], None] = lambda t, d: None,
-                 agora=time.time, hoje=date.today, pasta_marcas: Path | None = None) -> None:
+                 agora=time.time, hoje=date.today, pasta_marcas: Path | None = None, regras_ref: RegrasReferencia | None = None) -> None:
         self.cfg, self.nav, self.evento, self.agora, self.hoje = cfg, nav, evento, agora, hoje
         self._ocr, self.ocr_pronto = ocr, ocr is not None
         self.marcas = carregar_marcas(pasta_marcas)
+        self.regras_ref = regras_ref if regras_ref is not None else RegrasReferencia.carregar()
         self.pendentes: dict[tuple[str, str], Pendente] = {}   # (grupo, remetente) -> fotos esperando legenda
         self.aguardando: dict[str, int] = {}                   # msg_id -> ciclos esperando fotos carregarem
         self._dias: dict[str, date] = {}                       # grupo -> dia das pastas abertas
@@ -159,7 +161,10 @@ class Processador:
     def _salvar_com_legenda(self, grupo: str, legenda: str, fotos: list[bytes], obs: str) -> None:
         d = dividir_legenda(legenda, self.marcas)
         if d.completa:
-            self._registrar(grupo, d.marca, d.referencia, d.nome_pasta, fotos, "ok", obs)
+            ref, completa = self.regras_ref.aplicar(d.marca, d.referencia)
+            d.referencia = ref
+            nota = (obs + f" ref. completa na legenda: {completa}").strip() if completa else obs
+            self._registrar(grupo, d.marca, ref, d.nome_pasta, fotos, "ok", nota)
         else:
             nome = f"{CONFERIR} {nome_seguro(legenda)[:60]}"
             self._registrar(grupo, d.marca or "?", d.referencia or legenda, nome, fotos, "conferir",
@@ -175,7 +180,7 @@ class Processador:
 
     # ---- Grupo B -----------------------------------------------------------
     def _grupo_b(self, g: Grupo, m, fotos: list[bytes]) -> None:
-        achados: dict[str, tuple[str, str, list[bytes]]] = {}   # chave -> (marca, ref, fotos)
+        achados: dict[str, tuple[str, str, list[bytes], str]] = {}   # chave -> (marca, ref, fotos, ref completa)
         sem_leitura: list[bytes] = []
         try:
             ler = self._motor_ocr()
@@ -190,13 +195,15 @@ class Processador:
                 except Exception as e:  # noqa: BLE001
                     self.evento("log", f"Não consegui ler uma foto: {e}")
             if ref:
+                ref, completa = self.regras_ref.aplicar(marca, ref)
                 chave = chave_referencia(ref)
-                achados.setdefault(chave, (marca or "", ref, []))[2].append(f)
+                achados.setdefault(chave, (marca or "", ref, [], completa))[2].append(f)
             else:
                 sem_leitura.append(f)
-        for marca, ref, lote in achados.values():
+        for marca, ref, lote, completa in achados.values():
             nome = f"{marca} {ref}".strip()
-            obs = "" if marca else "marca não identificada na foto"
+            obs = " ".join(x for x in ("" if marca else "marca não identificada na foto",
+                                        f"etiqueta completa: {completa}" if completa else "") if x)
             self._registrar(g.nome, marca or "?", ref, nome, lote, "ok", obs)
         if sem_leitura:
             self._registrar(g.nome, "?", "não lida", f"{CONFERIR} etiqueta {m.hora.replace(':', 'h')} {m.id[-6:]}", sem_leitura,

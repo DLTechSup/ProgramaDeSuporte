@@ -18,6 +18,7 @@ from .config import TIPOS, Config, Grupo
 from .lista import ListaDoDia
 from .notificacao import Notificador
 from .registro import RegistroDoDia
+from .regras_ref import ARQUIVO as ARQ_REGRAS_REF, RegrasReferencia
 from .servico import Servico
 from .tema import (ACENTO, AVISO_BORDA, AVISO_FUNDO, AVISO_TEXTO, BORDA, BRANCO, FUNDO, OK_FUNDO, OK_TEXTO, SEC, SUAVE, TEXTO,
                    botao, cartao, etiqueta, fonte, pilula_status)
@@ -338,7 +339,13 @@ class Janela(ctk.CTk):
         self.seg_navegador.pack(side="left")
         ctk.CTkLabel(c3, text="É uma janela separada, com perfil próprio: não mexe no seu Chrome nem nos seus atalhos do WhatsApp.",
                      font=fonte(12), text_color=SUAVE).pack(anchor="w", padx=16, pady=(4, 12))
+        botao(c3, "Regras de referência por marca (ex.: cortar a cor)", self._abrir_regras_ref, "secundario", 360).pack(anchor="w", padx=16, pady=(0, 14))
         self._desenhar_grupos()
+
+    def _abrir_regras_ref(self) -> None:
+        RegrasReferencia.carregar()                 # cria o arquivo com o modelo, se ainda nao existir
+        abrir_no_windows(ARQ_REGRAS_REF)
+        messagebox.showinfo("Regras de referência", "Edite o arquivo que abriu, salve e depois pause e inicie o monitor de novo para valer.")
 
     def _escolher_pasta(self) -> None:
         p = filedialog.askdirectory(title="Pasta principal das demandas")

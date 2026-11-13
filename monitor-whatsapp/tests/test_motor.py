@@ -211,3 +211,36 @@ def test_servico_grava_o_log(tmp_path):
     from monitor.registro import RegistroDoDia
     txt = RegistroDoDia(tmp_path).ler()
     assert "Camilo mandou 3 fotos" in txt and "ERRO: falhou" in txt and txt.count("\n") == 2
+
+
+def test_referencias_so_numero_letras_e_nomes():
+    from monitor.referencia import extrair_referencia as x
+    assert x("PEGADA\nREF: (133) 161-01") == "133 161-01"
+    assert x("REF: 8513.115") == "8513.115"
+    assert x("MODELO: CORRE 2") == "CORRE 2"
+    assert x("REF.: T3533-150") == "T3533-150"
+    assert x("sem nada de util") is None
+
+
+def test_regra_cortar_cor_por_marca(tmp_path):
+    from monitor.regras_ref import RegrasReferencia
+    arq = tmp_path / "regras.txt"
+    r = RegrasReferencia.carregar(arq)                       # cria o modelo com a regra da Pegada
+    assert arq.exists() and r.aplicar("Pegada", "133 161-01") == ("133 161", "133 161-01")
+    assert r.aplicar("PEGADA", "133 161") == ("133 161", "")  # nada a cortar
+    assert r.aplicar("Olympikus", "CORRE 2") == ("CORRE 2", "")   # marca sem regra: completa
+    arq.write_text("MODARE | .NNN\nOlympikus | -LL\n", encoding="utf-8")
+    r2 = RegrasReferencia.carregar(arq)
+    assert r2.aplicar("Modare", "7226.106") == ("7226", "7226.106") and r2.aplicar("Olympikus", "CORRE-AB")[0] == "CORRE"
+
+
+def test_pegada_cores_diferentes_caem_na_mesma_pasta(tmp_path):
+    from monitor.regras_ref import RegrasReferencia
+    cfg = Config(pasta_base=str(tmp_path), grupos=[Grupo("G", "A")])
+    nav = NavFalso([msg("1", "PEGADA (133) 161-01"), msg("2", "Pegada (133) 161-02"), msg("3", "OLYMPIKUS CORRE 2")])
+    p = Processador(cfg, nav, regras_ref=RegrasReferencia.carregar(tmp_path / "r.txt"))
+    p.ciclo()
+    nomes = sorted(d.name for d in pasta_dia(tmp_path, "G").iterdir() if d.is_dir())
+    assert nomes == ["OLYMPIKUS CORRE 2", "PEGADA (133) 161"]      # mantém como a pessoa escreveu, sem o -01 da cor
+    item = [i for i in p.listas["G"].itens.values() if i.marca == "PEGADA"][0]
+    assert "133 161-01" in item.observacao            # a referencia completa fica registrada na lista

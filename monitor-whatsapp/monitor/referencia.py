@@ -16,8 +16,9 @@ _RE_ROTULO_COM_LETRAS = re.compile(
 
 
 def _limpar(cod: str) -> str:
-    cod = re.sub(r"\s+", "", cod)
-    return cod.strip(".-/")
+    """'133  161-01' -> '133 161-01'; '8513 .115' -> '8513.115' (espaco so entre grupos de numeros)."""
+    cod = re.sub(r"\s*([.\-/])\s*", r"\1", cod)
+    return re.sub(r"\s+", " ", cod).strip(" .-/")
 
 
 def _digitos(cod: str) -> int:
@@ -34,7 +35,7 @@ def extrair_referencia(texto: str) -> str | None:
     """Devolve a referência (como lida, ex.: '4235.101') ou None."""
     if not texto:
         return None
-    linhas = texto.replace("\r", "\n")
+    linhas = texto.replace("\r", "\n").replace("(", " ").replace(")", " ")   # '(133) 161-01' -> '133  161-01'
 
     # 1) Número logo depois de "REF", "REFERÊNCIA", "ARTIGO", "MODELO".
     for padrao in (_RE_APOS_ROTULO, _RE_ROTULO_COM_LETRAS):
@@ -42,6 +43,13 @@ def extrair_referencia(texto: str) -> str | None:
             cod = _limpar(m.group(1))
             if _digitos(cod) >= 4 and not _parece_codigo_de_barras(cod):
                 return cod.upper()
+
+    # 1b) Referência só com letras/nome depois do rótulo (ex.: "REF: CORRE 2", "MODELO: RUNNER")
+    m = re.search(r"(?:REF(?:ER[EÊ]NCIA)?|MODELO|ARTIGO)\s*[.:;#°º\-]+\s*([A-Za-zÀ-ú][A-Za-zÀ-ú0-9 .\-/]{1,30})", linhas, flags=re.IGNORECASE)
+    if m:
+        nome = re.split(r"\s{2,}|\n", m.group(1))[0].strip(" .-/")
+        if len(nome) >= 2:
+            return nome.upper()
 
     # 2) Rótulo numa linha e número na linha seguinte.
     partes = [p.strip() for p in linhas.split("\n") if p.strip()]

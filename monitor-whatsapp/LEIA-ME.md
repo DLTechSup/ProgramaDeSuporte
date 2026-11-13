@@ -52,6 +52,17 @@ Obs.: o monitor precisa "abrir" cada grupo na janela dele, um de cada vez, para 
 
 ## Tudo é salvo em `.txt` (nada de CSV ou Excel).
 
+## Referência sem a cor (regras por marca)
+Algumas marcas têm no fim da referência um código que é só a **cor** (ex.: Pegada `(133) 161-01`, o `-01` é a cor).
+Em **Configurações > Regras de referência por marca** você abre um arquivo de texto simples e escreve, por marca, o que cortar no final:
+
+```
+PEGADA | -NN        (corta "-01": a pasta fica "PEGADA (133) 161")
+```
+`N` = um número, `L` = uma letra. Sem regra para a marca, a referência fica completa. Cores diferentes do mesmo modelo caem na **mesma pasta**,
+e a referência completa que veio na legenda/etiqueta aparece como observação na lista. A referência pode ser só número, letras e números, ou só nome (ex.: Olympikus `CORRE 2`).
+Vamos ajustando as marcas com o tempo.
+
 ## Log do dia
 Tudo o que acontece (monitor iniciado, itens salvos, erros) fica na aba **Registro do dia** e também no arquivo `_Log/log_DD-MM-AAAA.txt`, dentro da pasta principal, uma linha por evento.
 
