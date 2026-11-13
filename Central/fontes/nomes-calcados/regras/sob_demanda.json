@@ -1,0 +1,4 @@
+{
+  "_aviso": "Palavras listadas aqui NÃO são barradas de saída (saem do bloqueio de proibidas.json e de moderacao.json e deixam de ser proibidas no pedido à IA). Só passam a ser barradas quando você digitar em \"Evitar nesta rodada\". Exemplo: [\"charme\", \"sola\", \"descanso\"]",
+  "palavras": []
+}

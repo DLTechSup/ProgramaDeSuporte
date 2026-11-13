@@ -1,0 +1,71 @@
+{
+  "name": "central-informax",
+  "productName": "Central Informax",
+  "version": "1.0.0",
+  "description": "Central Informax: Demanda do Dia (WhatsApp) e as ferramentas de trabalho num programa só.",
+  "author": "DLTechSup",
+  "main": "src/main/main.js",
+  "private": true,
+  "scripts": {
+    "dev": "vite build && electron .",
+    "build": "vite build",
+    "test": "node --test test/core.test.js test/lists.test.js test/tools.test.js test/monitor.test.js",
+    "dist": "vite build && electron-builder --win nsis --x64 --publish never"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.4",
+    "electron": "33.4.11",
+    "electron-builder": "^25.1.8",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "vite": "^5.4.11"
+  },
+  "build": {
+    "appId": "br.com.dltechsup.central",
+    "productName": "Central Informax",
+    "directories": {
+      "output": "release",
+      "buildResources": "build"
+    },
+    "files": [
+      "dist/**",
+      "src/main/**",
+      "package.json"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "build/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Central Informax",
+      "installerLanguages": [
+        "pt_BR"
+      ],
+      "language": "1046",
+      "artifactName": "CentralInformax-Instalador-${version}.exe",
+      "differentialPackage": false
+    },
+    "extraResources": [
+      {
+        "from": "ferramentas",
+        "to": "ferramentas",
+        "filter": [
+          "**/*"
+        ]
+      }
+    ]
+  }
+}

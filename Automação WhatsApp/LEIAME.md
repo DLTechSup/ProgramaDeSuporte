@@ -1,4 +1,4 @@
-> **Versão atual: `demanda-react/` (React + Electron, com instalador).** Veja `demanda-react/LEIAME.md`.
+> **Versão atual: a pasta `Central/` na raiz do repositório (React + Electron, programa único com instalador).** Veja `Central/LEIAME.md`.
 > O restante desta pasta (Python/Qt) é a versão anterior, mantida só como referência.
 
 # Demanda do Dia — Automação WhatsApp

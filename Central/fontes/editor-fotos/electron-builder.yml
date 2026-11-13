@@ -1,0 +1,26 @@
+appId: com.dltechsup.editorfotos
+productName: Editor de Fotos
+copyright: DL Tech Sup
+directories:
+  buildResources: build
+  output: dist
+files:
+  - out/**
+  - package.json
+asar: true
+publish: null
+win:
+  icon: build/icon.png
+  target:
+    - target: nsis
+      arch: [x64]
+    - target: portable
+      arch: [x64]
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: always
+  shortcutName: Editor de Fotos
+  artifactName: EditorFotos-${version}-Instalador.${ext}
+portable:
+  artifactName: EditorFotos-${version}-Portatil.${ext}

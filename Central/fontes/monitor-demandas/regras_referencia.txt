@@ -1,0 +1,11 @@
+# REGRAS DE REFERENCIA POR MARCA
+# Serve para cortar do FINAL da referencia o que e so a cor (voce nao usa).
+# Formato, uma por linha:   MARCA | padrao do que cortar no final
+#   N = um numero    L = uma letra    qualquer outro sinal vale como esta
+# Exemplos:
+#   PEGADA | -NN      corta '-01' no final:   133 161-01  ->  133 161
+#   MODARE | .NNN     corta '.106' no final:  7226.106   ->  7226
+# A referencia completa que veio na etiqueta continua aparecendo na lista (como observacao).
+# Linhas que comecam com # sao ignoradas. Sem regra para a marca = a referencia fica completa.
+
+PEGADA | -NN

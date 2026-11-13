@@ -1,0 +1,43 @@
+"""Configuracao (config.json ao lado do programa)."""
+from __future__ import annotations
+
+import json
+import sys
+from dataclasses import asdict, dataclass, field
+from pathlib import Path
+
+RAIZ = Path(sys.executable).resolve().parent if getattr(sys, "frozen", False) else Path(__file__).resolve().parent.parent
+ARQUIVO = RAIZ / "config.json"
+TIPOS = {"A": "Grupo A: foto + marca + referência (legenda)", "B": "Grupo B: só foto da caixa (ler a etiqueta)",
+         "I": "Conversa individual: salvar o que a pessoa escrever (.txt)"}
+
+
+@dataclass
+class Grupo:
+    nome: str
+    tipo: str = "A"   # "A", "B" ou "I" (conversa individual)
+
+
+@dataclass
+class Config:
+    pasta_base: str = ""
+    grupos: list[Grupo] = field(default_factory=list)
+    espera_legenda_seg: int = 120      # foto sem legenda espera o texto por este tempo
+    pegar_antigas: bool = False        # False (padrao) = so o que chegar DEPOIS de iniciar; True = le tambem o que ja chegou hoje
+    todas_do_grupo_b: bool = True      # grupo B: guarda tambem uma copia de cada foto numa pasta unica (_Todas as fotos)
+    tentar_escondidas: bool = True     # album com "+N": tentar abrir e baixar as fotos escondidas
+    navegador: str = "chrome"          # "chrome" ou "msedge" (o outro serve de reserva)
+    notificar: bool = True             # aviso na tela a cada item salvo
+    som: bool = True                   # toca um som junto com o aviso
+
+    def salvar(self, arquivo: Path = ARQUIVO) -> None:
+        arquivo.write_text(json.dumps(asdict(self), ensure_ascii=False, indent=2), encoding="utf-8")
+
+    @classmethod
+    def carregar(cls, arquivo: Path = ARQUIVO) -> "Config":
+        if not arquivo.is_file():
+            return cls()
+        d = json.loads(arquivo.read_text(encoding="utf-8"))
+        grupos = [Grupo(**g) for g in d.pop("grupos", [])]
+        validos = {k: v for k, v in d.items() if k in cls.__dataclass_fields__}
+        return cls(grupos=grupos, **validos)

@@ -1,0 +1,74 @@
+"""Pagina que imita o WhatsApp Web (so o necessario) para testar o leitor sem WhatsApp de verdade."""
+from pathlib import Path
+
+HTML = r"""<!doctype html><html><head><meta charset="utf-8"></head><body>
+<div id="side"><div contenteditable="true" role="textbox"></div>
+ <div id="pane-side">
+  <div role="listitem"><span title="Demandas Fotos" onclick="abrir('A')">Demandas Fotos</span></div>
+  <div role="listitem"><span title="Só Foto Caixa" onclick="abrir('B')">Só Foto Caixa</span></div>
+  <div role="listitem"><span title="Familia" onclick="abrir('C')">Familia</span></div>
+  <div role="listitem"><span title="SUBIR PRO SITE" onclick="abrirE()">SUBIR PRO SITE</span></div>
+  <div role="listitem"><span title="PROGRAMAÇÃO ✨📷💰" onclick="abrir('D')">PROGRAMAÇÃO ✨📷💰</span></div>
+ </div></div>
+<div id="app"></div>
+<script>
+window.ALBUM = {}; let VIS = null; let VIS_I = 0;
+document.addEventListener('keydown', e => { if (!VIS) return; if (e.key === 'Escape') { document.getElementById('visor')?.remove(); VIS = null; }
+  if (e.key === 'ArrowRight') { VIS_I = Math.min(VIS_I + 1, VIS.length - 1); document.getElementById('visor_img').src = VIS[VIS_I]; } });
+function abrirVisor(id, i) { VIS = window.ALBUM[id]; VIS_I = i; const d = document.createElement('div'); d.id = 'visor';
+  d.innerHTML = '<img id="visor_img" width="800" height="600" src="' + VIS[i] + '">'; document.body.appendChild(d); }
+function azul(cor, w=400, h=300) { const c = document.createElement('canvas'); c.width = w; c.height = h;
+  const x = c.getContext('2d'); x.fillStyle = cor; x.fillRect(0, 0, w, h); x.fillStyle = '#fff';
+  for (let i = 0; i < 400; i++) { x.fillRect(Math.random()*w, Math.random()*h, 6, 6); }
+  const bin = atob(c.toDataURL('image/jpeg', 0.9).split(',')[1]); const u8 = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i);
+  return Promise.resolve(URL.createObjectURL(new Blob([u8], {type: 'image/jpeg'}))); }
+const CHATS = {
+  A: {titulo: 'Demandas Fotos', msgs: [
+     {id: 'false_A@g.us_1_5511@c.us', pre: '[09:10, %HOJE%] Camilo: ', legenda: 'BEIRA RIO 8513.115', fotos: 3},
+     {id: 'false_A@g.us_2_5511@c.us', pre: '[09:12, %HOJE%] Camilo: ', legenda: 'dakota rosa Choque', fotos: 4, mais: 3},
+     {id: 'false_A@g.us_3_5511@c.us', pre: '[08:00, 01/01/2020] Camilo: ', legenda: 'VIZZANO 1111.100', fotos: 1},
+     {id: 'true_A@g.us_4_me@c.us', pre: '[09:30, %HOJE%] Eu: ', legenda: 'MODARE 7000.100', fotos: 1}]},
+  B: {titulo: 'Só Foto Caixa', msgs: [
+     {id: 'false_B@g.us_1_5522@c.us', pre: '[10:00, %HOJE%] Ana: ', legenda: '', fotos: 1},
+     {id: 'false_B@g.us_2_5522@c.us', pre: '', legenda: '', fotos: 1}]},
+  D: {titulo: 'PROGRAMAÇÃO ✨📷💰', msgs: [
+     {id: 'false_D@g.us_1_5511@c.us', pre: '[16:26, %HOJE%] ~ Camilo: ', legenda: 'VIZZANO 6291.1900', fotos: 4, mais: 6},
+     {id: 'false_D@g.us_2_5511@c.us', pre: '[16:30, %HOJE%] ~ Camilo: ', legenda: 'VIA JUPITER 8000.8460', fotos: 4, mais: 9}]},
+  C: {titulo: 'Familia', msgs: [{id: 'false_C@g.us_1_x@c.us', pre: '[09:00, %HOJE%] Mae: ', legenda: 'bom dia', fotos: 0}]}
+};
+const TOTAL_E = 60, LOTE_E = 15; let carregadosE = 0, carregandoE = false;
+function msgE(i) { return {id: 'false_E@g.us_' + (i + 1) + '_5533@c.us', pre: (i % 3 == 0) ? '[1' + Math.floor(i / 10) + ':0' + (i % 10) + ', %HOJE%] Israel: ' : '', legenda: 'Subir para site', fotos: 1}; }
+async function htmlMsgE(i) { const m = msgE(i); const u = await azul(['#c33','#3a3','#33c','#cc3','#939','#399'][i % 6], 700 + i, 500); window.ALBUM[m.id] = [u];
+  return '<div data-id="' + m.id + '"><img src="' + u + '" width="120" height="90" onclick="abrirVisor(\'' + m.id + '\',0)">' +
+    '<div class="copyable-text" data-pre-plain-text="' + m.pre + '"><span class="selectable-text"><span>' + m.legenda + '</span></span></div></div>'; }
+async function maisE() { if (carregandoE || carregadosE >= TOTAL_E) return; carregandoE = true; const r = document.getElementById('rolagem');
+  const fim = TOTAL_E - carregadosE, ini = Math.max(0, fim - LOTE_E); let h = '';
+  for (let i = ini; i < fim; i++) h += await htmlMsgE(i);
+  const antes = r.scrollHeight; r.insertAdjacentHTML('afterbegin', h); carregadosE = TOTAL_E - ini; r.scrollTop = r.scrollHeight - antes; carregandoE = false; }
+async function abrirE() { carregadosE = 0; document.getElementById('app').innerHTML = '<div id="main"><header><span title="SUBIR PRO SITE">SUBIR PRO SITE</span></header><div id="rolagem" style="height:500px;overflow:auto"></div></div>';
+  const r = document.getElementById('rolagem'); r.addEventListener('scroll', () => { if (r.scrollTop <= 2) maisE(); }); await maisE(); r.scrollTop = r.scrollHeight; }
+async function abrir(k) {
+  const c = CHATS[k]; const app = document.getElementById('app'); let h = '<div id="main"><header><span title="' + c.titulo + '">' + c.titulo + '</span></header>';
+  for (const m of c.msgs) {
+    h += '<div data-id="' + m.id + '">';
+    if (m.fotos) { h += '<div class="album">'; const total = m.fotos + (m.mais ? m.mais - 1 : 0); window.ALBUM[m.id] = [];
+      for (let i = 0; i < total; i++) { window.ALBUM[m.id].push(await azul(['#c33','#3a3','#33c','#cc3','#939','#399'][i % 6], 700 + i*10, 500)); }
+      for (let i = 0; i < m.fotos; i++) { h += '<img src="' + window.ALBUM[m.id][i] + '" width="120" height="90" onclick="abrirVisor(\'' + m.id + '\',' + i + ')">'; }
+      if (m.mais) h += '<div class="tile"><span>+' + m.mais + '</span></div>'; h += '</div>'; }
+    if (m.legenda || m.pre) h += '<div class="copyable-text" data-pre-plain-text="' + m.pre + '"><span class="selectable-text"><span>' + m.legenda + '</span></span></div>';
+    h += '</div>';
+  }
+  app.innerHTML = h + '</div>';
+  // imagens precisam ter naturalWidth: espera carregar
+  await Promise.all([...app.querySelectorAll('img')].map(i => i.decode().catch(() => {})));
+}
+</script></body></html>"""
+
+
+def criar(pasta: Path) -> str:
+    from datetime import date
+    hoje = date.today().strftime("%d/%m/%Y")
+    arq = pasta / "fake_whatsapp.html"
+    arq.write_text(HTML.replace("%HOJE%", hoje), encoding="utf-8")
+    return arq.as_uri()

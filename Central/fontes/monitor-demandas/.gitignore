@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+perfil_whatsapp/
+config.json
+.pytest_cache/
+saida/

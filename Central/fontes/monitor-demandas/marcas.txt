@@ -1,0 +1,2 @@
+# Marcas extras (opcional). Uma por linha; apelidos separados por |
+# Exemplo: Minha Marca | MINHA MARCA | MINHAMARCA
