@@ -1,0 +1,58 @@
+name: Gerar executável (Executar .py)
+on:
+  workflow_dispatch:
+  push:
+    branches: [claude/vigilant-ramanujan-g27161]
+    paths: ["executar-py/**", ".github/workflows/build-executarpy.yml"]
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: executar-py
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      - run: pip install -r requirements.txt pytest
+      - name: Testes automáticos
+        run: python -m pytest -q tests
+      - name: Gerar o programa (.exe com ícone e versão)
+        run: >
+          pyinstaller --noconfirm --onedir --console --name ExecutarPy
+          --icon assets/icone.ico --version-file installer/versao.txt
+          programa.py
+      - name: Teste do programa (roda scripts de verdade pelo .exe gerado)
+        shell: pwsh
+        run: |
+          $pasta = "dist\ExecutarPy"
+          $env:EXECUTARPY_TESTE = "1"
+          $p = Start-Process -FilePath "$pasta\ExecutarPy.exe" -ArgumentList "--selftest" -PassThru -WorkingDirectory $pasta
+          $p.WaitForExit(60000) | Out-Null
+          Get-ChildItem "$pasta\selftest_*.txt" -ErrorAction SilentlyContinue | ForEach-Object { "--- " + $_.Name; Get-Content $_.FullName }
+          if (-not $p.HasExited) { Stop-Process -Id $p.Id -Force }
+          if (Test-Path "$pasta\selftest_erro.txt") { throw "selftest falhou (veja acima)" }
+          if (-not (Test-Path "$pasta\selftest_ok.txt")) { throw "o programa não terminou o selftest" }
+          Remove-Item "$pasta\selftest_*.txt" -ErrorAction SilentlyContinue
+      - name: Instalar o Inno Setup
+        shell: pwsh
+        run: choco install innosetup --no-progress -y
+      - name: Gerar o instalador
+        shell: pwsh
+        run: |
+          & "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" installer\executarpy.iss
+          if (-not (Test-Path saida\ExecutarPy-Instalador-1.0.0.exe)) { throw "instalador não foi gerado" }
+      - name: Versão portátil (zip)
+        shell: pwsh
+        run: |
+          Copy-Item LEIA-ME.md dist\ExecutarPy\
+          Compress-Archive -Path dist\ExecutarPy -DestinationPath saida\ExecutarPy-portatil.zip
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: executarpy-${{ github.run_number }}
+          name: Executar .py (Windows) #${{ github.run_number }}
+          files: |
+            executar-py/saida/ExecutarPy-Instalador-1.0.0.exe
+            executar-py/saida/ExecutarPy-portatil.zip
