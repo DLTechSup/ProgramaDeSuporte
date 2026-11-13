@@ -1,7 +1,7 @@
 """Pagina que imita o WhatsApp Web (so o necessario) para testar o leitor sem WhatsApp de verdade."""
 from pathlib import Path
 
-HTML = r"""<!doctype html><html><body>
+HTML = r"""<!doctype html><html><head><meta charset="utf-8"></head><body>
 <div id="side"><div contenteditable="true" role="textbox"></div>
  <div id="pane-side">
   <div role="listitem"><span title="Demandas Fotos" onclick="abrir('A')">Demandas Fotos</span></div>
