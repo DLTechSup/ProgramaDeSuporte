@@ -2,7 +2,7 @@
 
 Fica rodando minimizado, **olha os grupos de WhatsApp que você escolher** e, a cada demanda que chega:
 - baixa as fotos e cria a pasta `MARCA REFERÊNCIA` com elas dentro;
-- anota na **lista da demanda do dia** (na tela e em arquivo `.csv`, que abre no Excel).
+- anota na **lista da demanda do dia** (na tela e em arquivo `.txt`, que abre em qualquer editor).
 
 A cada item salvo, aparece um **aviso no canto da tela** (mesmo com tudo minimizado) dizendo de qual grupo veio, a marca, a referência e quantas fotos. Dá para desligar o aviso ou o som em Configurações.
 
@@ -18,17 +18,22 @@ Demandas (pasta principal)/
 │       ├── BEIRA RIO 8513.115/   foto_01.jpg ...
 │       ├── DAKOTA rosa Choque/
 │       ├── _Conferir .../        <- o que o programa não soube identificar
-│       ├── lista_do_dia.csv
+│       ├── lista_do_dia.txt
 │       └── lista_do_dia.json
 └── FOTOS DA CAIXA/
     └── 13-11-2026/ ...
 ```
 
-## Dois tipos de grupo
+## Três tipos (quantos grupos e conversas você quiser)
 - **Grupo A (foto + marca + referência na legenda):** o programa separa a marca da referência pela legenda
   (`BEIRA RIO 8513.115` → pasta `BEIRA RIO 8513.115`). Se a foto vier sem legenda, ele espera o texto por 2 minutos; se não vier, vai para `_Conferir`.
 - **Grupo B (só a foto da caixa):** o programa **lê a etiqueta** (na sua máquina, sem internet) e acha a referência (e a marca,
   se aparecer). Foto que não deu para ler vai para `_Conferir`, marcada na lista.
+
+- **Conversa individual:** em vez de fotos, o programa salva **o texto do que a pessoa escrever** em `mensagens.txt`
+  (`[09:41] bom dia, segue a lista...`). Como é salvo na hora, **fica guardado mesmo que a pessoa apague a mensagem depois**.
+  Só entram as mensagens dela (não as suas), de hoje em diante. **Fotos** que a pessoa mandar também são salvas, na pasta `fotos`, com o **nome do contato** no arquivo (`Maria Silva - foto_01.jpg`). Foto sem texto aparece como `[foto]` no `mensagens.txt`; áudio/arquivo como `[mídia sem texto]`.
+  Aviso: o monitor passa pelas conversas uma de cada vez (alguns segundos entre uma e outra); se alguém apagar uma mensagem em poucos segundos, ele pode não ter lido.
 
 Álbum com "+N" fotos: o programa tenta abrir o álbum e baixar todas. Se não conseguir tudo, avisa na lista ("álbum incompleto").
 
@@ -40,6 +45,8 @@ Demandas (pasta principal)/
 4. Na aba **Demanda do dia** aparece tudo que chegou, com caixinha de "feito", pasta de cada item e avisos ⚠.
 
 Obs.: o monitor precisa "abrir" cada grupo na janela dele, um de cada vez, para ler as mensagens. Por isso ele usa uma janela separada.
+
+## Tudo é salvo em `.txt` (nada de CSV ou Excel).
 
 ## Se algo não funcionar
 Aba **Registro** > **Testar leitura (diagnóstico)** mostra o que o programa enxerga na tela (sem o texto das conversas).

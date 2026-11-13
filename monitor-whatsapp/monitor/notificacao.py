@@ -14,6 +14,9 @@ LARGURA, ALTURA, MARGEM = 380, 86, 10
 
 def texto_do_aviso(d: dict) -> tuple[str, str, str]:
     """(titulo, linha 1, linha 2) a partir do evento 'salvo'."""
+    if d.get("tipo") == "I":
+        extra = f" · {d['fotos']} foto(s)" if d.get("fotos") else ""
+        return f"💬 {d['grupo']}", d["previa"], f"{d['mensagens']} mensagem(ns) salva(s) em texto{extra}"
     marca = d["marca"] if d["marca"] and d["marca"] != "?" else ""
     nome = f"{marca} {d['referencia']}".strip()
     if d["situacao"] == "conferir":

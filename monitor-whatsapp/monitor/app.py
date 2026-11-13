@@ -101,7 +101,7 @@ class Janela(ctk.CTk):
         linha = ctk.CTkFrame(aba, fg_color="transparent")
         linha.pack(fill="x")
         ctk.CTkButton(linha, text="Abrir pasta principal", width=170, command=self._abrir_pasta_dia).pack(side="left", padx=4)
-        ctk.CTkButton(linha, text="Abrir lista (Excel/CSV)", width=170, command=self._abrir_csv).pack(side="left", padx=4)
+        ctk.CTkButton(linha, text="Abrir lista do dia (.txt)", width=170, command=self._abrir_lista_txt).pack(side="left", padx=4)
         self.lbl_total = ctk.CTkLabel(linha, text="", text_color="gray30")
         self.lbl_total.pack(side="left", padx=12)
         self.quadro = ctk.CTkScrollableFrame(aba)
@@ -162,10 +162,10 @@ class Janela(ctk.CTk):
         if p and (p / nome).exists():
             abrir_no_windows(p / nome)
 
-    def _abrir_csv(self) -> None:
+    def _abrir_lista_txt(self) -> None:
         """Abre a lista de hoje: se ha um grupo so, abre o dele; se ha varios, abre a pasta de cada um."""
-        csvs = [self._pasta_do_dia(g.nome) / "lista_do_dia.csv" for g in self.cfg.grupos if self._pasta_do_dia(g.nome)]
-        existentes = [c for c in csvs if c.exists()]
+        listas = [self._pasta_do_dia(g.nome) / "lista_do_dia.txt" for g in self.cfg.grupos if self._pasta_do_dia(g.nome)]
+        existentes = [c for c in listas if c.exists()]
         if not existentes:
             messagebox.showinfo("Lista", "A lista ainda não foi criada (nada chegou hoje).")
         for c in existentes:
@@ -173,7 +173,7 @@ class Janela(ctk.CTk):
 
     # ------------------------------------------------------- configuracoes
     def _aba_config(self, aba) -> None:
-        ctk.CTkLabel(aba, text="Pasta principal (dentro dela o programa cria uma pasta para cada grupo, e dentro dela uma por dia):", anchor="w").pack(fill="x", padx=6, pady=(6, 0))
+        ctk.CTkLabel(aba, text="Pasta principal (dentro dela o programa cria uma pasta para cada grupo ou pessoa, e dentro dela uma por dia):", anchor="w").pack(fill="x", padx=6, pady=(6, 0))
         linha = ctk.CTkFrame(aba, fg_color="transparent")
         linha.pack(fill="x", padx=6)
         self.e_pasta = ctk.CTkEntry(linha)
@@ -181,7 +181,7 @@ class Janela(ctk.CTk):
         self.e_pasta.insert(0, self.cfg.pasta_base)
         ctk.CTkButton(linha, text="Escolher...", width=100, command=self._escolher_pasta).pack(side="left", padx=6)
 
-        ctk.CTkLabel(aba, text="Grupos monitorados:", anchor="w", font=("Segoe UI", 13, "bold")).pack(fill="x", padx=6, pady=(14, 0))
+        ctk.CTkLabel(aba, text="Grupos e conversas monitorados (quantos quiser):", anchor="w", font=("Segoe UI", 13, "bold")).pack(fill="x", padx=6, pady=(14, 0))
         self.quadro_grupos = ctk.CTkFrame(aba)
         self.quadro_grupos.pack(fill="x", padx=6, pady=4)
 
@@ -196,7 +196,7 @@ class Janela(ctk.CTk):
         ctk.CTkButton(add, text="Adicionar", width=90, command=self._adicionar_grupo).pack(side="left")
         ctk.CTkButton(aba, text="Atualizar lista de conversas (do WhatsApp aberto)", width=330, command=self._pedir_conversas).pack(anchor="w", padx=6, pady=2)
         ctk.CTkLabel(aba, anchor="w", text_color="gray35", wraplength=900, justify="left",
-                     text="Dica: digite o nome do grupo igualzinho ao do WhatsApp, ou use \"Atualizar lista\" e escolha na caixa (aparecem as conversas visíveis na lista lateral).").pack(fill="x", padx=6)
+                     text="Dica: digite o nome do grupo ou da pessoa igualzinho ao do WhatsApp, ou use \"Atualizar lista\" e escolha na caixa (aparecem as conversas visíveis na lista lateral).").pack(fill="x", padx=6)
 
         self.v_hoje = ctk.BooleanVar(value=self.cfg.incluir_hoje)
         self.v_escond = ctk.BooleanVar(value=self.cfg.tentar_escondidas)
@@ -217,7 +217,8 @@ class Janela(ctk.CTk):
             self._recarregar_lista()
 
     def _tipo_da_caixa(self) -> str:
-        return "B" if self.c_tipo.get().startswith("Grupo B") else "A"
+        t = self.c_tipo.get()
+        return "B" if t.startswith("Grupo B") else ("I" if t.startswith("Conversa") else "A")
 
     def _adicionar_grupo(self) -> None:
         nome = self.c_conversa.get().strip()

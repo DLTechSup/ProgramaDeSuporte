@@ -8,13 +8,14 @@ from pathlib import Path
 
 RAIZ = Path(sys.executable).resolve().parent if getattr(sys, "frozen", False) else Path(__file__).resolve().parent.parent
 ARQUIVO = RAIZ / "config.json"
-TIPOS = {"A": "Grupo A: foto + marca + referência (legenda)", "B": "Grupo B: só foto da caixa (ler a etiqueta)"}
+TIPOS = {"A": "Grupo A: foto + marca + referência (legenda)", "B": "Grupo B: só foto da caixa (ler a etiqueta)",
+         "I": "Conversa individual: salvar o que a pessoa escrever (.txt)"}
 
 
 @dataclass
 class Grupo:
     nome: str
-    tipo: str = "A"   # "A" ou "B"
+    tipo: str = "A"   # "A", "B" ou "I" (conversa individual)
 
 
 @dataclass

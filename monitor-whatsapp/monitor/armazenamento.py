@@ -35,19 +35,28 @@ def extensao(dados: bytes) -> str:
     return ".jpg"
 
 
-def salvar_fotos(pasta_dia: Path, nome_pasta: str, fotos: list[bytes]) -> tuple[Path, int]:
-    """Salva em <dia>/<nome_pasta>/foto_01.jpg... Pula foto que ja esta na pasta. Devolve (pasta, quantas novas)."""
+def salvar_fotos(pasta_dia: Path, nome_pasta: str, fotos: list[bytes], prefixo: str = "") -> tuple[Path, int]:
+    """Salva em <dia>/<nome_pasta>/<prefixo>foto_01.jpg... Pula foto que ja esta na pasta. Devolve (pasta, quantas novas)."""
     destino = Path(pasta_dia) / nome_seguro(nome_pasta)
     destino.mkdir(parents=True, exist_ok=True)
     existentes = {hashlib.sha1(f.read_bytes()).hexdigest() for f in destino.iterdir() if f.is_file()}
-    numero = sum(1 for f in destino.iterdir() if f.is_file() and f.name.startswith("foto_"))
+    numero = sum(1 for f in destino.iterdir() if f.is_file() and f.name.startswith(prefixo + "foto_"))
     novas = 0
     for dados in fotos:
         h = hashlib.sha1(dados).hexdigest()
         if len(dados) < 3000 or h in existentes:   # menor que 3 KB = miniatura/icone, nao e foto
             continue
         numero += 1
-        (destino / f"foto_{numero:02d}{extensao(dados)}").write_bytes(dados)
+        (destino / f"{prefixo}foto_{numero:02d}{extensao(dados)}").write_bytes(dados)
         existentes.add(h)
         novas += 1
     return destino, novas
+
+
+def anexar_mensagens(pasta_dia: Path, linhas: list[str], nome_arquivo: str = "mensagens.txt") -> Path:
+    """Acrescenta linhas ao .txt do dia (UTF-8, abre em qualquer editor). Nunca apaga nem reescreve o que ja foi salvo."""
+    arq = Path(pasta_dia) / nome_arquivo
+    with open(arq, "a", encoding="utf-8") as f:
+        for linha in linhas:
+            f.write(linha.rstrip("\n") + "\n")
+    return arq

@@ -7,7 +7,7 @@ from datetime import date
 from pathlib import Path
 from typing import Callable
 
-from .armazenamento import pasta_do_dia, salvar_fotos
+from .armazenamento import anexar_mensagens, nome_pasta_grupo, pasta_do_dia, salvar_fotos
 from .config import Config, Grupo
 from .legenda import dividir_legenda
 from .lista import Estado, ListaDoDia
@@ -15,6 +15,7 @@ from .marcas import carregar_marcas, detectar_marca
 from .referencia import chave_referencia, extrair_referencia, nome_seguro
 
 CONFERIR = "_Conferir"
+APAGADA = {"ESTA MENSAGEM FOI APAGADA", "VOCE APAGOU ESTA MENSAGEM", "THIS MESSAGE WAS DELETED", "YOU DELETED THIS MESSAGE", "MENSAGEM APAGADA"}
 
 
 @dataclass
@@ -96,6 +97,8 @@ class Processador:
         self._vencer_pendentes()
 
     def _processar_grupo(self, g: Grupo) -> None:
+        if g.tipo == "I":
+            return self._conversa_individual(g)
         _, msgs = self.nav.ler()
         primeira_vez = g.nome not in self._primeiro
         self._primeiro.add(g.nome)
@@ -198,3 +201,51 @@ class Processador:
         if sem_leitura:
             self._registrar(g.nome, "?", "não lida", f"{CONFERIR} etiqueta {m.hora.replace(':', 'h')} {m.id[-6:]}", sem_leitura,
                             "conferir", "não consegui ler a referência na foto")
+
+    # ---- Conversa individual: salva o TEXTO do que a pessoa escreveu ----------
+    def _conversa_individual(self, g: Grupo) -> None:
+        from .texto import normalizar
+        _, msgs = self.nav.ler()
+        estado = self.estados[g.nome]
+        primeira_vez = g.nome not in self._primeiro
+        self._primeiro.add(g.nome)
+        linhas: list[str] = []
+        previa = ""
+        n_fotos = 0
+        for m in msgs:
+            if m.minha or not estado.novo(m.id):
+                continue
+            if m.dia != self.hoje() or (primeira_vez and not self.cfg.incluir_hoje):
+                estado.marcar(m.id)
+                continue
+            if m.carregando and self.aguardando.get(m.id, 0) < 10:       # foto ainda borrada: espera baixar
+                self.aguardando[m.id] = self.aguardando.get(m.id, 0) + 1
+                continue
+            if m.blobs:                                                    # foto: salva com o nome do contato
+                try:
+                    _, novas = salvar_fotos(self.pastas[g.nome], "fotos", self._fotos_da_mensagem(m),
+                                            prefixo=f"{nome_pasta_grupo(g.nome)} - ")
+                    n_fotos += novas
+                except Exception as e:  # noqa: BLE001
+                    self.evento("log", f"Erro ao baixar foto de {g.nome}: {e}")
+                    continue
+            texto = (m.legenda or "").strip()
+            if texto and normalizar(texto) in APAGADA:
+                texto = "[mensagem apagada antes de o monitor ler]"
+            elif not texto:
+                texto = "[foto]" if (m.blobs or m.carregando) else "[mídia sem texto: áudio, figurinha ou arquivo]"
+            elif m.blobs or m.carregando:
+                texto = "[foto] " + texto
+            partes = texto.split("\n")
+            linhas.append(f"[{m.hora or '--:--'}] {partes[0]}")
+            linhas += [f"        {p}" for p in partes[1:]]
+            previa = previa or texto
+            estado.marcar(m.id)
+        if not linhas:
+            return
+        n = sum(1 for x in linhas if x.startswith("["))
+        arq = anexar_mensagens(self.pastas[g.nome], linhas)
+        if n_fotos:
+            self.evento("log", f"{g.nome}: {n_fotos} foto(s) salva(s) na pasta fotos")
+        self.evento("log", f"{g.nome}: {n} mensagem(ns) salva(s) em {arq.name}")
+        self.evento("salvo", {"grupo": g.nome, "tipo": "I", "mensagens": n, "fotos": n_fotos, "previa": previa[:80], "situacao": "ok", "obs": ""})

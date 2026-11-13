@@ -55,7 +55,8 @@ def test_grupo_a_salva_pastas_e_lista(nav, tmp_path):
     assert {i.referencia for i in p.listas['Demandas Fotos'].itens.values()} == {"8513.115", "rosa Choque"}
     p.ciclo()                                                                   # segunda volta: nada novo
     assert len(list(beira.glob("foto_*"))) == 3 and len(p.listas['Demandas Fotos'].itens) == 2
-    assert (dia / "lista_do_dia.csv").read_text(encoding="utf-8-sig").count("\n") == 3
+    txt = (dia / "lista_do_dia.txt").read_text(encoding="utf-8")
+    assert "8513.115 — 3 foto(s)" in txt and "rosa Choque — 6 foto(s)" in txt and not list(dia.glob("*.csv"))
 
 
 def test_grupo_b_le_etiqueta(nav, tmp_path):
@@ -154,3 +155,37 @@ def test_texto_do_aviso():
     assert texto_do_aviso(dict(d, nova=False, total=5, novas=2))[0].startswith("＋ PROGRAMAÇÃO")
     t, l1, l2 = texto_do_aviso(dict(d, marca="?", referencia="não lida", situacao="conferir", obs="não consegui ler"))
     assert t.startswith("⚠") and l1 == "não lida" and "não consegui ler" in l2
+
+
+def test_conversa_individual_salva_texto_mesmo_se_apagar(tmp_path):
+    from monitor.leitor import Mensagem
+    def m(id, texto, minha=False, blobs=(), hora="10:00", dia=None):
+        return Mensagem(id, minha, texto, list(blobs), 0, 0, "Maria", dia or HOJE, hora)
+    cfg = Config(pasta_base=str(tmp_path), grupos=[Grupo("Maria Silva", "I")])
+    nav = NavFalso([m("1", "bom dia"), m("2", "linha 1\nlinha 2", hora="10:05"), m("3", "resposta minha", minha=True),
+                    m("4", "", blobs=("blob:x",), hora="10:06"), m("5", "antiga", dia=date(2020, 1, 1))])
+    eventos = []
+    p = Processador(cfg, nav, evento=lambda t, d: eventos.append((t, d)))
+    p.ciclo()
+    arq = tmp_path / "Maria Silva" / HOJE.strftime("%d-%m-%Y") / "mensagens.txt"
+    assert arq.read_text(encoding="utf-8").splitlines() == ["[10:00] bom dia", "[10:05] linha 1", "        linha 2", "[10:06] [foto]"]
+    fotos = list((arq.parent / "fotos").glob("*"))
+    assert [f.name for f in fotos] == ["Maria Silva - foto_01.jpg"]                  # foto salva com o nome do contato
+    aviso = [d for t, d in eventos if t == "salvo"][0]
+    assert aviso["mensagens"] == 3 and aviso["fotos"] == 1 and aviso["previa"] == "bom dia"
+    # a pessoa apaga a mensagem 1 e manda outra: o que ja foi salvo continua, e nao duplica
+    nav.msgs = [m("1", "Esta mensagem foi apagada"), m("2", "linha 1\nlinha 2", hora="10:05"), m("6", "nova msg", hora="10:20")]
+    p.ciclo()
+    linhas = arq.read_text(encoding="utf-8").splitlines()
+    assert linhas[0] == "[10:00] bom dia" and linhas[-1] == "[10:20] nova msg" and len(linhas) == 5
+
+
+def test_conversa_apagada_antes_de_ler_e_aviso_individual(tmp_path):
+    from monitor.leitor import Mensagem
+    from monitor.notificacao import texto_do_aviso
+    cfg = Config(pasta_base=str(tmp_path), grupos=[Grupo("Joao", "I")])
+    nav = NavFalso([Mensagem("1", False, "Você apagou esta mensagem", [], 0, 0, "Joao", HOJE, "09:00")])
+    Processador(cfg, nav).ciclo()
+    arq = tmp_path / "Joao" / HOJE.strftime("%d-%m-%Y") / "mensagens.txt"
+    assert "[mensagem apagada antes de o monitor ler]" in arq.read_text(encoding="utf-8")
+    assert texto_do_aviso({"grupo": "Joao", "tipo": "I", "mensagens": 2, "fotos": 1, "previa": "oi", "situacao": "ok", "obs": ""}) == ("💬 Joao", "oi", "2 mensagem(ns) salva(s) em texto · 1 foto(s)")

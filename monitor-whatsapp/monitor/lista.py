@@ -1,14 +1,10 @@
-"""Lista da demanda do dia (arquivo JSON + CSV na pasta do dia)."""
+"""Lista da demanda do dia (lista_do_dia.txt legivel + um .json interno)."""
 from __future__ import annotations
 
-import csv
 import json
 from dataclasses import asdict, dataclass
 from datetime import datetime
 from pathlib import Path
-
-CABECALHO = ["hora", "grupo", "marca", "referencia", "fotos", "situacao", "feito", "pasta", "observacao"]
-
 
 @dataclass
 class Item:
@@ -64,12 +60,16 @@ class ListaDoDia:
 
     def salvar(self) -> None:
         self.arquivo.write_text(json.dumps([asdict(i) for i in self.itens.values()], ensure_ascii=False, indent=1), encoding="utf-8")
-        with open(self.pasta / "lista_do_dia.csv", "w", newline="", encoding="utf-8-sig") as f:
-            w = csv.writer(f, delimiter=";")
-            w.writerow(CABECALHO)
-            for i in sorted(self.itens.values(), key=lambda x: x.hora):
-                w.writerow([i.hora, i.grupo, i.marca, i.referencia, i.fotos, "CONFERIR" if i.situacao == "conferir" else "ok",
-                            "sim" if i.feito else "", i.pasta, i.observacao])
+        self._escrever_txt()
+
+    def _escrever_txt(self) -> None:
+        linhas = [f"LISTA DA DEMANDA — {self.pasta.parent.name} — {self.pasta.name.replace('-', '/')}", ""]
+        for i in sorted(self.itens.values(), key=lambda x: x.hora):
+            marca = f"{i.marca} " if i.marca and i.marca != "?" else ""
+            aviso = "  ⚠ CONFERIR" if i.situacao == "conferir" else ""
+            obs = f"  ({i.observacao})" if i.observacao else ""
+            linhas.append(f"[{'x' if i.feito else ' '}] {i.hora}  {marca}{i.referencia} — {i.fotos} foto(s){aviso}{obs}")
+        (self.pasta / "lista_do_dia.txt").write_text("\n".join(linhas) + "\n", encoding="utf-8")
 
 
 class Estado:
