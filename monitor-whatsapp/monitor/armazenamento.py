@@ -53,10 +53,13 @@ def salvar_fotos(pasta_dia: Path, nome_pasta: str, fotos: list[bytes], prefixo: 
     return destino, novas
 
 
-def anexar_mensagens(pasta_dia: Path, linhas: list[str], nome_arquivo: str = "mensagens.txt") -> Path:
-    """Acrescenta linhas ao .txt do dia (UTF-8, abre em qualquer editor). Nunca apaga nem reescreve o que ja foi salvo."""
+def anexar_mensagens(pasta_dia: Path, mensagens: list[list[str]], nome_arquivo: str = "mensagens.txt") -> Path:
+    """Acrescenta ao .txt do dia: cada mensagem em sua(s) linha(s), com uma linha em branco entre elas.
+    UTF-8, quebras de linha do Windows (CRLF). Nunca apaga nem reescreve o que ja foi salvo."""
     arq = Path(pasta_dia) / nome_arquivo
-    with open(arq, "a", encoding="utf-8") as f:
-        for linha in linhas:
-            f.write(linha.rstrip("\n") + "\n")
+    with open(arq, "a", encoding="utf-8", newline="") as f:
+        for linhas in mensagens:
+            for linha in linhas:
+                f.write(linha.rstrip("\r\n") + "\r\n")
+            f.write("\r\n")
     return arq

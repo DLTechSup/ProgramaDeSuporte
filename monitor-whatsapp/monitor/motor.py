@@ -209,7 +209,7 @@ class Processador:
         estado = self.estados[g.nome]
         primeira_vez = g.nome not in self._primeiro
         self._primeiro.add(g.nome)
-        linhas: list[str] = []
+        mensagens: list[list[str]] = []
         previa = ""
         n_fotos = 0
         for m in msgs:
@@ -237,14 +237,13 @@ class Processador:
             elif m.blobs or m.carregando:
                 texto = "[foto] " + texto
             partes = texto.split("\n")
-            linhas.append(f"[{m.hora or '--:--'}] {partes[0]}")
-            linhas += [f"        {p}" for p in partes[1:]]
+            mensagens.append([f"[{m.hora or '--:--'}] {partes[0]}"] + [f"        {p}" for p in partes[1:]])
             previa = previa or texto
             estado.marcar(m.id)
-        if not linhas:
+        if not mensagens:
             return
-        n = sum(1 for x in linhas if x.startswith("["))
-        arq = anexar_mensagens(self.pastas[g.nome], linhas)
+        n = len(mensagens)
+        arq = anexar_mensagens(self.pastas[g.nome], mensagens)
         if n_fotos:
             self.evento("log", f"{g.nome}: {n_fotos} foto(s) salva(s) na pasta fotos")
         self.evento("log", f"{g.nome}: {n} mensagem(ns) salva(s) em {arq.name}")

@@ -3,3 +3,4 @@ __pycache__/
 perfil_whatsapp/
 config.json
 .pytest_cache/
+saida/

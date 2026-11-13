@@ -21,34 +21,42 @@ jobs:
         env:
           CHROMIUM_PATH: C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe
         run: python -m pytest -q tests
-      - name: Gerar .exe
+      - name: Gerar o programa (.exe com ícone e versão)
         run: >
-          pyinstaller --onefile --noconsole --name MonitorDeDemandas
-          --collect-all playwright --collect-all customtkinter
+          pyinstaller --noconfirm --onedir --noconsole --name MonitorDeDemandas
+          --icon assets/icone.ico --version-file installer/versao.txt --add-data "assets;assets"
+          --collect-all playwright --collect-all customtkinter --collect-all pystray
           --collect-all rapidocr_onnxruntime --collect-all onnxruntime --collect-all rapidfuzz
           programa.py
-      - name: Montar pacote
+      - name: Teste do programa (janela + bandeja + Edge sem tela + leitura + OCR)
         shell: pwsh
         run: |
-          New-Item -ItemType Directory pacote | Out-Null
-          Copy-Item dist\MonitorDeDemandas.exe pacote\
-          Copy-Item marcas.txt, LEIA-ME.md pacote\
-      - name: Teste do .exe (janela + Edge sem tela + leitura + OCR)
-        shell: pwsh
-        run: |
-          $p = Start-Process -FilePath pacote\MonitorDeDemandas.exe -ArgumentList "--selftest" -PassThru
+          $pasta = "dist\MonitorDeDemandas"
+          $p = Start-Process -FilePath "$pasta\MonitorDeDemandas.exe" -ArgumentList "--selftest" -PassThru
           $p.WaitForExit(130000) | Out-Null
-          Get-ChildItem pacote\selftest_*.txt -ErrorAction SilentlyContinue | ForEach-Object { "--- " + $_.Name; Get-Content $_.FullName }
+          Get-ChildItem "$pasta\selftest_*.txt" -ErrorAction SilentlyContinue | ForEach-Object { "--- " + $_.Name; Get-Content $_.FullName }
           if (-not $p.HasExited) { Stop-Process -Id $p.Id -Force }
-          if (Test-Path pacote\selftest_erro.txt) { throw "selftest falhou (veja acima)" }
-          if (-not (Test-Path pacote\selftest_ok.txt)) { throw "o .exe não terminou o selftest" }
-          Remove-Item pacote\selftest_*.txt -ErrorAction SilentlyContinue
-          Remove-Item -Recurse -Force pacote\perfil_whatsapp, pacote\config.json -ErrorAction SilentlyContinue
-      - name: Empacotar
+          if (Test-Path "$pasta\selftest_erro.txt") { throw "selftest falhou (veja acima)" }
+          if (-not (Test-Path "$pasta\selftest_ok.txt")) { throw "o programa não terminou o selftest" }
+          Remove-Item "$pasta\selftest_*.txt" -ErrorAction SilentlyContinue
+          Remove-Item -Recurse -Force "$pasta\perfil_whatsapp", "$pasta\config.json" -ErrorAction SilentlyContinue
+      - name: Instalar o Inno Setup
         shell: pwsh
-        run: Compress-Archive -Path pacote\* -DestinationPath MonitorDeDemandas-Windows.zip
+        run: choco install innosetup --no-progress -y
+      - name: Gerar o instalador
+        shell: pwsh
+        run: |
+          & "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" installer\monitor.iss
+          if (-not (Test-Path saida\MonitorDeDemandas-Instalador-1.0.0.exe)) { throw "instalador não foi gerado" }
+      - name: Versão portátil (zip)
+        shell: pwsh
+        run: |
+          Copy-Item marcas.txt, LEIA-ME.md dist\MonitorDeDemandas\
+          Compress-Archive -Path dist\MonitorDeDemandas -DestinationPath saida\MonitorDeDemandas-portatil.zip
       - uses: softprops/action-gh-release@v2
         with:
           tag_name: monitor-${{ github.run_number }}
           name: Monitor de Demandas (Windows) #${{ github.run_number }}
-          files: monitor-whatsapp/MonitorDeDemandas-Windows.zip
+          files: |
+            monitor-whatsapp/saida/MonitorDeDemandas-Instalador-1.0.0.exe
+            monitor-whatsapp/saida/MonitorDeDemandas-portatil.zip

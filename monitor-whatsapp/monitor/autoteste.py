@@ -26,7 +26,10 @@ def rodar() -> None:
         _passo("1 janela")
         from .app import Janela
         j = Janela(selftest=True)
+        bandeja_ok = j.tem_bandeja
         j.mainloop()
+        _passo(f"1b bandeja do Windows: {'ativa' if bandeja_ok else 'INATIVA'}")
+        # a bandeja pode nao subir em servidor de build sem area de notificacao: so registramos (o programa cai para 'minimizar')
         _passo("2 navegador sem tela + pagina de teste")
         from .config import Config, Grupo
         from .fixture_teste import criar
@@ -57,7 +60,7 @@ def rodar() -> None:
         img.save(buf, "JPEG")
         marca, ref = ler_etiqueta(criar_motor(), buf.getvalue(), carregar_marcas(None))
         assert (marca, ref) == ("BEIRA RIO", "123.456"), f"OCR leu {marca!r} {ref!r}"
-        (RAIZ / "selftest_ok.txt").write_text("ok", encoding="utf-8")
+        (RAIZ / "selftest_ok.txt").write_text(f"ok; bandeja={'ativa' if bandeja_ok else 'INATIVA'}", encoding="utf-8")
     except Exception:  # noqa: BLE001
         (RAIZ / "selftest_erro.txt").write_text(traceback.format_exc(), encoding="utf-8")
     os._exit(0)

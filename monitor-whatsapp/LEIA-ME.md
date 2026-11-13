@@ -37,16 +37,23 @@ Demandas (pasta principal)/
 
 Álbum com "+N" fotos: o programa tenta abrir o álbum e baixar todas. Se não conseguir tudo, avisa na lista ("álbum incompleto").
 
+## Como instalar
+Rode o **MonitorDeDemandas-Instalador-1.0.0.exe** (não pede senha de administrador) e siga as telas. Ele cria o atalho no Menu Iniciar e, se você quiser, na Área de Trabalho e para abrir junto com o Windows. Se preferir sem instalar, use o `.zip` portátil.
+Se o Windows avisar "O Windows protegeu o computador", clique em **Mais informações** > **Executar assim mesmo** (o programa ainda não tem assinatura digital paga).
+
 ## Como usar
 1. Abra o `MonitorDeDemandas.exe`. Na aba **Configurações**, escolha a **pasta principal** e adicione os **grupos** (nome igual ao do WhatsApp) com o tipo A ou B.
 2. Clique em **Abrir WhatsApp**. Abre uma janela de navegador (Edge) **só do monitor**: entre com o **QR code** do seu número
    (WhatsApp > Aparelhos conectados). Só na primeira vez. O seu atalho do WhatsApp Web e o WhatsApp instalado no Windows **não são mexidos**.
-3. Clique em **Iniciar monitor**. Pode minimizar a janela do navegador e a do programa (fechar o programa só minimiza; para encerrar use **Sair de vez**).
+3. Clique em **Iniciar monitor**. Pode minimizar a janela do navegador e a do programa (fechar a janela manda o programa para a **bandeja**, o ícone perto do relógio: clique nele para abrir, ou use o botão direito para pausar, abrir a pasta ou sair; para encerrar de vez use **Sair de vez**).
 4. Na aba **Demanda do dia** aparece tudo que chegou, com caixinha de "feito", pasta de cada item e avisos ⚠.
 
 Obs.: o monitor precisa "abrir" cada grupo na janela dele, um de cada vez, para ler as mensagens. Por isso ele usa uma janela separada.
 
 ## Tudo é salvo em `.txt` (nada de CSV ou Excel).
+
+## Log do dia
+Tudo o que acontece (monitor iniciado, itens salvos, erros) fica na aba **Registro do dia** e também no arquivo `_Log/log_DD-MM-AAAA.txt`, dentro da pasta principal, uma linha por evento.
 
 ## Se algo não funcionar
 Aba **Registro** > **Testar leitura (diagnóstico)** mostra o que o programa enxerga na tela (sem o texto das conversas).

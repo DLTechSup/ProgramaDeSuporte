@@ -63,13 +63,21 @@ class ListaDoDia:
         self._escrever_txt()
 
     def _escrever_txt(self) -> None:
-        linhas = [f"LISTA DA DEMANDA — {self.pasta.parent.name} — {self.pasta.name.replace('-', '/')}", ""]
+        """Um bloco por demanda, com cada dado em sua propria linha (nada junto numa linha so)."""
+        linhas = ["LISTA DA DEMANDA", f"Grupo: {self.pasta.parent.name}", f"Dia: {self.pasta.name.replace('-', '/')}", "", "=" * 40, ""]
         for i in sorted(self.itens.values(), key=lambda x: x.hora):
-            marca = f"{i.marca} " if i.marca and i.marca != "?" else ""
-            aviso = "  ⚠ CONFERIR" if i.situacao == "conferir" else ""
-            obs = f"  ({i.observacao})" if i.observacao else ""
-            linhas.append(f"[{'x' if i.feito else ' '}] {i.hora}  {marca}{i.referencia} — {i.fotos} foto(s){aviso}{obs}")
-        (self.pasta / "lista_do_dia.txt").write_text("\n".join(linhas) + "\n", encoding="utf-8")
+            marca = i.marca if i.marca and i.marca != "?" else "(não identificada)"
+            linhas += [f"[{'x' if i.feito else ' '}] {i.referencia}",
+                       f"    Marca: {marca}",
+                       f"    Hora: {i.hora}",
+                       f"    Fotos: {i.fotos}",
+                       f"    Pasta: {i.pasta}",
+                       f"    Situação: {'CONFERIR' if i.situacao == 'conferir' else 'ok'}"]
+            if i.observacao:
+                linhas.append(f"    Observação: {i.observacao}")
+            linhas.append("")
+        with open(self.pasta / "lista_do_dia.txt", "w", encoding="utf-8", newline="") as f:
+            f.write("\r\n".join(linhas) + "\r\n")
 
 
 class Estado:

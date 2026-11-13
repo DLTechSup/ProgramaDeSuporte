@@ -48,17 +48,21 @@ class Notificador:
     def _criar(self, d: dict) -> None:
         titulo, l1, l2 = texto_do_aviso(d)
         conferir = d["situacao"] == "conferir"
+        faixa, fundo = ("#E0A030", "#FFF9EC") if conferir else ("#0E7C66", "#FFFFFF")
         w = tk.Toplevel(self.raiz)
         w.overrideredirect(True)
         w.attributes("-topmost", True)
-        fundo = "#7a4b00" if conferir else "#1f3a2a"
-        w.configure(bg=fundo, highlightthickness=1, highlightbackground="#000000")
-        tk.Label(w, text=titulo, bg=fundo, fg="#ffffff", font=("Segoe UI", 11, "bold"), anchor="w").pack(fill="x", padx=12, pady=(8, 0))
-        tk.Label(w, text=l1, bg=fundo, fg="#ffffff", font=("Segoe UI", 12), anchor="w").pack(fill="x", padx=12)
-        tk.Label(w, text=l2, bg=fundo, fg="#d7e8dc", font=("Segoe UI", 9), anchor="w").pack(fill="x", padx=12, pady=(0, 6))
-        w.bind("<Button-1>", lambda _e, x=w: self._fechar(x))
-        for filho in w.winfo_children():
-            filho.bind("<Button-1>", lambda _e, x=w: self._fechar(x))
+        w.configure(bg="#C9D1D9")                                   # borda fina
+        corpo = tk.Frame(w, bg=fundo)
+        corpo.pack(fill="both", expand=True, padx=1, pady=1)
+        tk.Frame(corpo, bg=faixa, width=6).pack(side="left", fill="y")
+        texto = tk.Frame(corpo, bg=fundo)
+        texto.pack(side="left", fill="both", expand=True, padx=12, pady=8)
+        tk.Label(texto, text=titulo, bg=fundo, fg=faixa if not conferir else "#8A5A00", font=("Segoe UI", 10, "bold"), anchor="w").pack(fill="x")
+        tk.Label(texto, text=l1, bg=fundo, fg="#1F2933", font=("Segoe UI", 12, "bold"), anchor="w").pack(fill="x")
+        tk.Label(texto, text=l2, bg=fundo, fg="#6B7785", font=("Segoe UI", 9), anchor="w").pack(fill="x")
+        for parte in (w, corpo, texto, *texto.winfo_children()):
+            parte.bind("<Button-1>", lambda _e, x=w: self._fechar(x))
         self.abertos.append(w)
         self._posicionar()
         if self.som:

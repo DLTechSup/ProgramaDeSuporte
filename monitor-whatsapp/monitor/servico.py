@@ -8,6 +8,7 @@ import time
 from .config import Config
 from .leitor import Navegador
 from .motor import Processador
+from .registro import RegistroDoDia
 
 
 class Servico(threading.Thread):
@@ -22,6 +23,12 @@ class Servico(threading.Thread):
 
     def emitir(self, tipo: str, dado=None) -> None:
         self.eventos.put((tipo, dado))
+        texto = {"log": dado, "status": dado, "erro": f"ERRO: {dado}"}.get(tipo)   # 'salvo' ja aparece como 'log'
+        if texto and self.cfg.pasta_base:
+            try:
+                RegistroDoDia(self.cfg.pasta_base).escrever(str(texto))
+            except OSError:
+                pass
 
     def pedir(self, comando: str) -> None:
         self.comandos.put(comando)
@@ -85,8 +92,10 @@ class Servico(threading.Thread):
                 return ""
             self.proc = Processador(self.cfg, self.nav, evento=self.emitir)
             self.monitorando = True
+            self.emitir("log", "Monitor iniciado. Grupos: " + ", ".join(f"{g.nome} ({g.tipo})" for g in self.cfg.grupos))
         elif c == "pausar":
             self.monitorando = False
+            self.emitir("log", "Monitor pausado.")
         elif c == "conversas":
             try:
                 self.emitir("conversas", self.nav.conversas())
