@@ -57,13 +57,14 @@ end;
 
 procedure RestaurarAssociacao();
 var
+  bruto: AnsiString;
   valorAntigo: String;
   app: String;
 begin
   app := ExpandConstant('{app}');
-  if LoadStringFromFile(app + '\backup_associacao.txt', valorAntigo) then
+  if LoadStringFromFile(app + '\backup_associacao.txt', bruto) then
   begin
-    valorAntigo := Trim(valorAntigo);
+    valorAntigo := Trim(String(bruto));
     if valorAntigo = 'NAO_HAVIA' then
       RegDeleteValue(HKCU, 'Software\Classes\.py', '')
     else
