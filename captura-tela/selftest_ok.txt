@@ -1,1 +1,0 @@
-ok; mouse=INATIVO; bandeja=INATIVA; clipboard=falhou

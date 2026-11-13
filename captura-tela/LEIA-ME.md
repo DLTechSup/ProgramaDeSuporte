@@ -1,8 +1,12 @@
 # Captura de Tela
 
-Fica na **bandeja do Windows**. Aperte os **dois botões do mouse ao mesmo tempo** (esquerdo + direito),
-arraste para selecionar a área e **solte**: a captura é salva numa pasta e copiada para a área de
-transferência, pronta para colar em qualquer conversa ou programa (WhatsApp, Word, etc.).
+Fica na **bandeja do Windows**. É em duas etapas:
+1. Aperte os **dois botões do mouse ao mesmo tempo** (esquerdo + direito, um toque rápido — não precisa
+   segurar nem arrastar com os dois). Isso **arma** a captura: a tela fica escurecida, pronta para você selecionar.
+2. Agora, com um clique **normal**, só com o botão **esquerdo**: clique, **arraste** para marcar a área e **solte**.
+
+A captura é salva numa pasta e copiada para a área de transferência, pronta para colar em qualquer
+conversa ou programa (WhatsApp, Word, etc.).
 
 ## Como instalar
 Rode o **CapturaDeTela-Instalador-1.0.0.exe** (não pede senha de administrador).
@@ -10,11 +14,13 @@ Se o Windows avisar "O Windows protegeu o computador", clique em **Mais informa�
 (o programa ainda não tem assinatura digital paga).
 
 ## Como usar
-1. Pressione o botão esquerdo **e** o direito do mouse ao mesmo tempo (não importa qual vem primeiro,
-   desde que o segundo chegue em menos de ⅓ de segundo).
-2. Arraste para marcar a área. Um retângulo mostra o tamanho em pixels.
-3. Solte **qualquer um** dos dois botões: a captura é tirada na hora.
-4. Aparece um aviso no canto da tela com uma miniatura e o botão **Abrir pasta**.
+1. Toque o botão esquerdo **e** o direito do mouse ao mesmo tempo (não importa qual vem primeiro, desde
+   que o segundo chegue em menos de ⅓ de segundo) — pode soltar os dois na hora, não precisa segurar.
+   A tela escurece e mostra a dica "Clique e arraste para selecionar a área".
+2. Clique com o botão **esquerdo** e arraste para marcar a área. Um retângulo mostra o tamanho em pixels.
+3. Solte o botão esquerdo: a captura é tirada na hora.
+4. Para **cancelar** depois de armar (antes de soltar a captura), clique com o botão **direito** ou aperte **Esc**.
+5. Aparece um aviso no canto da tela com uma miniatura e o botão **Abrir pasta**.
 
 A imagem já fica na área de transferência — é só apertar **Ctrl+V** onde quiser colar.
 

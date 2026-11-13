@@ -1,5 +1,5 @@
-"""Partes que so existem no Windows: ouvir os dois botoes do mouse ao mesmo tempo, a janela de
-selecao na tela inteira e colocar a imagem na area de transferencia."""
+"""Partes que so existem no Windows: ouvir o mouse do sistema inteiro, a janela de selecao na tela
+inteira e colocar a imagem na area de transferencia."""
 from __future__ import annotations
 
 import io
@@ -10,18 +10,29 @@ from typing import Callable
 EH_WINDOWS = sys.platform.startswith("win")
 
 
-class GatilhoDoisBotoes:
-    """Dispara quando o botao esquerdo e o direito do mouse ficam pressionados ao mesmo tempo
-    (ouve o mouse inteiro do sistema; nao precisa o programa estar em primeiro plano)."""
+class GatilhoCaptura:
+    """Fluxo em duas etapas:
+    1) Os dois botoes do mouse pressionados ao mesmo tempo (um toque rapido, sem precisar segurar)
+       ARMAM a captura -- a tela fica pronta esperando.
+    2) Um clique normal com o botao ESQUERDO: pressionar comeca a selecao, arrastar mostra a area,
+       soltar conclui a captura.
+    Um clique com o botao direito (ou Esc, tratado fora daqui) cancela a qualquer momento depois de armado.
+    Logica pura (sem pynput), para poder ser testada."""
 
-    def __init__(self, ao_iniciar: Callable[[int, int], None], ao_mover: Callable[[int, int], None],
-                 ao_soltar: Callable[[int, int], None], janela_ms: int = 350) -> None:
-        self.ao_iniciar, self.ao_mover, self.ao_soltar = ao_iniciar, ao_mover, ao_soltar
+    IDLE, ARMADO, SELECIONANDO = "idle", "armado", "selecionando"
+
+    def __init__(self, ao_armar: Callable[[int, int], None], ao_iniciar_selecao: Callable[[int, int], None],
+                ao_mover: Callable[[int, int], None], ao_finalizar: Callable[[int, int], None],
+                ao_cancelar: Callable[[], None], janela_ms: int = 350) -> None:
+        self.ao_armar, self.ao_iniciar_selecao = ao_armar, ao_iniciar_selecao
+        self.ao_mover, self.ao_finalizar, self.ao_cancelar = ao_mover, ao_finalizar, ao_cancelar
         self.janela_ms = janela_ms
         self._listener = None
-        self._esquerdo_em = 0.0
-        self._direito_em = 0.0
-        self._selecionando = False
+        self.estado = self.IDLE
+        self._esquerdo_apertado = False
+        self._direito_apertado = False
+        self._esquerdo_desde = 0.0
+        self._direito_desde = 0.0
 
     def iniciar(self) -> bool:
         if not EH_WINDOWS:
@@ -45,31 +56,45 @@ class GatilhoDoisBotoes:
             self._listener.stop()
             self._listener = None
 
+    def cancelar(self) -> None:
+        """Chamado de fora (ex.: tecla Esc) para desistir, de qualquer estado."""
+        if self.estado != self.IDLE:
+            self.estado = self.IDLE
+            self.ao_cancelar()
+
     def clique(self, x: int, y: int, lado: str, pressionado: bool) -> None:
-        """lado = 'esquerdo' ou 'direito'. Logica pura, sem depender do pynput (por isso e' testavel)."""
         agora = time.monotonic()
         if lado == "esquerdo":
+            self._esquerdo_apertado = pressionado
             if pressionado:
-                self._esquerdo_em = agora
-            elif self._selecionando:
-                self._selecionando = False
-                self._esquerdo_em = self._direito_em = 0.0   # evita que um horario antigo "combine" com um clique futuro
-                self.ao_soltar(x, y)
+                self._esquerdo_desde = agora
         else:
+            self._direito_apertado = pressionado
             if pressionado:
-                self._direito_em = agora
-            elif self._selecionando:
-                self._selecionando = False
-                self._esquerdo_em = self._direito_em = 0.0
-                self.ao_soltar(x, y)
-        if pressionado and not self._selecionando:
-            outro = self._direito_em if lado == "esquerdo" else self._esquerdo_em
-            if outro and abs(agora - outro) * 1000 <= self.janela_ms:
-                self._selecionando = True
-                self.ao_iniciar(x, y)
+                self._direito_desde = agora
+
+        if self.estado == self.IDLE:
+            if pressionado and self._esquerdo_apertado and self._direito_apertado and \
+               abs(self._esquerdo_desde - self._direito_desde) * 1000 <= self.janela_ms:
+                self.estado = self.ARMADO
+                self.ao_armar(x, y)
+        elif self.estado == self.ARMADO:
+            if lado == "esquerdo" and pressionado:
+                self.estado = self.SELECIONANDO
+                self.ao_iniciar_selecao(x, y)
+            elif lado == "direito" and pressionado:
+                self.estado = self.IDLE
+                self.ao_cancelar()
+        elif self.estado == self.SELECIONANDO:
+            if lado == "esquerdo" and not pressionado:
+                self.estado = self.IDLE
+                self.ao_finalizar(x, y)
+            elif lado == "direito" and pressionado:
+                self.estado = self.IDLE
+                self.ao_cancelar()
 
     def _mover(self, x: int, y: int) -> None:
-        if self._selecionando:
+        if self.estado == self.SELECIONANDO:
             self.ao_mover(x, y)
 
 

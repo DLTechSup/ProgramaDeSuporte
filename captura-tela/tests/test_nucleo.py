@@ -41,34 +41,97 @@ def test_config_salvar_e_carregar(tmp_path):
     assert n.Config.carregar(tmp_path / "nao_existe.json").pasta_destino == ""
 
 
-def test_gatilho_dos_dois_botoes_logica_pura():
-    """So a logica de 'os dois ficaram pressionados dentro da janela de tempo' -- sem pynput de verdade."""
-    from captura.windows import GatilhoDoisBotoes
+import time as _time_modulo
+
+
+def test_fluxo_em_duas_etapas_armar_depois_clicar_e_arrastar():
+    """1) os dois botoes juntos ARMAM (sem precisar segurar). 2) so' depois, um clique+arraste
+    com o ESQUERDO inicia, move e finaliza a selecao. Direito ou outro aperto cancela."""
+    from captura.windows import GatilhoCaptura
     import captura.windows as w
 
     eventos = []
-    g = GatilhoDoisBotoes(lambda x, y: eventos.append(("iniciar", x, y)),
-                         lambda x, y: eventos.append(("mover", x, y)),
-                         lambda x, y: eventos.append(("soltar", x, y)), janela_ms=300)
-
-    import time
+    g = GatilhoCaptura(lambda x, y: eventos.append(("armar", x, y)),
+                      lambda x, y: eventos.append(("iniciar", x, y)),
+                      lambda x, y: eventos.append(("mover", x, y)),
+                      lambda x, y: eventos.append(("finalizar", x, y)),
+                      lambda: eventos.append(("cancelar",)), janela_ms=300)
     t = [1000.0]
     w.time = type("T", (), {"monotonic": staticmethod(lambda: t[0])})
     try:
-        g.clique(10, 20, "esquerdo", True)           # so o esquerdo: nada ainda
-        assert eventos == []
-        t[0] += 0.1
-        g.clique(10, 20, "direito", True)             # direito chegou rapido: dispara
-        assert eventos == [("iniciar", 10, 20)]
-        g._mover(15, 25)
-        assert eventos[-1] == ("mover", 15, 25)
-        g.clique(30, 40, "esquerdo", False)            # soltar qualquer um dos dois finaliza
-        assert eventos[-1] == ("soltar", 30, 40)
+        # 1) toque rapido dos dois botoes: arma (nao inicia a selecao ainda)
+        g.clique(10, 10, "esquerdo", True)
+        t[0] += 0.05
+        g.clique(10, 10, "direito", True)
+        assert eventos == [("armar", 10, 10)] and g.estado == g.ARMADO
+        # soltar os dois do toque inicial nao faz nada (continua armado)
+        g.clique(10, 10, "esquerdo", False)
+        g.clique(10, 10, "direito", False)
+        assert eventos == [("armar", 10, 10)] and g.estado == g.ARMADO
+
+        # 2) clique normal com o esquerdo: comeca, move, solta -> finaliza
+        g.clique(50, 60, "esquerdo", True)
+        assert eventos[-1] == ("iniciar", 50, 60) and g.estado == g.SELECIONANDO
+        g._mover(80, 90)
+        assert eventos[-1] == ("mover", 80, 90)
+        g.clique(120, 130, "esquerdo", False)
+        assert eventos[-1] == ("finalizar", 120, 130) and g.estado == g.IDLE
+
+        # nao fica "pronto" sozinho de novo: um clique esquerdo solto nao faz nada sem armar antes
+        eventos.clear()
+        g.clique(1, 1, "esquerdo", True)
+        g.clique(2, 2, "esquerdo", False)
+        assert eventos == [] and g.estado == g.IDLE
+    finally:
+        w.time = _time_modulo
+
+
+def test_cancelar_com_botao_direito_e_com_esc():
+    from captura.windows import GatilhoCaptura
+    import captura.windows as w
+    eventos = []
+    g = GatilhoCaptura(lambda x, y: eventos.append(("armar", x, y)), lambda x, y: eventos.append(("iniciar", x, y)),
+                      lambda x, y: None, lambda x, y: eventos.append(("finalizar", x, y)),
+                      lambda: eventos.append(("cancelar",)), janela_ms=300)
+    t = [2000.0]
+    w.time = type("T", (), {"monotonic": staticmethod(lambda: t[0])})
+    try:
+        g.clique(0, 0, "esquerdo", True); g.clique(0, 0, "direito", True)   # arma
+        g.clique(0, 0, "esquerdo", False); g.clique(0, 0, "direito", False)
+        g.clique(5, 5, "direito", True)                                     # cancela enquanto armado
+        assert eventos[-1] == ("cancelar",) and g.estado == g.IDLE
+        g.clique(5, 5, "direito", False)                                    # solta o direito do cancelamento
 
         eventos.clear()
-        g.clique(0, 0, "esquerdo", True)
-        t[0] += 1.0                                    # direito demorou demais: nao conta
-        g.clique(0, 0, "direito", True)
-        assert eventos == []
+        g.clique(0, 0, "esquerdo", True); g.clique(0, 0, "direito", True)   # arma de novo
+        g.clique(0, 0, "esquerdo", False); g.clique(0, 0, "direito", False)
+        g.clique(10, 10, "esquerdo", True)                                  # comeca a selecionar
+        g.clique(10, 10, "direito", True)                                   # cancela durante a selecao
+        assert eventos[-1] == ("cancelar",) and g.estado == g.IDLE and ("finalizar", 10, 10) not in eventos
+        g.clique(10, 10, "esquerdo", False); g.clique(10, 10, "direito", False)
+
+        eventos.clear()
+        g.clique(0, 0, "esquerdo", True); g.clique(0, 0, "direito", True)   # arma
+        g.cancelar()                                                        # Esc chamado de fora
+        assert eventos == [("armar", 0, 0), ("cancelar",)] and g.estado == g.IDLE
+        g.cancelar()                                                        # ja estava ocioso: nao duplica
+        assert eventos == [("armar", 0, 0), ("cancelar",)]
     finally:
-        w.time = time
+        w.time = _time_modulo
+
+
+def test_direito_demorado_nao_arma():
+    from captura.windows import GatilhoCaptura
+    import captura.windows as w
+    eventos = []
+    g = GatilhoCaptura(lambda x, y: eventos.append("armar"), lambda x, y: None, lambda x, y: None,
+                      lambda x, y: None, lambda: None, janela_ms=300)
+    t = [3000.0]
+    w.time = type("T", (), {"monotonic": staticmethod(lambda: t[0])})
+    try:
+        g.clique(0, 0, "esquerdo", True)
+        t[0] += 1.0
+        g.clique(0, 0, "direito", True)
+        assert eventos == [] and g.estado == g.IDLE
+    finally:
+        w.time = _time_modulo

@@ -1,6 +1,0 @@
-1 criando o programa
-2 ouvinte do mouse: INATIVO / bandeja: ativa
-3 simulando o gatilho (os dois botoes do mouse)
-4 selecao finalizada; conferindo o arquivo
-5 ok: Captura 2026-11-13 14-07-40.png (160x120)
-6 copiar para a área de transferência: nao funcionou

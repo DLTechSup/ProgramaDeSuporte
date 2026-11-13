@@ -35,20 +35,29 @@ def rodar() -> None:
         app.update()
         passo(f"2 ouvinte do mouse: {'ativo' if app.gatilho_ativo else 'INATIVO'} / bandeja: {'ativa' if app.tem_bandeja else 'INATIVA'}")
 
-        passo("3 simulando o gatilho (os dois botoes do mouse)")
+        passo("3 simulando o gatilho: os dois botoes ARMAM")
         app.cfg.pasta_destino = str(tmp / "capturas")
         app.gatilho.clique(100, 100, "esquerdo", True)
-        app.gatilho.clique(100, 100, "direito", True)   # dispara o inicio (dentro da janela de tempo)
+        app.gatilho.clique(100, 100, "direito", True)   # arma (dentro da janela de tempo)
+        app.gatilho.clique(100, 100, "esquerdo", False)
+        app.gatilho.clique(100, 100, "direito", False)
         app._ler_eventos()
         app.update()
-        assert app.overlay is not None, "a janela de selecao nao abriu"
-        app.gatilho.ao_mover(260, 220)
+        assert app.overlay is not None, "a janela de selecao nao abriu ao armar"
+        assert app.gatilho.estado == app.gatilho.ARMADO, "nao ficou no estado ARMADO"
+
+        passo("4 clique esquerdo comeca, move e solta: finaliza a selecao")
+        app.gatilho.clique(100, 100, "esquerdo", True)   # clique normal (sem o direito) comeca a selecao
+        app._ler_eventos()
+        app.update()
+        assert app.gatilho.estado == app.gatilho.SELECIONANDO, "nao entrou em modo de selecao apos o clique esquerdo"
+        app.gatilho._mover(260, 220)
         app._ler_eventos()
         app.update()
         app.gatilho.clique(260, 220, "esquerdo", False)   # solta: finaliza a selecao
         app._ler_eventos()
         app.update()
-        passo("4 selecao finalizada; conferindo o arquivo")
+        passo("5 selecao finalizada; conferindo o arquivo")
 
         destino = Path(app.cfg.pasta_destino)
         arquivos = list(destino.glob("*.png")) if destino.exists() else []
@@ -56,11 +65,11 @@ def rodar() -> None:
         from PIL import Image
         with Image.open(arquivos[0]) as im:
             assert im.width >= 100 and im.height >= 100, f"tamanho da captura inesperado: {im.size}"
-        passo(f"5 ok: {arquivos[0].name} ({im.size[0]}x{im.size[1]})")
+        passo(f"6 ok: {arquivos[0].name} ({im.size[0]}x{im.size[1]})")
 
         from .windows import copiar_imagem
         colou = copiar_imagem(Image.new("RGB", (20, 20), "red"))
-        passo(f"6 copiar para a área de transferência: {'ok' if colou else 'nao funcionou'}")
+        passo(f"7 copiar para a área de transferência: {'ok' if colou else 'nao funcionou'}")
 
         bandeja_ok = app.tem_bandeja   # ler ANTES de destroy() (ele desliga a bandeja e zera essa flag)
         app.destroy()

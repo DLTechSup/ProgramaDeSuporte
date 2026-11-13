@@ -15,7 +15,7 @@ from .configuracoes import Configuracoes
 from .nucleo import Config, area_valida, caminho_sem_sobrescrever, nome_arquivo, normalizar_area
 from .overlay import Overlay
 from .toast import Aviso
-from .windows import (GatilhoDoisBotoes, abrir_pasta, area_da_tela_toda, capturar_regiao, copiar_imagem,
+from .windows import (GatilhoCaptura, abrir_pasta, area_da_tela_toda, capturar_regiao, copiar_imagem,
                       tocar_som_de_obturador)
 
 
@@ -36,8 +36,9 @@ class Aplicativo(ctk.CTk):
         self.janela_config: Configuracoes | None = None
         self.bandeja: Bandeja | None = None
         self.tem_bandeja = False
-        self.gatilho = GatilhoDoisBotoes(self._ao_iniciar_fora_da_thread, self._ao_mover_fora_da_thread,
-                                         self._ao_soltar_fora_da_thread)
+        self.gatilho = GatilhoCaptura(self._ao_armar_fora_da_thread, self._ao_iniciar_selecao_fora_da_thread,
+                                      self._ao_mover_fora_da_thread, self._ao_finalizar_fora_da_thread,
+                                      self._ao_cancelar_fora_da_thread)
         self.gatilho_ativo = self.gatilho.iniciar()
         self._iniciar_bandeja()
         self.after(150, self._ler_eventos)
@@ -57,31 +58,49 @@ class Aplicativo(ctk.CTk):
                                                        "Alguns antivírus bloqueiam isso. Veja o LEIA-ME.", erro=True))
 
     # ---- chamadas da thread do mouse (pynput): so colocam na fila, nada de Tk por la ----------
-    def _ao_iniciar_fora_da_thread(self, x: int, y: int) -> None:
+    def _ao_armar_fora_da_thread(self, x: int, y: int) -> None:
         if self.cfg.ativo:
-            self.eventos.put(("iniciar_selecao", (x, y)))
+            self.eventos.put(("armar", (x, y)))
+
+    def _ao_iniciar_selecao_fora_da_thread(self, x: int, y: int) -> None:
+        self.eventos.put(("iniciar_selecao", (x, y)))
 
     def _ao_mover_fora_da_thread(self, x: int, y: int) -> None:
         self.eventos.put(("mover_selecao", (x, y)))
 
-    def _ao_soltar_fora_da_thread(self, x: int, y: int) -> None:
-        self.eventos.put(("soltar_selecao", (x, y)))
+    def _ao_finalizar_fora_da_thread(self, x: int, y: int) -> None:
+        self.eventos.put(("finalizar_selecao", (x, y)))
+
+    def _ao_cancelar_fora_da_thread(self) -> None:
+        self.eventos.put(("cancelar_selecao", None))
 
     # ---- selecao (na thread da interface) -----------------------------------------------------
+    def _armar(self, x: int, y: int) -> None:
+        if self.overlay is None:
+            self.overlay = Overlay(self, area_da_tela_toda(), self._pedir_cancelar)
+
     def _iniciar_selecao(self, x: int, y: int) -> None:
         if self.overlay is not None:
-            return
-        self.overlay = Overlay(self, area_da_tela_toda(), x, y, self._finalizar_selecao, self._cancelar_selecao)
+            self.overlay.iniciar_arraste(x, y)
+
+    def _pedir_cancelar(self) -> None:
+        self.gatilho.cancelar()   # a janela chama o gatilho; o proprio gatilho confirma o cancelamento pela fila
+        self._cancelar_selecao()
 
     def _cancelar_selecao(self) -> None:
-        self.overlay = None
+        if self.overlay is not None:
+            self.overlay.destroy()
+            self.overlay = None
 
-    def _finalizar_selecao(self, x1: int, y1: int, x2: int, y2: int) -> None:
-        self.overlay = None
-        area = normalizar_area(x1, y1, x2, y2)
-        if not area_valida(area):
+    def _finalizar_selecao(self, x1: int, y1: int) -> None:
+        if self.overlay is None:
             return
-        self.capturar(area)
+        x0, y0, _, _ = self.overlay.bbox_absoluto(x1, y1)
+        area = normalizar_area(x0, y0, x1, y1)
+        self.overlay.destroy()
+        self.overlay = None
+        if area_valida(area):
+            self.capturar(area)
 
     def capturar(self, area: tuple[int, int, int, int]) -> None:
         try:
@@ -124,12 +143,16 @@ class Aplicativo(ctk.CTk):
         try:
             while True:
                 tipo, dado = self.eventos.get_nowait()
-                if tipo == "iniciar_selecao":
+                if tipo == "armar":
+                    self._armar(*dado)
+                elif tipo == "iniciar_selecao":
                     self._iniciar_selecao(*dado)
                 elif tipo == "mover_selecao" and self.overlay is not None:
                     self.overlay.atualizar(*dado)
-                elif tipo == "soltar_selecao" and self.overlay is not None:
-                    self.overlay.finalizar(*dado)
+                elif tipo == "finalizar_selecao":
+                    self._finalizar_selecao(*dado)
+                elif tipo == "cancelar_selecao":
+                    self._cancelar_selecao()
                 elif tipo == "alternar":
                     self.cfg.ativo = not self.cfg.ativo
                     self.cfg.salvar(self.arquivo_config)
