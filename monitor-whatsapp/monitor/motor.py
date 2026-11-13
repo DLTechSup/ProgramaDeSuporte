@@ -131,9 +131,25 @@ class Processador:
                 self._texto_avulso(g, m)
             estado.marcar(m.id)
 
+    LADO_MINIMO = 1000     # abaixo disso a foto do chat e so uma miniatura: abrimos a foto inteira
+
+    @staticmethod
+    def _lado_medio(fotos: list[bytes]) -> float:
+        """Maior lado (em pixels) medio das fotos; 0 se nao der para medir."""
+        import io
+        from PIL import Image
+        lados = []
+        for f in fotos:
+            try:
+                with Image.open(io.BytesIO(f)) as im:
+                    lados.append(max(im.size))
+            except Exception:  # noqa: BLE001
+                pass
+        return sum(lados) / len(lados) if lados else 0
+
     def _fotos_da_mensagem(self, m) -> list[bytes]:
         fotos = self.nav.baixar(m.blobs)
-        if m.mais and self.cfg.tentar_escondidas:
+        if m.mais and self.cfg.tentar_escondidas:                  # album grande: abre o visualizador e passa todas
             esperado = len(m.blobs) + m.mais - 1
             completo = self.nav.baixar_album_completo(m, esperado)
             if len(completo) >= len(fotos):
@@ -142,6 +158,10 @@ class Processador:
             m.observacao_album = f"álbum incompleto: esperadas {esperado}, baixadas {len(fotos)} (faltam {esperado - len(fotos)})"
         elif m.mais:
             m.observacao_album = f"álbum com +{m.mais} foto(s) escondida(s): baixe o restante na mão"
+        elif self.cfg.tentar_escondidas and fotos and 0 < self._lado_medio(fotos) < self.LADO_MINIMO:
+            completo = self.nav.baixar_album_completo(m, len(fotos))       # miniaturas pequenas: tenta a foto inteira
+            if len(completo) >= len(fotos) and self._lado_medio(completo) > self._lado_medio(fotos):
+                return completo
         return fotos
 
     # ---- Grupo A -----------------------------------------------------------

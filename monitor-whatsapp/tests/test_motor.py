@@ -256,3 +256,32 @@ def test_grupo_com_emojis_acha_pelo_nome_simples_e_baixa_o_album_inteiro(nav, tm
     assert len(list((dia / "VIZZANO 6291.1900").glob("foto_*"))) == 9       # +6 -> 3 + 6 fotos
     assert len(list((dia / "VIA JUPITER 8000.8460").glob("foto_*"))) == 12  # +9 -> 3 + 9 fotos
     assert all("incompleto" not in i.observacao for i in p.listas["Programação"].itens.values())
+
+
+def _jpeg(lado: int, cor=(200, 30, 30)) -> bytes:
+    import io
+    from PIL import Image
+    b = io.BytesIO()
+    Image.new("RGB", (lado, lado), cor).save(b, "JPEG", quality=95)
+    return b.getvalue() + bytes(3000)
+
+
+def test_miniatura_pequena_abre_a_foto_inteira_e_foto_grande_nao_mexe(tmp_path):
+    chamadas = []
+
+    class Nav(NavFalso):
+        def baixar(self, urls): return [_jpeg(300 + i) for i, _ in enumerate(urls)]
+        def baixar_album_completo(self, m, esperado):
+            chamadas.append(esperado)
+            return [_jpeg(1600 + i, (30, 30, 200)) for i in range(esperado)]
+    cfg = Config(pasta_base=str(tmp_path), grupos=[Grupo("G", "A")])
+    Processador(cfg, Nav([msg("1", "VIZZANO 6291.1900", blobs=("b1", "b2", "b3", "b4"))])).ciclo()
+    from PIL import Image
+    fotos = sorted((pasta_dia(tmp_path, "G") / "VIZZANO 6291.1900").glob("foto_*"))
+    assert chamadas == [4] and len(fotos) == 4 and Image.open(fotos[0]).size[0] >= 1600     # ficou a foto inteira
+
+    class NavGrande(Nav):
+        def baixar(self, urls): return [_jpeg(1800 + i) for i, _ in enumerate(urls)]
+    chamadas.clear()
+    Processador(Config(pasta_base=str(tmp_path / "b"), grupos=[Grupo("G", "A")]), NavGrande([msg("1", "DAKOTA 1.1", blobs=("b1", "b2"))])).ciclo()
+    assert chamadas == []                                          # ja era grande: nao abre o visualizador
