@@ -337,6 +337,9 @@ class Navegador:
                 return volta + 1
         return max_voltas
 
+    def aguardar(self, ms: int) -> None:
+        self.pagina.wait_for_timeout(ms)
+
     def rolar_um_passo(self) -> bool:
         """Desce uma tela. False quando chegou ao fim (ou nao ha rolagem)."""
         ok = bool(self.pagina.evaluate(JS_ROLAR_PASSO))

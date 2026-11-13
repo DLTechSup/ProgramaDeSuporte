@@ -105,10 +105,10 @@ class Processador:
     def _processar_grupo(self, g: Grupo) -> None:
         primeira = g.nome not in self._primeiro
         self._primeiro.add(g.nome)
-        if primeira and self.cfg.incluir_hoje and hasattr(self.nav, "rolar_para_o_inicio_do_dia"):
+        if primeira and self.cfg.pegar_antigas and hasattr(self.nav, "rolar_para_o_inicio_do_dia"):
             self._varredura(g)                      # tudo o que chegou hoje, mesmo o que o WhatsApp nao mostra de primeira
         else:
-            self._passada(g, ignorar_existentes=primeira and not self.cfg.incluir_hoje)
+            self._passada(g, ignorar_existentes=primeira and not self.cfg.pegar_antigas)
 
     def _varredura(self, g: Grupo) -> None:
         """Sobe ate o inicio do dia e desce tela por tela (as fotos so carregam quando aparecem), processando tudo."""
@@ -124,16 +124,16 @@ class Processador:
     def _passada(self, g: Grupo, ignorar_existentes: bool = False) -> None:
         if g.tipo == "I":
             return self._conversa_individual(g, ignorar_existentes)
-        _, msgs = self.nav.ler()
         estado = self.estados[g.nome]
+        if ignorar_existentes:                     # modo "so o que chegar de novo": tudo o que ja esta na conversa e historico
+            self._marcar_historico(g)
+            return
+        _, msgs = self.nav.ler()
         for m in msgs:
             if m.minha or not estado.novo(m.id):
                 continue
             if m.dia != self.hoje():
                 estado.marcar(m.id)                # antiga ou sem data: ignora para sempre
-                continue
-            if ignorar_existentes:
-                estado.marcar(m.id)
                 continue
             if m.blobs or m.carregando:
                 espera = self.aguardando.get(m.id, 0)
@@ -158,6 +158,22 @@ class Processador:
             elif g.tipo == "A" and m.legenda:
                 self._texto_avulso(g, m)
             estado.marcar(m.id)
+
+    def _marcar_historico(self, g: Grupo) -> None:
+        """Marca como 'ja visto' tudo o que ja esta na conversa. Espera o WhatsApp terminar de carregar o historico
+        (senao o resto dele chegaria depois e seria tratado como novidade)."""
+        estado = self.estados[g.nome]
+        anterior = -1
+        for _ in range(8):
+            _, msgs = self.nav.ler()
+            for m in msgs:
+                estado.marcar(m.id)
+            if msgs and len(msgs) == anterior:
+                break
+            anterior = len(msgs)
+            if hasattr(self.nav, "aguardar"):
+                self.nav.aguardar(1000)
+        self.evento("log", f"{g.nome}: pronto. Daqui para frente salvo só o que chegar de novo.")
 
     LADO_MINIMO = 1000     # abaixo disso a foto do chat e so uma miniatura: abrimos a foto inteira
 
@@ -263,15 +279,18 @@ class Processador:
     # ---- Conversa individual: salva o TEXTO do que a pessoa escreveu ----------
     def _conversa_individual(self, g: Grupo, ignorar_existentes: bool = False) -> None:
         from .texto import normalizar
-        _, msgs = self.nav.ler()
         estado = self.estados[g.nome]
+        if ignorar_existentes:
+            self._marcar_historico(g)
+            return
+        _, msgs = self.nav.ler()
         mensagens: list[list[str]] = []
         previa = ""
         n_fotos = 0
         for m in msgs:
             if m.minha or not estado.novo(m.id):
                 continue
-            if m.dia != self.hoje() or ignorar_existentes:
+            if m.dia != self.hoje():
                 estado.marcar(m.id)
                 continue
             if m.carregando and self.aguardando.get(m.id, 0) < 10:       # foto ainda borrada: espera baixar

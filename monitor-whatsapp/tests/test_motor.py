@@ -40,7 +40,7 @@ def test_leitor_ve_conversas_e_mensagens(nav):
 
 
 def test_grupo_a_salva_pastas_e_lista(nav, tmp_path):
-    cfg = Config(pasta_base=str(tmp_path / "saida"), grupos=[Grupo("Demandas Fotos", "A")])
+    cfg = Config(pegar_antigas=True, pasta_base=str(tmp_path / "saida"), grupos=[Grupo("Demandas Fotos", "A")])
     eventos = []
     p = Processador(cfg, nav, evento=lambda t, d: eventos.append((t, d)))
     p.ciclo()
@@ -62,7 +62,7 @@ def test_grupo_a_salva_pastas_e_lista(nav, tmp_path):
 
 def test_grupo_b_le_etiqueta(nav, tmp_path):
     textos = iter(["BEIRA RIO\nREF: 2282.107\nCOR PRETO", "etiqueta ilegivel"] + [""] * 20)
-    cfg = Config(pasta_base=str(tmp_path / "saida"), grupos=[Grupo("Só Foto Caixa", "B")])
+    cfg = Config(pegar_antigas=True, pasta_base=str(tmp_path / "saida"), grupos=[Grupo("Só Foto Caixa", "B")])
     p = Processador(cfg, nav, ocr=lambda img: next(textos, ""))
     p.ciclo()
     dia = pasta_dia(cfg.pasta_base, "Só Foto Caixa")
@@ -86,7 +86,7 @@ def msg(id, legenda="", blobs=("blob:1",), rem="Ana", dia=None, mais=0, carregan
 
 
 def test_foto_sem_legenda_espera_texto_e_vence_o_prazo(tmp_path):
-    cfg = Config(pasta_base=str(tmp_path), grupos=[Grupo("G", "A")], espera_legenda_seg=100)
+    cfg = Config(pegar_antigas=True, pasta_base=str(tmp_path), grupos=[Grupo("G", "A")], espera_legenda_seg=100)
     relogio = [1000.0]
     nav = NavFalso([msg("1", "")])
     p = Processador(cfg, nav, agora=lambda: relogio[0])
@@ -102,7 +102,7 @@ def test_foto_sem_legenda_espera_texto_e_vence_o_prazo(tmp_path):
 
 
 def test_marca_desconhecida_vai_para_conferir_e_miniatura_borrada_espera(tmp_path):
-    cfg = Config(pasta_base=str(tmp_path), grupos=[Grupo("G", "A")])
+    cfg = Config(pegar_antigas=True, pasta_base=str(tmp_path), grupos=[Grupo("G", "A")])
     nav = NavFalso([msg("1", "bom dia pessoal"), msg("2", "NOVA MARCA 55-1", carregando=1)])
     p = Processador(cfg, nav)
     p.ciclo()
@@ -115,7 +115,7 @@ def test_marca_desconhecida_vai_para_conferir_e_miniatura_borrada_espera(tmp_pat
 
 
 def test_incluir_hoje_falso_ignora_o_que_ja_estava(tmp_path):
-    cfg = Config(pasta_base=str(tmp_path), grupos=[Grupo("G", "A")], incluir_hoje=False)
+    cfg = Config(pasta_base=str(tmp_path), grupos=[Grupo("G", "A")], pegar_antigas=False)
     nav = NavFalso([msg("1", "BEIRA RIO 1.1")])
     p = Processador(cfg, nav); p.ciclo()
     assert not (pasta_dia(tmp_path, "G") / "BEIRA RIO 1.1").exists()
@@ -137,7 +137,7 @@ def test_cada_grupo_tem_a_sua_pasta_e_nome_sem_emoji(tmp_path):
     assert nome_pasta_grupo("PROGRAMAÇÃO ✨📷💰") == "PROGRAMAÇÃO"
     assert nome_pasta_grupo("Só Foto: Caixa/2") == "Só Foto- Caixa-2"
     assert nome_pasta_grupo("✨📷") == "Grupo"
-    cfg = Config(pasta_base=str(tmp_path), grupos=[Grupo("Grupo ✨ X", "A"), Grupo("Grupo Y", "A")])
+    cfg = Config(pegar_antigas=True, pasta_base=str(tmp_path), grupos=[Grupo("Grupo ✨ X", "A"), Grupo("Grupo Y", "A")])
 
     class DoisGrupos(NavFalso):
         def __init__(self): self.atual = ""
@@ -162,7 +162,7 @@ def test_conversa_individual_salva_texto_mesmo_se_apagar(tmp_path):
     from monitor.leitor import Mensagem
     def m(id, texto, minha=False, blobs=(), hora="10:00", dia=None):
         return Mensagem(id, minha, texto, list(blobs), 0, 0, "Maria", dia or HOJE, hora)
-    cfg = Config(pasta_base=str(tmp_path), grupos=[Grupo("Maria Silva", "I")])
+    cfg = Config(pegar_antigas=True, pasta_base=str(tmp_path), grupos=[Grupo("Maria Silva", "I")])
     nav = NavFalso([m("1", "bom dia"), m("2", "linha 1\nlinha 2", hora="10:05"), m("3", "resposta minha", minha=True),
                     m("4", "", blobs=("blob:x",), hora="10:06"), m("5", "antiga", dia=date(2020, 1, 1))])
     eventos = []
@@ -184,7 +184,7 @@ def test_conversa_individual_salva_texto_mesmo_se_apagar(tmp_path):
 def test_conversa_apagada_antes_de_ler_e_aviso_individual(tmp_path):
     from monitor.leitor import Mensagem
     from monitor.notificacao import texto_do_aviso
-    cfg = Config(pasta_base=str(tmp_path), grupos=[Grupo("Joao", "I")])
+    cfg = Config(pegar_antigas=True, pasta_base=str(tmp_path), grupos=[Grupo("Joao", "I")])
     nav = NavFalso([Mensagem("1", False, "Você apagou esta mensagem", [], 0, 0, "Joao", HOJE, "09:00")])
     Processador(cfg, nav).ciclo()
     arq = tmp_path / "Joao" / HOJE.strftime("%d-%m-%Y") / "mensagens.txt"
@@ -206,7 +206,7 @@ def test_log_do_dia(tmp_path):
 def test_servico_grava_o_log(tmp_path):
     import queue
     from monitor.servico import Servico
-    sv = Servico(Config(pasta_base=str(tmp_path)), queue.Queue())
+    sv = Servico(Config(pegar_antigas=True, pasta_base=str(tmp_path)), queue.Queue())
     sv.emitir("log", "Camilo mandou 3 fotos"); sv.emitir("erro", "falhou"); sv.emitir("lista", None)
     from monitor.registro import RegistroDoDia
     txt = RegistroDoDia(tmp_path).ler()
@@ -236,7 +236,7 @@ def test_regra_cortar_cor_por_marca(tmp_path):
 
 def test_pegada_cores_diferentes_caem_na_mesma_pasta(tmp_path):
     from monitor.regras_ref import RegrasReferencia
-    cfg = Config(pasta_base=str(tmp_path), grupos=[Grupo("G", "A")])
+    cfg = Config(pegar_antigas=True, pasta_base=str(tmp_path), grupos=[Grupo("G", "A")])
     nav = NavFalso([msg("1", "PEGADA (133) 161-01"), msg("2", "Pegada (133) 161-02"), msg("3", "OLYMPIKUS CORRE 2")])
     p = Processador(cfg, nav, regras_ref=RegrasReferencia.carregar(tmp_path / "r.txt"))
     p.ciclo()
@@ -249,7 +249,7 @@ def test_pegada_cores_diferentes_caem_na_mesma_pasta(tmp_path):
 def test_grupo_com_emojis_acha_pelo_nome_simples_e_baixa_o_album_inteiro(nav, tmp_path):
     assert nav.abrir_conversa("programacao")                    # sem emojis, sem acento, minusculo
     assert nav._titulo_aberto() == "PROGRAMAÇÃO ✨📷💰"
-    cfg = Config(pasta_base=str(tmp_path / "saida"), grupos=[Grupo("Programação", "A")])
+    cfg = Config(pegar_antigas=True, pasta_base=str(tmp_path / "saida"), grupos=[Grupo("Programação", "A")])
     p = Processador(cfg, nav)
     p.ciclo()
     dia = pasta_dia(cfg.pasta_base, "Programação")
@@ -274,7 +274,7 @@ def test_miniatura_pequena_abre_a_foto_inteira_e_foto_grande_nao_mexe(tmp_path):
         def baixar_album_completo(self, m, esperado):
             chamadas.append(esperado)
             return [_jpeg(1600 + i, (30, 30, 200)) for i in range(esperado)]
-    cfg = Config(pasta_base=str(tmp_path), grupos=[Grupo("G", "A")])
+    cfg = Config(pegar_antigas=True, pasta_base=str(tmp_path), grupos=[Grupo("G", "A")])
     Processador(cfg, Nav([msg("1", "VIZZANO 6291.1900", blobs=("b1", "b2", "b3", "b4"))])).ciclo()
     from PIL import Image
     fotos = sorted((pasta_dia(tmp_path, "G") / "VIZZANO 6291.1900").glob("foto_*"))
@@ -283,14 +283,14 @@ def test_miniatura_pequena_abre_a_foto_inteira_e_foto_grande_nao_mexe(tmp_path):
     class NavGrande(Nav):
         def baixar(self, urls): return [_jpeg(1800 + i) for i, _ in enumerate(urls)]
     chamadas.clear()
-    Processador(Config(pasta_base=str(tmp_path / "b"), grupos=[Grupo("G", "A")]), NavGrande([msg("1", "DAKOTA 1.1", blobs=("b1", "b2"))])).ciclo()
+    Processador(Config(pegar_antigas=True, pasta_base=str(tmp_path / "b"), grupos=[Grupo("G", "A")]), NavGrande([msg("1", "DAKOTA 1.1", blobs=("b1", "b2"))])).ciclo()
     assert chamadas == []                                          # ja era grande: nao abre o visualizador
 
 
 def test_varredura_pega_tudo_que_o_whatsapp_so_carrega_ao_rolar(nav, tmp_path):
     """Grupo 'SUBIR PRO SITE': 60 fotos, so as 15 ultimas aparecem de primeira (como no WhatsApp real)."""
     contador = iter(range(10**6))
-    cfg = Config(pasta_base=str(tmp_path / "saida"), grupos=[Grupo("SUBIR PRO SITE", "B")], todas_do_grupo_b=True, tentar_escondidas=False)
+    cfg = Config(pegar_antigas=True, pasta_base=str(tmp_path / "saida"), grupos=[Grupo("SUBIR PRO SITE", "B")], todas_do_grupo_b=True, tentar_escondidas=False)
     p = Processador(cfg, nav, ocr=lambda img: f"MODARE\nREF: 70{next(contador) % 90 + 10}.1")
     p.ciclo()
     itens = p.listas["SUBIR PRO SITE"].itens
@@ -319,7 +319,7 @@ def test_aviso_de_grupo_nao_aberto_nao_se_repete_a_cada_rodada(tmp_path):
         def resumo_conversas(self, limite=8): return "vejo A, B"
     relogio = [1000.0]
     eventos = []
-    p = Processador(Config(pasta_base=str(tmp_path), grupos=[Grupo("SUBIR PRO SITE", "B")]), NavSemGrupo([]),
+    p = Processador(Config(pegar_antigas=True, pasta_base=str(tmp_path), grupos=[Grupo("SUBIR PRO SITE", "B")]), NavSemGrupo([]),
                     agora=lambda: relogio[0], evento=lambda t, d: eventos.append((t, d)))
     for _ in range(5):
         p.ciclo(); relogio[0] += 4
@@ -327,3 +327,25 @@ def test_aviso_de_grupo_nao_aberto_nao_se_repete_a_cada_rodada(tmp_path):
     relogio[0] += 200
     p.ciclo()
     assert sum(1 for t, d in eventos if t == "log" and "Não consegui abrir" in str(d)) == 2        # depois de 3 min, avisa de novo
+
+
+def test_padrao_ignora_o_historico_mesmo_que_ele_carregue_aos_poucos(tmp_path):
+    """Padrao: so o que chegar DEPOIS de iniciar. O WhatsApp carrega o historico em partes: nada dele pode ser salvo."""
+    assert Config().pegar_antigas is False
+    leituras = [[msg("1", "BEIRA RIO 1.1")], [msg("1", "BEIRA RIO 1.1"), msg("2", "DAKOTA 2.2"), msg("3", "VIZZANO 3.3")]]
+
+    class NavProgressivo(NavFalso):
+        def __init__(self): self.n = 0; self.msgs = []
+        def ler(self):
+            r = leituras[min(self.n, 1)]
+            self.n += 1
+            return "g", r
+        def aguardar(self, ms): pass
+    nav = NavProgressivo()
+    p = Processador(Config(pasta_base=str(tmp_path), grupos=[Grupo("G", "A")]), nav)
+    p.ciclo()
+    assert not any(d.is_dir() for d in pasta_dia(tmp_path, "G").iterdir())            # nenhuma foto do historico foi salva
+    leituras[1] = leituras[1] + [msg("4", "MODARE 4.4")]                               # agora chega uma demanda de verdade
+    p.ciclo()
+    nomes = sorted(d.name for d in pasta_dia(tmp_path, "G").iterdir() if d.is_dir())
+    assert nomes == ["MODARE 4.4"]

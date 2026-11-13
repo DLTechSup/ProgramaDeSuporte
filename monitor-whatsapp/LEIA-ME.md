@@ -35,7 +35,7 @@ Demandas (pasta principal)/
   Só entram as mensagens dela (não as suas), de hoje em diante. **Fotos** que a pessoa mandar também são salvas, na pasta `fotos`, com o **nome do contato** no arquivo (`Maria Silva - foto_01.jpg`). Foto sem texto aparece como `[foto]` no `mensagens.txt`; áudio/arquivo como `[mídia sem texto]`.
   Aviso: o monitor passa pelas conversas uma de cada vez (alguns segundos entre uma e outra); se alguém apagar uma mensagem em poucos segundos, ele pode não ter lido.
 
-**Ao ligar o monitor**, o programa sobe cada conversa até o começo do dia e desce lendo tudo (o WhatsApp só mostra as últimas mensagens de primeira), para não perder o que já tinha chegado. Depois disso, tudo é salvo na hora que chega.
+**Por padrão o monitor salva só o que chegar DEPOIS de iniciar** e ignora todo o histórico da conversa. Se você quiser que ele também leia o que já chegou hoje, ligue "Ler também o que já chegou hoje" em Configurações: nesse caso, ao iniciar, ele sobe cada conversa até o começo do dia e lê tudo.
 
 No **Grupo B** ele também guarda uma cópia de cada foto na pasta `_Todas as fotos`, com o nome do que foi lido (`13h37 - OLYMPIKUS CORRE 2 - foto_01.jpg`, ou `não lida`), para você conferir rápido no fim do dia.
 
