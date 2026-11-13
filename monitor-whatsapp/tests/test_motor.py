@@ -301,3 +301,13 @@ def test_varredura_pega_tudo_que_o_whatsapp_so_carrega_ao_rolar(nav, tmp_path):
     assert len(itens) >= 50                                                # uma pasta por referencia lida
     p.ciclo()                                                              # segunda volta: nada se repete
     assert len(list((dia / "_Todas as fotos").glob("*"))) == 60
+
+
+def test_abre_grupo_mesmo_se_a_tela_nao_usar_o_atributo_title(nav):
+    """O WhatsApp muda a tela: aqui tiramos todos os 'title' e o programa ainda acha e abre o grupo pelo texto."""
+    nav.pagina.evaluate("() => document.querySelectorAll('[title]').forEach(e => { e.setAttribute('data-nome', e.getAttribute('title')); e.removeAttribute('title'); })")
+    assert "Demandas Fotos" in nav.conversas()                      # lista lida pelo texto das linhas
+    assert nav.abrir_conversa("demandas fotos")
+    nav.pagina.evaluate("() => document.querySelectorAll('#main header [data-nome]').forEach(e => e.removeAttribute('data-nome'))")
+    assert nav._titulo_aberto() == "Demandas Fotos"                 # titulo do cabecalho lido pela primeira linha
+    assert "Demandas Fotos" in nav.resumo_conversas() and "vejo" in nav.resumo_conversas()

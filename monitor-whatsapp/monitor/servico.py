@@ -92,6 +92,7 @@ class Servico(threading.Thread):
                 return ""
             self.proc = Processador(self.cfg, self.nav, evento=self.emitir)
             self.monitorando = True
+            self.emitir("status", f"Monitorando {len(self.cfg.grupos)} grupo(s)...")
             self.emitir("log", "Monitor iniciado. Grupos: " + ", ".join(f"{g.nome} ({g.tipo})" for g in self.cfg.grupos))
         elif c == "pausar":
             self.monitorando = False

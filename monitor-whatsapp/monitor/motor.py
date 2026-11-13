@@ -93,7 +93,8 @@ class Processador:
             self._preparar_dia(g.nome)
             self.listas[g.nome].recarregar()
             if not self.nav.abrir_conversa(g.nome):
-                self.evento("log", f"Não consegui abrir o grupo \"{g.nome}\" (nome diferente? está na lista de conversas?)")
+                visto = self.nav.resumo_conversas() if hasattr(self.nav, "resumo_conversas") else ""
+                self.evento("log", f"Não consegui abrir o grupo \"{g.nome}\" (nome diferente? está na lista de conversas?)" + (f" — {visto}" if visto else ""))
                 continue
             self._processar_grupo(g)
         self._vencer_pendentes()

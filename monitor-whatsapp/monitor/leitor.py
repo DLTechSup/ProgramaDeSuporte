@@ -89,7 +89,35 @@ JS_ROLAR_FIM = "() => {" + _JS_ROLAVEL + r"""
 }"""
 
 JS_CONVERSAS = r"""
-() => [...new Set([...document.querySelectorAll('#pane-side span[title]')].map(s => s.getAttribute('title')).filter(Boolean))]
+() => {
+  const out = []; const add = t => { t = (t || '').trim(); if (t && !out.includes(t)) out.push(t); };
+  document.querySelectorAll('#pane-side [title]').forEach(e => add(e.getAttribute('title')));
+  if (out.length < 3) {   // se a tela nao usa o atributo title, pega a primeira linha de cada conversa da lista
+    document.querySelectorAll('#pane-side [role="row"], #pane-side [role="listitem"], #pane-side [role="gridcell"]')
+      .forEach(e => add(((e.innerText || '').split('\n').map(x => x.trim()).filter(Boolean))[0]));
+  }
+  return out;
+}
+"""
+
+JS_TITULO_ABERTO = r"""
+() => {
+  const h = document.querySelector('#main header'); if (!h) return '';
+  const t = h.querySelector('[title]');
+  if (t && (t.getAttribute('title') || '').trim()) return t.getAttribute('title').trim();
+  return ((h.innerText || '').split('\n').map(x => x.trim()).filter(Boolean))[0] || '';
+}
+"""
+
+JS_CLICAR_CONVERSA = r"""
+(nome) => {
+  const alvo = [...document.querySelectorAll('#pane-side [title], #pane-side span, #pane-side div[dir="auto"]')]
+    .find(e => ((e.getAttribute('title') || e.innerText || '').trim()) === nome);
+  if (!alvo) return false;
+  const linha = alvo.closest('[role="row"], [role="listitem"], [tabindex]') || alvo;
+  for (const tipo of ['mousedown', 'mouseup', 'click']) linha.dispatchEvent(new MouseEvent(tipo, {bubbles: true, cancelable: true}));
+  return true;
+}
 """
 
 # Visualizador de fotos em tela cheia (album com "+N"): maior imagem blob FORA do #main
@@ -211,11 +239,7 @@ class Navegador:
         real = self._titulo_equivalente(nome)
         clicou = False
         if real is not None:
-            try:
-                self.pagina.locator("#pane-side").get_by_title(real, exact=True).first.click(timeout=3000)
-                clicou = True
-            except Exception:  # noqa: BLE001
-                clicou = False
+            clicou = self._clicar(real)
         if not clicou and not self._abrir_pela_busca(nome):
             return False
         fim = time.time() + 5
@@ -225,6 +249,23 @@ class Navegador:
                 return True
             self.pagina.wait_for_timeout(200)
         return False
+
+    def _clicar(self, titulo: str) -> bool:
+        """Clica na conversa da lista lateral por tres caminhos (o WhatsApp muda a tela de tempos em tempos)."""
+        try:
+            self.pagina.locator("#pane-side").get_by_title(titulo, exact=True).first.click(timeout=2500)
+            return True
+        except Exception:  # noqa: BLE001
+            pass
+        try:
+            self.pagina.locator("#pane-side").get_by_text(titulo, exact=True).first.click(timeout=2500)
+            return True
+        except Exception:  # noqa: BLE001
+            pass
+        try:
+            return bool(self.pagina.evaluate(JS_CLICAR_CONVERSA, titulo))
+        except Exception:  # noqa: BLE001
+            return False
 
     @staticmethod
     def _mesmo_nome(a: str, b: str) -> bool:
@@ -241,21 +282,26 @@ class Navegador:
 
     def _titulo_aberto(self) -> str:
         try:
-            return self.pagina.evaluate("() => { const t = document.querySelector('#main header span[title]'); return t ? t.getAttribute('title') : ''; }")
+            return self.pagina.evaluate(JS_TITULO_ABERTO)
         except Exception:  # noqa: BLE001
             return ""
 
     def _abrir_pela_busca(self, nome: str) -> bool:
         try:
-            caixa = self.pagina.locator('#side div[contenteditable="true"]').first
+            caixa = None
+            for seletor in ('#side div[contenteditable="true"]', 'div[contenteditable="true"][data-tab="3"]',
+                            'div[role="textbox"][contenteditable="true"]:not(#main *)', 'input[type="text"]'):
+                cand = self.pagina.locator(seletor).first
+                if cand.count():
+                    caixa = cand
+                    break
+            if caixa is None:
+                return False
             caixa.click(timeout=2000)
             caixa.fill(nome)
-            self.pagina.wait_for_timeout(1200)
+            self.pagina.wait_for_timeout(1500)
             real = self._titulo_equivalente(nome)
-            if real is None:
-                return False
-            self.pagina.locator("#pane-side").get_by_title(real, exact=True).first.click(timeout=3000)
-            return True
+            return real is not None and self._clicar(real)
         except Exception:  # noqa: BLE001
             return False
         finally:
@@ -339,6 +385,17 @@ class Navegador:
                 pass
         return fotos
 
+    def resumo_conversas(self, limite: int = 8) -> str:
+        """Texto curto para o registro: o que o programa enxerga na lista lateral."""
+        try:
+            nomes = self.conversas()
+        except Exception:  # noqa: BLE001
+            return "não consegui ler a lista de conversas"
+        if not nomes:
+            return "a lista de conversas aparece VAZIA para o programa"
+        extra = f" (+{len(nomes) - limite} outras)" if len(nomes) > limite else ""
+        return "vejo " + ", ".join(nomes[:limite]) + extra
+
     def diagnostico(self) -> str:
         """Estrutura do que o programa enxerga (sem o texto das conversas), para ajustar os seletores."""
         info = self.pagina.evaluate(r"""() => {
@@ -348,4 +405,6 @@ class Navegador:
                   imagens_blob: q('#main img[src^="blob:"]'), titulos_na_lista: q('#pane-side span[title]'),
                   pre_plain_text: q('#main [data-pre-plain-text]')};
         }""")
-        return "\n".join(f"{k}: {v}" for k, v in info.items())
+        info["conversas_que_o_programa_ve"] = len(self.conversas())
+        info["conversa_aberta_titulo"] = self._titulo_aberto() or "(nenhuma)"
+        return "\n".join(f"{k}: {v}" for k, v in info.items()) + "\nprimeiras conversas: " + self.resumo_conversas(12)
