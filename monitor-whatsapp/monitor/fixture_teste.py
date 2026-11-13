@@ -7,6 +7,7 @@ HTML = r"""<!doctype html><html><head><meta charset="utf-8"></head><body>
   <div role="listitem"><span title="Demandas Fotos" onclick="abrir('A')">Demandas Fotos</span></div>
   <div role="listitem"><span title="Só Foto Caixa" onclick="abrir('B')">Só Foto Caixa</span></div>
   <div role="listitem"><span title="Familia" onclick="abrir('C')">Familia</span></div>
+  <div role="listitem"><span title="PROGRAMAÇÃO ✨📷💰" onclick="abrir('D')">PROGRAMAÇÃO ✨📷💰</span></div>
  </div></div>
 <div id="app"></div>
 <script>
@@ -28,6 +29,9 @@ const CHATS = {
   B: {titulo: 'Só Foto Caixa', msgs: [
      {id: 'false_B@g.us_1_5522@c.us', pre: '[10:00, %HOJE%] Ana: ', legenda: '', fotos: 1},
      {id: 'false_B@g.us_2_5522@c.us', pre: '', legenda: '', fotos: 1}]},
+  D: {titulo: 'PROGRAMAÇÃO ✨📷💰', msgs: [
+     {id: 'false_D@g.us_1_5511@c.us', pre: '[16:26, %HOJE%] ~ Camilo: ', legenda: 'VIZZANO 6291.1900', fotos: 4, mais: 6},
+     {id: 'false_D@g.us_2_5511@c.us', pre: '[16:30, %HOJE%] ~ Camilo: ', legenda: 'VIA JUPITER 8000.8460', fotos: 4, mais: 9}]},
   C: {titulo: 'Familia', msgs: [{id: 'false_C@g.us_1_x@c.us', pre: '[09:00, %HOJE%] Mae: ', legenda: 'bom dia', fotos: 0}]}
 };
 async function abrir(k) {

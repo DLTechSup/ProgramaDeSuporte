@@ -244,3 +244,15 @@ def test_pegada_cores_diferentes_caem_na_mesma_pasta(tmp_path):
     assert nomes == ["OLYMPIKUS CORRE 2", "PEGADA (133) 161"]      # mantém como a pessoa escreveu, sem o -01 da cor
     item = [i for i in p.listas["G"].itens.values() if i.marca == "PEGADA"][0]
     assert "(133) 161-01" in item.observacao            # a referencia completa fica registrada na lista
+
+
+def test_grupo_com_emojis_acha_pelo_nome_simples_e_baixa_o_album_inteiro(nav, tmp_path):
+    assert nav.abrir_conversa("programacao")                    # sem emojis, sem acento, minusculo
+    assert nav._titulo_aberto() == "PROGRAMAÇÃO ✨📷💰"
+    cfg = Config(pasta_base=str(tmp_path / "saida"), grupos=[Grupo("Programação", "A")])
+    p = Processador(cfg, nav)
+    p.ciclo()
+    dia = pasta_dia(cfg.pasta_base, "Programação")
+    assert len(list((dia / "VIZZANO 6291.1900").glob("foto_*"))) == 9       # +6 -> 3 + 6 fotos
+    assert len(list((dia / "VIA JUPITER 8000.8460").glob("foto_*"))) == 12  # +9 -> 3 + 9 fotos
+    assert all("incompleto" not in i.observacao for i in p.listas["Programação"].itens.values())

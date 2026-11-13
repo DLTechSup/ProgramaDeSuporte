@@ -12,6 +12,7 @@ from datetime import date, datetime
 from pathlib import Path
 
 from .config import RAIZ
+from .marcas import compactar
 
 URL = "https://web.whatsapp.com"
 PERFIL = RAIZ / "perfil_whatsapp"
@@ -172,21 +173,40 @@ class Navegador:
 
     # ---- conversa ----------------------------------------------------------
     def abrir_conversa(self, nome: str) -> bool:
-        """Abre o grupo pela lista lateral (ou pela busca). So clica; nao digita mensagem."""
-        if self._titulo_aberto() == nome:
+        """Abre o grupo pela lista lateral (ou pela busca). So clica; nao digita mensagem.
+        O nome vale igual ao do WhatsApp OU sem emojis, acentos e maiusculas (ex.: 'programacao' acha 'PROGRAMAÇÃO ✨📷💰')."""
+        if self._mesmo_nome(self._titulo_aberto(), nome):
             return True
-        try:
-            self.pagina.locator("#pane-side").get_by_title(nome, exact=True).first.click(timeout=3000)
-        except Exception:  # noqa: BLE001
-            if not self._abrir_pela_busca(nome):
-                return False
+        real = self._titulo_equivalente(nome)
+        clicou = False
+        if real is not None:
+            try:
+                self.pagina.locator("#pane-side").get_by_title(real, exact=True).first.click(timeout=3000)
+                clicou = True
+            except Exception:  # noqa: BLE001
+                clicou = False
+        if not clicou and not self._abrir_pela_busca(nome):
+            return False
         fim = time.time() + 5
         while time.time() < fim:
-            if self._titulo_aberto() == nome:
+            if self._mesmo_nome(self._titulo_aberto(), nome):
                 self.pagina.wait_for_timeout(500)
                 return True
             self.pagina.wait_for_timeout(200)
         return False
+
+    @staticmethod
+    def _mesmo_nome(a: str, b: str) -> bool:
+        return bool(compactar(a)) and compactar(a) == compactar(b)
+
+    def _titulo_equivalente(self, nome: str) -> str | None:
+        try:
+            for t in self.conversas():
+                if self._mesmo_nome(t, nome):
+                    return t
+        except Exception:  # noqa: BLE001
+            pass
+        return None
 
     def _titulo_aberto(self) -> str:
         try:
@@ -200,7 +220,10 @@ class Navegador:
             caixa.click(timeout=2000)
             caixa.fill(nome)
             self.pagina.wait_for_timeout(1200)
-            self.pagina.locator("#pane-side").get_by_title(nome, exact=True).first.click(timeout=3000)
+            real = self._titulo_equivalente(nome)
+            if real is None:
+                return False
+            self.pagina.locator("#pane-side").get_by_title(real, exact=True).first.click(timeout=3000)
             return True
         except Exception:  # noqa: BLE001
             return False
