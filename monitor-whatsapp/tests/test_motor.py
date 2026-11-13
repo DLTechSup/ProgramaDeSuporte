@@ -41,8 +41,12 @@ def test_leitor_ve_conversas_e_mensagens(nav):
 
 def test_grupo_a_salva_pastas_e_lista(nav, tmp_path):
     cfg = Config(pasta_base=str(tmp_path / "saida"), grupos=[Grupo("Demandas Fotos", "A")])
-    p = Processador(cfg, nav)
+    eventos = []
+    p = Processador(cfg, nav, evento=lambda t, d: eventos.append((t, d)))
     p.ciclo()
+    avisos = [d for t, d in eventos if t == "salvo"]
+    assert [(a["grupo"], a["referencia"], a["novas"], a["nova"]) for a in avisos] == [
+        ("Demandas Fotos", "8513.115", 3, True), ("Demandas Fotos", "rosa Choque", 6, True)]
     dia = pasta_dia(cfg.pasta_base)
     beira = dia / "BEIRA RIO 8513.115"
     assert len(list(beira.glob("foto_*.jpg"))) == 3
@@ -141,3 +145,12 @@ def test_cada_grupo_tem_a_sua_pasta_e_nome_sem_emoji(tmp_path):
     assert (tmp_path / "Grupo X" / HOJE.strftime("%d-%m-%Y") / "BEIRA RIO 1.1").is_dir()
     assert (tmp_path / "Grupo Y" / HOJE.strftime("%d-%m-%Y") / "DAKOTA 2.2").is_dir()
     assert not (tmp_path / "Grupo Y" / HOJE.strftime("%d-%m-%Y") / "BEIRA RIO 1.1").exists()      # nada mistura
+
+
+def test_texto_do_aviso():
+    from monitor.notificacao import texto_do_aviso
+    d = {"grupo": "PROGRAMAÇÃO", "marca": "BEIRA RIO", "referencia": "123.456", "novas": 3, "total": 3, "nova": True, "situacao": "ok", "obs": ""}
+    assert texto_do_aviso(d) == ("✔ PROGRAMAÇÃO", "BEIRA RIO 123.456", "3 foto(s) salva(s)")
+    assert texto_do_aviso(dict(d, nova=False, total=5, novas=2))[0].startswith("＋ PROGRAMAÇÃO")
+    t, l1, l2 = texto_do_aviso(dict(d, marca="?", referencia="não lida", situacao="conferir", obs="não consegui ler"))
+    assert t.startswith("⚠") and l1 == "não lida" and "não consegui ler" in l2

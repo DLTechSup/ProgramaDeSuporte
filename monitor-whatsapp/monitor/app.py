@@ -14,6 +14,7 @@ import customtkinter as ctk
 from .armazenamento import nome_pasta_grupo, pasta_do_dia
 from .config import ARQUIVO, RAIZ, TIPOS, Config, Grupo
 from .lista import ListaDoDia
+from .notificacao import Notificador
 from .servico import Servico
 
 
@@ -38,6 +39,8 @@ class Janela(ctk.CTk):
         self.eventos: queue.Queue = queue.Queue()
         self.servico: Servico | None = None
         self.conversas: list[str] = []
+        self.notificador = Notificador(self)
+        self.notificador.ligado, self.notificador.som = self.cfg.notificar, self.cfg.som
         self.protocol("WM_DELETE_WINDOW", self._minimizar)
         self._topo()
         self.abas = ctk.CTkTabview(self)
@@ -50,7 +53,9 @@ class Janela(ctk.CTk):
         self._recarregar_lista()
         self.after(400, self._ler_eventos)
         if selftest:
-            self.after(800, self.destroy)
+            self.after(300, lambda: self.notificador.mostrar({"grupo": "TESTE", "pasta": "BEIRA RIO 123.456", "marca": "BEIRA RIO",
+                       "referencia": "123.456", "novas": 3, "total": 3, "nova": True, "situacao": "ok", "obs": ""}))
+            self.after(1200, self.destroy)
 
     # ---------------------------------------------------------------- topo
     def _topo(self) -> None:
@@ -197,6 +202,10 @@ class Janela(ctk.CTk):
         self.v_escond = ctk.BooleanVar(value=self.cfg.tentar_escondidas)
         ctk.CTkCheckBox(aba, text="Pegar também o que já chegou hoje (ao iniciar o monitor)", variable=self.v_hoje, command=self._guardar_config).pack(anchor="w", padx=6, pady=(14, 2))
         ctk.CTkCheckBox(aba, text="Álbum com \"+N\": tentar abrir e baixar todas as fotos", variable=self.v_escond, command=self._guardar_config).pack(anchor="w", padx=6, pady=2)
+        self.v_aviso = ctk.BooleanVar(value=self.cfg.notificar)
+        self.v_som = ctk.BooleanVar(value=self.cfg.som)
+        ctk.CTkCheckBox(aba, text="Avisar na tela a cada item salvo (diz de qual grupo veio)", variable=self.v_aviso, command=self._guardar_config).pack(anchor="w", padx=6, pady=2)
+        ctk.CTkCheckBox(aba, text="Tocar um som junto com o aviso", variable=self.v_som, command=self._guardar_config).pack(anchor="w", padx=6, pady=2)
         self._desenhar_grupos()
 
     def _escolher_pasta(self) -> None:
@@ -249,6 +258,8 @@ class Janela(ctk.CTk):
         self.cfg.pasta_base = self.e_pasta.get().strip()
         self.cfg.incluir_hoje = bool(self.v_hoje.get())
         self.cfg.tentar_escondidas = bool(self.v_escond.get())
+        self.cfg.notificar, self.cfg.som = bool(self.v_aviso.get()), bool(self.v_som.get())
+        self.notificador.ligado, self.notificador.som = self.cfg.notificar, self.cfg.som
         try:
             self.cfg.salvar()
         except OSError as e:
@@ -288,6 +299,8 @@ class Janela(ctk.CTk):
                     messagebox.showerror("Não foi possível abrir o WhatsApp", str(dado))
                 elif tipo == "lista":
                     mudou_lista = True
+                elif tipo == "salvo":
+                    self.notificador.mostrar(dado)
                 elif tipo == "conversas":
                     self.conversas = list(dado)
                     self.c_conversa.configure(values=self.conversas or [""])

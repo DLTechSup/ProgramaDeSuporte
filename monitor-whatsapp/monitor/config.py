@@ -25,6 +25,8 @@ class Config:
     incluir_hoje: bool = True          # pegar tambem o que ja chegou hoje
     tentar_escondidas: bool = True     # album com "+N": tentar abrir e baixar as fotos escondidas
     navegador: str = "msedge"
+    notificar: bool = True             # aviso na tela a cada item salvo
+    som: bool = True                   # toca um som junto com o aviso
 
     def salvar(self, arquivo: Path = ARQUIVO) -> None:
         arquivo.write_text(json.dumps(asdict(self), ensure_ascii=False, indent=2), encoding="utf-8")

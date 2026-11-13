@@ -80,6 +80,9 @@ class Processador:
                                     novas_fotos=novas, situacao=situacao, pasta=pasta.name, observacao=obs)
         self.evento("lista", item)
         self.evento("log", f"{grupo}: {pasta.name} (+{novas} foto(s))" + (f" — {obs}" if obs else ""))
+        if novas > 0:
+            self.evento("salvo", {"grupo": grupo, "pasta": pasta.name, "marca": marca, "referencia": ref, "novas": novas,
+                                  "total": item.fotos, "nova": item.fotos == novas, "situacao": situacao, "obs": obs})
 
     # ---- ciclo -------------------------------------------------------------
     def ciclo(self) -> None:

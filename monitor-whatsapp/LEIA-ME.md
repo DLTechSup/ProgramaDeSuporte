@@ -4,6 +4,8 @@ Fica rodando minimizado, **olha os grupos de WhatsApp que você escolher** e, a 
 - baixa as fotos e cria a pasta `MARCA REFERÊNCIA` com elas dentro;
 - anota na **lista da demanda do dia** (na tela e em arquivo `.csv`, que abre no Excel).
 
+A cada item salvo, aparece um **aviso no canto da tela** (mesmo com tudo minimizado) dizendo de qual grupo veio, a marca, a referência e quantas fotos. Dá para desligar o aviso ou o som em Configurações.
+
 Ele **só lê**: nunca envia mensagem e nunca apaga nada.
 
 ## Onde ficam as pastas
