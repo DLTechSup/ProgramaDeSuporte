@@ -40,7 +40,7 @@ def rodar() -> None:
         nav.iniciar()
         try:
             assert nav.logado(), "pagina de teste nao carregou"
-            cfg = Config(pasta_base=str(tmp / "saida"), grupos=[Grupo("Demandas Fotos", "A")])
+            cfg = Config(pasta_base=str(tmp / "saida"), grupos=[Grupo("Demandas Fotos", "A")], pegar_antigas=True)   # o teste precisa ler as mensagens que ja estao na pagina
             p = Processador(cfg, nav)
             _passo("3 ciclo de leitura")
             p.ciclo()
