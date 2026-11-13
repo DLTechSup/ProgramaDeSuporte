@@ -311,3 +311,19 @@ def test_abre_grupo_mesmo_se_a_tela_nao_usar_o_atributo_title(nav):
     nav.pagina.evaluate("() => document.querySelectorAll('#main header [data-nome]').forEach(e => e.removeAttribute('data-nome'))")
     assert nav._titulo_aberto() == "Demandas Fotos"                 # titulo do cabecalho lido pela primeira linha
     assert "Demandas Fotos" in nav.resumo_conversas() and "vejo" in nav.resumo_conversas()
+
+
+def test_aviso_de_grupo_nao_aberto_nao_se_repete_a_cada_rodada(tmp_path):
+    class NavSemGrupo(NavFalso):
+        def abrir_conversa(self, nome): return False
+        def resumo_conversas(self, limite=8): return "vejo A, B"
+    relogio = [1000.0]
+    eventos = []
+    p = Processador(Config(pasta_base=str(tmp_path), grupos=[Grupo("SUBIR PRO SITE", "B")]), NavSemGrupo([]),
+                    agora=lambda: relogio[0], evento=lambda t, d: eventos.append((t, d)))
+    for _ in range(5):
+        p.ciclo(); relogio[0] += 4
+    assert sum(1 for t, d in eventos if t == "log" and "Não consegui abrir" in str(d)) == 1 and "vejo A, B" in str(eventos)
+    relogio[0] += 200
+    p.ciclo()
+    assert sum(1 for t, d in eventos if t == "log" and "Não consegui abrir" in str(d)) == 2        # depois de 3 min, avisa de novo

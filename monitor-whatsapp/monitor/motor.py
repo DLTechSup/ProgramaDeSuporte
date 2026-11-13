@@ -57,6 +57,7 @@ class Processador:
         self.estados: dict[str, Estado] = {}
         self.pastas: dict[str, Path] = {}
         self._primeiro: set[str] = set()                       # grupos ja varridos uma vez
+        self._aviso_falha: dict[str, float] = {}               # grupo -> quando avisamos pela ultima vez que nao abriu
 
     # ---- infra -------------------------------------------------------------
     def _preparar_dia(self, grupo: str) -> None:
@@ -93,8 +94,10 @@ class Processador:
             self._preparar_dia(g.nome)
             self.listas[g.nome].recarregar()
             if not self.nav.abrir_conversa(g.nome):
-                visto = self.nav.resumo_conversas() if hasattr(self.nav, "resumo_conversas") else ""
-                self.evento("log", f"Não consegui abrir o grupo \"{g.nome}\" (nome diferente? está na lista de conversas?)" + (f" — {visto}" if visto else ""))
+                if self.agora() - self._aviso_falha.get(g.nome, -10**9) >= 180:       # avisa de 3 em 3 minutos, nao a cada rodada
+                    self._aviso_falha[g.nome] = self.agora()
+                    visto = self.nav.resumo_conversas() if hasattr(self.nav, "resumo_conversas") else ""
+                    self.evento("log", f"Não consegui abrir o grupo \"{g.nome}\" (nome diferente? está na lista de conversas?)" + (f" — {visto}" if visto else "") + " Continuo tentando.")
                 continue
             self._processar_grupo(g)
         self._vencer_pendentes()
