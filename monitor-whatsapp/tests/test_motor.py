@@ -243,4 +243,4 @@ def test_pegada_cores_diferentes_caem_na_mesma_pasta(tmp_path):
     nomes = sorted(d.name for d in pasta_dia(tmp_path, "G").iterdir() if d.is_dir())
     assert nomes == ["OLYMPIKUS CORRE 2", "PEGADA (133) 161"]      # mantém como a pessoa escreveu, sem o -01 da cor
     item = [i for i in p.listas["G"].itens.values() if i.marca == "PEGADA"][0]
-    assert "133 161-01" in item.observacao            # a referencia completa fica registrada na lista
+    assert "(133) 161-01" in item.observacao            # a referencia completa fica registrada na lista
