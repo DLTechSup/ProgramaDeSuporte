@@ -221,6 +221,12 @@ class Processador:
         p = self.pendentes.pop((g.nome, m.remetente), None)
         if p:
             self._salvar_com_legenda(g.nome, m.legenda, p.fotos, "legenda veio depois das fotos")
+            return
+        nome = f"{CONFERIR} sem foto {nome_seguro(m.legenda)[:60]}"
+        self._registrar(g.nome, "?", m.legenda, nome, [], "conferir",
+                        "não encontrei a foto desta mensagem (pode ter sido enviada de um jeito que não reconheço); confira no WhatsApp")
+        self.evento("log", f"{g.nome}: texto de {m.remetente or 'alguém'} sem foto correspondente — "
+                          f"\"{m.legenda[:60]}\"; salvei em _Conferir para você revisar.")
 
     def _salvar_com_legenda(self, grupo: str, legenda: str, fotos: list[bytes], obs: str) -> None:
         d = dividir_legenda(legenda, self.marcas)

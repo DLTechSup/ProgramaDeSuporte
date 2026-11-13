@@ -101,6 +101,18 @@ def test_foto_sem_legenda_espera_texto_e_vence_o_prazo(tmp_path):
     assert any(d.name.startswith("_Conferir sem legenda") for d in pasta_dia(tmp_path, "G").iterdir())
 
 
+def test_texto_sem_foto_nenhuma_vai_para_conferir_e_avisa_no_log(tmp_path):
+    """Mensagem so' de texto (sem blobs e sem 'pendente' esperando legenda): antes desaparecia em silencio."""
+    cfg = Config(pegar_antigas=True, pasta_base=str(tmp_path), grupos=[Grupo("G", "A")])
+    nav = NavFalso([msg("1", "Subir para o Site", blobs=(), rem="Cliente")])
+    eventos = []
+    p = Processador(cfg, nav, evento=lambda t, d: eventos.append((t, d)))
+    p.ciclo()
+    nomes = [d.name for d in pasta_dia(tmp_path, "G").iterdir() if d.is_dir()]
+    assert any(n.startswith("_Conferir sem foto Subir para o Site") for n in nomes)
+    assert any(t == "log" and "sem foto correspondente" in str(d) and "Subir para o Site" in str(d) for t, d in eventos)
+
+
 def test_marca_desconhecida_vai_para_conferir_e_miniatura_borrada_espera(tmp_path):
     cfg = Config(pegar_antigas=True, pasta_base=str(tmp_path), grupos=[Grupo("G", "A")])
     nav = NavFalso([msg("1", "bom dia pessoal"), msg("2", "NOVA MARCA 55-1", carregando=1)])
