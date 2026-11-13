@@ -1,0 +1,61 @@
+name: Gerar executável (Captura de Tela)
+on:
+  workflow_dispatch:
+  push:
+    branches: [claude/vigilant-ramanujan-g27161]
+    paths: ["captura-tela/**", ".github/workflows/build-captura-tela.yml"]
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: captura-tela
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      - run: pip install -r requirements.txt pyinstaller pytest
+      - name: Testes automáticos
+        run: python -m pytest -q tests
+      - name: Gerar o programa (.exe com ícone e versão)
+        run: >
+          pyinstaller --noconfirm --onedir --noconsole --name CapturaDeTela
+          --icon assets/icone.ico --version-file installer/versao.txt --add-data "assets;assets"
+          --collect-all customtkinter --collect-all pystray --collect-all pynput
+          --hidden-import win32clipboard --hidden-import win32con --hidden-import win32timezone
+          programa.py
+      - name: Teste do programa (gatilho, janela de seleção, salvar, área de transferência)
+        shell: pwsh
+        run: |
+          $pasta = "dist\CapturaDeTela"
+          $p = Start-Process -FilePath "$pasta\CapturaDeTela.exe" -ArgumentList "--selftest" -PassThru
+          $p.WaitForExit(70000) | Out-Null
+          Get-ChildItem "$pasta\selftest_*.txt" -ErrorAction SilentlyContinue | ForEach-Object { "--- " + $_.Name; Get-Content $_.FullName }
+          if (-not $p.HasExited) { Stop-Process -Id $p.Id -Force }
+          if (Test-Path "$pasta\selftest_erro.txt") { throw "selftest falhou (veja acima)" }
+          if (-not (Test-Path "$pasta\selftest_ok.txt")) { throw "o programa não terminou o selftest" }
+          $okContent = Get-Content "$pasta\selftest_ok.txt" -Raw
+          if ($okContent -notmatch "mouse=ativo") { throw "o ouvinte global do mouse NÃO ficou ativo dentro do .exe: $okContent" }
+          Remove-Item "$pasta\selftest_*.txt" -ErrorAction SilentlyContinue
+      - name: Instalar o Inno Setup
+        shell: pwsh
+        run: choco install innosetup --no-progress -y
+      - name: Gerar o instalador
+        shell: pwsh
+        run: |
+          & "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" installer\capturadetela.iss
+          if (-not (Test-Path saida\CapturaDeTela-Instalador-1.0.0.exe)) { throw "instalador não foi gerado" }
+      - name: Versão portátil (zip)
+        shell: pwsh
+        run: |
+          Copy-Item LEIA-ME.md dist\CapturaDeTela\
+          Compress-Archive -Path dist\CapturaDeTela -DestinationPath saida\CapturaDeTela-portatil.zip
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: capturatela-${{ github.run_number }}
+          name: Captura de Tela (Windows) #${{ github.run_number }}
+          files: |
+            captura-tela/saida/CapturaDeTela-Instalador-1.0.0.exe
+            captura-tela/saida/CapturaDeTela-portatil.zip
