@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+. /etc/os-release
+printf '\033[38;2;124;156;255m%s\033[0m\n' "$PRETTY_NAME"
+echo "Base:      Debian $(cat /etc/debian_version)"
+echo "Kernel:    $(uname -r)"
+echo "Desktop:   ${XDG_CURRENT_DESKTOP:-XFCE}"
+echo "Tema:      $(xfconf-query -c xsettings -p /Net/ThemeName 2>/dev/null || echo -)"
+echo "Memória:   $(free -h | awk '/Mem/{print $3" / "$2}')"
+echo "Criado por Danilo Lira"

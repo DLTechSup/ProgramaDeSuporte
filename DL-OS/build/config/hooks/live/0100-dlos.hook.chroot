@@ -22,3 +22,11 @@ chsh -s /usr/bin/zsh root || true
 sed -i 's/^#\?greeter-session=.*/greeter-session=lightdm-gtk-greeter/' /etc/lightdm/lightdm.conf || true
 # Atualizações automáticas só de segurança + snapshot antes
 sed -i 's|//\s*"origin=Debian,codename=${distro_codename}-updates"|"origin=Debian,codename=${distro_codename}-updates"|' /etc/apt/apt.conf.d/50unattended-upgrades || true
+# ---- Identidade DL OS ----
+for f in /etc/os-release /usr/lib/os-release; do dpkg-divert --quiet --local --rename --add "$f" || true; done
+cp /usr/lib/os-release.dlos /usr/lib/os-release && ln -sf ../usr/lib/os-release /etc/os-release
+sed -i 's/^GRUB_DISTRIBUTOR=.*/GRUB_DISTRIBUTOR="DL OS"/' /etc/default/grub 2>/dev/null || true
+echo 'DL OS' > /etc/dlos/name
+plymouth-set-default-theme dlos 2>/dev/null || true
+update-initramfs -u 2>/dev/null || true
+gtk-update-icon-cache -f /usr/share/icons/hicolor 2>/dev/null || true

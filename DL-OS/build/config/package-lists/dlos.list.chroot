@@ -95,3 +95,12 @@ ristretto
 network-manager-gnome
 gvfs-backends
 firmware-linux-free
+plymouth
+plymouth-themes
+mkvtoolnix
+mediainfo
+live-boot
+live-config
+parted
+dosfstools
+e2fsprogs

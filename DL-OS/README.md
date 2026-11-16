@@ -14,6 +14,12 @@ Sistema operacional leve para trabalho e programação. Base **Debian 13 + XFCE 
 Local (Debian/Ubuntu, como root): `sudo ./DL-OS/build/build.sh` → `DL-OS/out/DL-OS-AAAAMMDD.iso`
 Ou no GitHub: aba **Actions → "DL OS - gerar ISO" → Run workflow** e baixe o artefato.
 
+## Rodar do pendrive
+A ISO é híbrida (BIOS + UEFI): grave com `sudo ./DL-OS/tools/make-usb.sh DL-OS.iso /dev/sdX` e boote por ele. O script também cria a partição **persistente** `dlos-data`, que guarda arquivos, programas e configurações entre os boots (sem ela, funciona como "live", sem salvar). O script apaga o pendrive e pede confirmação. No Windows, use Rufus/balenaEtcher para gravar (sem persistência).
+
+## Identidade
+Nome: **DL OS**: Digital Logic Operating System (DL também são as iniciais de Danilo Lira). Versão 1.0 "Boole". Logo e wordmark em `branding/` (para trocar pelo seu: substitua `branding/logo.svg` e `logo.png` e rode o build).
+
 ## Como cada requisito é atendido
 - **Fácil de instalar**: ISO live + Calamares.
 - **Atualizações**: `dlos-update` (snapshot Timeshift + apt + Flatpak) e `unattended-upgrades` para segurança.
