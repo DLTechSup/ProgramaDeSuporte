@@ -1,17 +1,21 @@
 #!/usr/bin/env bash
-# dlos-seguranca status|alertas|testar-alerta|atualizar|scan <pasta>|quarentena|auditar|liberar <tcp|udp> <porta>|dns-seguro on|off|modo-total on|off
+# dlos-seguranca status|bloqueados|desbloquear <ip>|confiar <ip>|alertas|testar-alerta|atualizar|scan <pasta>|quarentena|auditar|liberar <tcp|udp> <porta>|dns-seguro on|off|modo-total on|off
 case "${1:-status}" in
   status)
     echo "Firewall (nftables):  $(systemctl is-active nftables)"
     echo "AppArmor:             $(aa-enabled 2>/dev/null || echo desconhecido)"
     echo "Detector de intrusão: $(systemctl is-active dlos-alerta)"
     echo "Último alerta:        $(tail -1 /var/log/dlos-alertas.log 2>/dev/null || echo nenhum)"
+    echo "IPs bloqueados agora: $(python3 /usr/lib/dlos/alerta.py --bloqueados 2>/dev/null | grep -vc nenhum)"
     echo "Antivírus (vigia):    $(systemctl is-active dlos-av)"
     d=$(ls -t /var/lib/clamav/*.c[vl]d 2>/dev/null | head -1); echo "Banco de vírus:       ${d:+atualizado em $(date -r "$d" '+%d/%m/%Y')}${d:-AUSENTE (conecte à internet e rode: dlos-seguranca atualizar)}"
     echo "DNS seguro (Quad9):   $(resolvectl dns 2>/dev/null | grep -q 9.9.9.9 && echo ativo || echo inativo)"
     echo "Atualizações automáticas: $(systemctl is-enabled apt-daily-upgrade.timer 2>/dev/null)"
     echo "Quarentena:           $(ls /var/lib/dlos/quarentena 2>/dev/null | wc -l) arquivo(s)"
     echo "Portas abertas (de fora): $(ss -lntuH 2>/dev/null | grep -vc '127\.\|\[::1\]')" ;;
+  bloqueados) sudo python3 /usr/lib/dlos/alerta.py --bloqueados ;;
+  desbloquear) sudo python3 /usr/lib/dlos/alerta.py --desbloquear "${2:?ip}" ;;
+  confiar) sudo python3 /usr/lib/dlos/alerta.py --confiar "${2:?ip}" ;;
   alertas) echo "== Alertas de intrusão =="; sudo tail -30 /var/log/dlos-alertas.log 2>/dev/null || echo nenhum; echo; echo "== Antivírus =="; sudo tail -15 /var/log/dlos-av.log 2>/dev/null || echo nenhum ;;
   testar-alerta) sudo python3 /usr/lib/dlos/alerta.py --teste ;;
   atualizar) sudo systemctl stop clamav-freshclam; sudo freshclam; sudo systemctl start clamav-freshclam ;;
@@ -19,7 +23,7 @@ case "${1:-status}" in
   quarentena) sudo ls -la /var/lib/dlos/quarentena; echo; sudo tail -20 /var/log/dlos-av.log 2>/dev/null ;;
   auditar) sudo lynis audit system --quick ;;
   liberar) [ -n "$3" ] || { echo "uso: dlos-seguranca liberar tcp 22"; exit 1; }
-    echo "$2 dport $3 accept" | sudo tee "/etc/nftables.d/$2-$3.nft" >/dev/null && sudo systemctl reload nftables && echo "porta $2/$3 liberada" ;;
+    echo "$2 dport $3 accept" | sudo tee "/etc/nftables.d/$2-$3.nft" >/dev/null && sudo systemctl reload nftables && sudo python3 /usr/lib/dlos/alerta.py --restaurar && echo "porta $2/$3 liberada" ;;
   dns-seguro) if [ "$2" = off ]; then sudo mv /etc/systemd/resolved.conf.d/dlos.conf /etc/systemd/resolved.conf.d/dlos.conf.off 2>/dev/null
               else sudo mv /etc/systemd/resolved.conf.d/dlos.conf.off /etc/systemd/resolved.conf.d/dlos.conf 2>/dev/null; fi
               sudo systemctl restart systemd-resolved; echo "dns-seguro: ${2:-on}" ;;
