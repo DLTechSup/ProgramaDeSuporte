@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+# dlos-intro [play|on|off|nome "Fulano"] : abertura do DL OS, narrada com o nome da conta.
+# Cena A (boot) + cena B (gerada: "Bem-vindo, <nome>", escrita e falada) + cena C (desktop).
+D=/usr/share/dlos/branding/intro; F="$HOME/.config/dlos"; mkdir -p "$F" "$HOME/.cache/dlos"
+case "${1:-auto}" in
+  off) touch "$F/no-intro"; echo "abertura desativada"; exit ;;
+  on)  rm -f "$F/no-intro"; echo "abertura ativada"; exit ;;
+  nome) echo "$2" > "$F/nome"; echo "nome da abertura: $2"; exit ;;
+  auto) [ -f "$F/no-intro" ] && exit 0 ;;
+esac
+# nome: escolhido pelo usuário > nome completo da conta (GECOS) > login
+NOME=$(cat "$F/nome" 2>/dev/null)
+[ -n "$NOME" ] || NOME=$(getent passwd "$USER" | cut -d: -f5 | cut -d, -f1)
+[ -n "$NOME" ] || NOME="$USER"
+KEY=$(printf '%s' "$NOME" | sha1sum | cut -c1-12); B="$HOME/.cache/dlos/boasvindas-$KEY.mp4"
+[ -f "$B" ] || /usr/lib/dlos/welcome.sh "$NOME" "$B" || B=""
+exec mpv --fs --no-config --really-quiet --osd-level=0 --no-osc --cursor-autohide=always \
+  --hwdec=auto-safe --keep-open=no "$D/a.mp4" ${B:+"$B"} "$D/c.mp4"   # qualquer tecla (q/Esc) encerra

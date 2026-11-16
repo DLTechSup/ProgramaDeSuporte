@@ -26,6 +26,9 @@ Nome: **DL OS**: Digital Logic Operating System (DL também são as iniciais de 
 - Para regenerar as animações: `python3 tools/make_animations.py`.
 - Arte original em `branding/art/`. Imagens maiores (1920x1080 ou 4K) deixam tudo mais nítido: as atuais têm 1024 px.
 
+## Abertura narrada com o nome da conta
+Vídeo de abertura em 3 cenas (`branding/intro/`): **A** boot → **B gerada na hora** ("Bem-vindo, *nome*", escrito e narrado) → **C** desktop. O nome vem do nome completo da conta (ou `dlos-intro nome "Fulano"`); a cena B é guardada em cache por nome. Comandos: `dlos-intro play|on|off`. Voz offline: `espeak-ng` (pt-BR); se existir `piper` + `/usr/share/dlos/voice/pt_BR.onnx`, usa a voz neural (bem mais natural). Demonstração: `design/abertura-demo-maria.mp4`.
+
 ## Como cada requisito é atendido
 - **Fácil de instalar**: ISO live + Calamares.
 - **Atualizações**: `dlos-update` (snapshot Timeshift + apt + Flatpak) e `unattended-upgrades` para segurança.

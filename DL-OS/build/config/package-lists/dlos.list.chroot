@@ -97,6 +97,8 @@ gvfs-backends
 firmware-linux-free
 plymouth
 plymouth-themes
+espeak-ng
+espeak-ng-data
 mkvtoolnix
 mediainfo
 live-boot
