@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+# dlos-diagnostico : junta informações para descobrir por que o desktop não subiu. Rode na tela de texto
+# (Ctrl+Alt+F2, login: user / senha: live) e salve em pendrive: dlos-diagnostico /media/SEU_PENDRIVE
+OUT="${1:-/tmp}/dlos-diagnostico.txt"
+{ echo "== usuário =="; id user 2>&1
+  echo; echo "== serviços com falha =="; systemctl --failed --no-legend 2>&1
+  echo; echo "== lightdm =="; systemctl status lightdm --no-pager -l 2>&1 | tail -15
+  echo; echo "== journal do lightdm =="; journalctl -b -u lightdm --no-pager 2>&1 | tail -30
+  echo; echo "== Xorg =="; tail -30 /var/log/Xorg.0.log 2>&1; tail -20 /var/log/lightdm/x-0.log 2>&1
+  echo; echo "== pacotes essenciais =="; for p in xserver-xorg-core libpam-systemd user-setup sudo polkitd lightdm libgl1-mesa-dri; do dpkg -s $p >/dev/null 2>&1 && echo "ok  $p" || echo "FALTA $p"; done
+  echo; echo "== erros do boot =="; journalctl -b -p err --no-pager 2>&1 | tail -30
+  echo; echo "== placa de vídeo =="; lspci 2>/dev/null | grep -iE "vga|3d|display"
+} > "$OUT" 2>&1
+echo "Salvo em $OUT"; less "$OUT"

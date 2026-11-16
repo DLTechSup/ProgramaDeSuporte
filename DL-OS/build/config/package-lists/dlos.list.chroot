@@ -102,3 +102,34 @@ gir1.2-gtk-3.0
 live-boot
 live-config
 parted
+# ===== Essenciais da sessão gráfica e do modo live =====
+# (a ISO usa --apt-recommends false; sem estes pacotes o desktop não sobe e o login automático falha)
+xserver-xorg-core
+xserver-xorg-input-libinput
+xserver-xorg-video-vesa
+xinit
+x11-xkb-utils
+xkb-data
+libgl1-mesa-dri
+libglx-mesa0
+libpam-systemd
+dbus
+dbus-user-session
+dbus-x11
+polkitd
+pkexec
+sudo
+user-setup
+locales
+keyboard-configuration
+console-setup
+xdg-utils
+xdg-user-dirs
+shared-mime-info
+desktop-file-utils
+librsvg2-common
+adwaita-icon-theme
+gsettings-desktop-schemas
+dconf-gsettings-backend
+gvfs-daemons
+exo-utils
