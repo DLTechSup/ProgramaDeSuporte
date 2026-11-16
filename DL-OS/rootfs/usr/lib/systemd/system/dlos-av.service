@@ -1,0 +1,10 @@
+[Unit]
+Description=DL OS antivírus (vigia downloads e mídias externas)
+After=clamav-freshclam.service
+[Service]
+ExecStart=/usr/lib/dlos/av-watch.sh
+Restart=always
+Nice=15
+IOSchedulingClass=idle
+[Install]
+WantedBy=multi-user.target

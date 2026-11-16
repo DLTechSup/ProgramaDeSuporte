@@ -1,0 +1,2 @@
+{"SafeBrowsingProtectionLevel":2,"HttpsOnlyMode":"force_enabled","DnsOverHttpsMode":"off","SitePerProcess":true,
+ "PasswordLeakDetectionEnabled":true,"MetricsReportingEnabled":false,"BlockThirdPartyCookies":true,"DownloadRestrictions":1}

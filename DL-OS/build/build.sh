@@ -11,7 +11,7 @@ python3 "$ROOT/tools/gen_theme.py" --out "$ROOT/rootfs/usr/share/dlos"
 rm -rf "$WORK"; mkdir -p "$WORK" "$OUT"; cd "$WORK"
 lb config --distribution trixie --architectures amd64 \
   --archive-areas "main contrib non-free non-free-firmware" \
-  --binary-images iso-hybrid --bootloaders "grub-efi syslinux" --bootappend-live "boot=live components quiet splash persistence persistence-label=dlos-data" \
+  --binary-images iso-hybrid --bootloaders "grub-efi syslinux" --bootappend-live "boot=live components quiet splash persistence persistence-label=dlos-data apparmor=1 security=apparmor" \
   --iso-application "DL OS" --iso-publisher "Danilo Lira" --iso-volume "DLOS" \
   --image-name dlos --debian-installer none --apt-recommends false \
   --firmware-chroot true --win32-loader false --memtest none

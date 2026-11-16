@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+# dlos-seguranca status|atualizar|scan <pasta>|quarentena|auditar|liberar <tcp|udp> <porta>|dns-seguro on|off|modo-total on|off
+case "${1:-status}" in
+  status)
+    echo "Firewall (nftables):  $(systemctl is-active nftables)"
+    echo "AppArmor:             $(aa-enabled 2>/dev/null || echo desconhecido)"
+    echo "Antivírus (vigia):    $(systemctl is-active dlos-av)"
+    d=$(ls -t /var/lib/clamav/*.c[vl]d 2>/dev/null | head -1); echo "Banco de vírus:       ${d:+atualizado em $(date -r "$d" '+%d/%m/%Y')}${d:-AUSENTE (conecte à internet e rode: dlos-seguranca atualizar)}"
+    echo "DNS seguro (Quad9):   $(resolvectl dns 2>/dev/null | grep -q 9.9.9.9 && echo ativo || echo inativo)"
+    echo "Atualizações automáticas: $(systemctl is-enabled apt-daily-upgrade.timer 2>/dev/null)"
+    echo "Quarentena:           $(ls /var/lib/dlos/quarentena 2>/dev/null | wc -l) arquivo(s)"
+    echo "Portas abertas (de fora): $(ss -lntuH 2>/dev/null | grep -vc '127\.\|\[::1\]')" ;;
+  atualizar) sudo systemctl stop clamav-freshclam; sudo freshclam; sudo systemctl start clamav-freshclam ;;
+  scan) clamscan -r -i --move="${DLOS_Q:-$HOME/.quarentena}" "${2:-$HOME}" ;;
+  quarentena) sudo ls -la /var/lib/dlos/quarentena; echo; sudo tail -20 /var/log/dlos-av.log 2>/dev/null ;;
+  auditar) sudo lynis audit system --quick ;;
+  liberar) [ -n "$3" ] || { echo "uso: dlos-seguranca liberar tcp 22"; exit 1; }
+    echo "$2 dport $3 accept" | sudo tee "/etc/nftables.d/$2-$3.nft" >/dev/null && sudo systemctl reload nftables && echo "porta $2/$3 liberada" ;;
+  dns-seguro) if [ "$2" = off ]; then sudo mv /etc/systemd/resolved.conf.d/dlos.conf /etc/systemd/resolved.conf.d/dlos.conf.off 2>/dev/null
+              else sudo mv /etc/systemd/resolved.conf.d/dlos.conf.off /etc/systemd/resolved.conf.d/dlos.conf 2>/dev/null; fi
+              sudo systemctl restart systemd-resolved; echo "dns-seguro: ${2:-on}" ;;
+  modo-total) if [ "$2" = on ]; then sudo apt-get install -y clamav-daemon && sudo systemctl enable --now clamav-daemon && echo "modo total: clamd ativo (usa ~1 GB de RAM)"
+              else sudo systemctl disable --now clamav-daemon; echo "modo total desligado"; fi ;;
+  *) sed -n '2p' "$0" ;;
+esac

@@ -29,6 +29,16 @@ Pacotes reduzidos ao essencial (sem Go/Node/CMake, EasyEffects, Flatpak nem mpc-
 ## Visual elegante
 Cantos arredondados em janelas, painel e dock, sombras suaves, painel translúcido, dock com zoom, barra de título moderna (Greybird) e Rofi arredondado. Três níveis de efeitos: `dlos-efeitos leve|equilibrado|cristal` (cristal = blur de vidro, pede GPU razoável), também na Central DL, aba Temas.
 
+## Segurança (em camadas)
+- **Firewall** (nftables): bloqueia tudo que chega de fora; saída livre. Abrir porta: `dlos-seguranca liberar tcp 22`.
+- **Antivírus** (ClamAV): vigia Downloads, HDs e pendrives; arquivos novos são escaneados em lote e os infectados vão para quarentena com aviso na tela. Varredura completa semanal + rkhunter. Funciona com **qualquer navegador**, pois olha os arquivos baixados. Banco de vírus baixa na primeira conexão. Modo total (clamd residente, ~1 GB RAM): `dlos-seguranca modo-total on`.
+- **DNS seguro**: DNS criptografado (DoT) com bloqueio de domínios maliciosos (Quad9) para todo o sistema e qualquer navegador; redes locais/empresa seguem no DNS do roteador. Desligar: `dlos-seguranca dns-seguro off`.
+- **Navegadores**: Firefox ESR com HTTPS-only, proteção de rastreio, Safe Browsing travado e uBlock Origin. Políticas equivalentes pré-configuradas para Chrome, Chromium, Brave e Edge (valem se instalados).
+- **Sistema**: AppArmor ativo, kernel/rede endurecidos (sysctl), MAC estável no Wi-Fi, atualizações de segurança automáticas, bloqueio de tela. `dlos-seguranca auditar` roda o Lynis.
+- **Programas do Windows**: `dlos-win seguro <nome>` isola o programa dos seus arquivos.
+- **Painel**: Central DL, aba Segurança. Para criptografar o disco, marque a opção no instalador.
+- **Limites**: nenhuma proteção é absoluta; o antivírus do Linux pega mais malware de Windows do que de Linux; no modo live a senha padrão é conhecida (use a instalação para uso sério).
+
 ## Como cada requisito é atendido
 - **Fácil de instalar**: ISO live + Calamares.
 - **Atualizações**: `dlos-update` (snapshot Timeshift + apt + Flatpak) e `unattended-upgrades` para segurança.

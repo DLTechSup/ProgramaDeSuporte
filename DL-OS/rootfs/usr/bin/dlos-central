@@ -87,9 +87,22 @@ def system_page():
         bt = Gtk.Button(label=txt); bt.connect("clicked", lambda w, c=cmd: spawn(*c)); b.pack_start(bt, False, False, 0)
     return b
 
+# ---------- Segurança ----------
+def security_page():
+    b = page("Segurança")
+    st = Gtk.Label(label=run("dlos-seguranca", "status"), xalign=0, selectable=True); b.pack_start(st, False, False, 0)
+    def refresh(*_): st.set_text(run("dlos-seguranca", "status"))
+    for txt, cmd in (("Atualizar banco de vírus", ["kitty", "sh", "-c", "dlos-seguranca atualizar; read -n1"]),
+                     ("Escanear a pasta Downloads", ["kitty", "sh", "-c", "dlos-seguranca scan ~/Downloads; read -n1"]),
+                     ("Auditoria de segurança (Lynis)", ["kitty", "sh", "-c", "dlos-seguranca auditar; read -n1"]),
+                     ("Ver quarentena e registros", ["kitty", "sh", "-c", "dlos-seguranca quarentena; read -n1"])):
+        bt = Gtk.Button(label=txt); bt.connect("clicked", lambda w, c=cmd: spawn(*c)); b.pack_start(bt, False, False, 0)
+    rb = Gtk.Button(label="Atualizar status"); rb.connect("clicked", refresh); b.pack_start(rb, False, False, 0)
+    return b
+
 win = Gtk.Window(title="Central DL", default_width=640, default_height=480)
 win.set_icon_name("dlos"); win.connect("destroy", Gtk.main_quit)
 nb = Gtk.Notebook(tab_pos=Gtk.PositionType.LEFT)
-for name, fn in (("Temas", themes_page), ("Áudio", audio_page), ("Hibernação", hib_page), ("Sistema", system_page)):
+for name, fn in (("Temas", themes_page), ("Áudio", audio_page), ("Hibernação", hib_page), ("Segurança", security_page), ("Sistema", system_page)):
     nb.append_page(fn(), Gtk.Label(label=name, margin=8))
 win.add(nb); win.show_all(); Gtk.main()
