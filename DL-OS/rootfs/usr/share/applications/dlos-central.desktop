@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Central DL
+Comment=Temas, áudio, hibernação e atualizações do DL OS
+Exec=dlos-central
+Icon=dlos
+Categories=Settings;System;

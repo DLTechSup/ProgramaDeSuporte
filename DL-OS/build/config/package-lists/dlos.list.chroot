@@ -97,8 +97,6 @@ gvfs-backends
 firmware-linux-free
 plymouth
 plymouth-themes
-espeak-ng
-espeak-ng-data
 mkvtoolnix
 mediainfo
 live-boot
@@ -106,3 +104,5 @@ live-config
 parted
 dosfstools
 e2fsprogs
+python3-gi
+gir1.2-gtk-3.0

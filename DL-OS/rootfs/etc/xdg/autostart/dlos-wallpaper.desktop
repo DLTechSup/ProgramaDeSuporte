@@ -1,4 +1,0 @@
-[Desktop Entry]
-Type=Application
-Name=DL OS Papel de parede animado
-Exec=sh -c "[ -f $HOME/.config/dlos/animated-wallpaper ] && dlos-wallpaper on"

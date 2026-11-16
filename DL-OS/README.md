@@ -20,14 +20,8 @@ A ISO é híbrida (BIOS + UEFI): grave com `sudo ./DL-OS/tools/make-usb.sh DL-OS
 ## Identidade
 Nome: **DL OS**: Digital Logic Operating System (DL também são as iniciais de Danilo Lira). Versão 1.0 "Boole". Logo e wordmark em `branding/` (para trocar pelo seu: substitua `branding/logo.svg` e `logo.png` e rode o build).
 
-## Animações
-- **Tela de boot** (Plymouth, `rootfs/usr/share/plymouth/themes/dlos`): fundo com deriva lenta, brilho pulsante no logo, feixe de luz, faíscas, barra de progresso e log `[ OK ]` estilo terminal. Prévia em `design/boot-animado.mp4`.
-- **Papel de parede animado**: `dlos-wallpaper on|off` (loop de vídeo de 10 s, desligado por padrão para poupar bateria/CPU). Arquivo: `branding/wallpaper-animado.mp4`.
-- Para regenerar as animações: `python3 tools/make_animations.py`.
-- Arte original em `branding/art/`. Imagens maiores (1920x1080 ou 4K) deixam tudo mais nítido: as atuais têm 1024 px.
-
-## Abertura narrada com o nome da conta
-Vídeo de abertura em 3 cenas (`branding/intro/`): **A** boot → **B gerada na hora** ("Bem-vindo, *nome*", escrito e narrado) → **C** desktop. O nome vem do nome completo da conta (ou `dlos-intro nome "Fulano"`); a cena B é guardada em cache por nome. Comandos: `dlos-intro play|on|off`. Voz offline: `espeak-ng` (pt-BR); se existir `piper` + `/usr/share/dlos/voice/pt_BR.onnx`, usa a voz neural (bem mais natural). Demonstração: `design/abertura-demo-maria.mp4`.
+## Tela de boot e login
+Usam a imagem oficial (`branding/art/boot-logo.png`) com barra de progresso (Plymouth). O papel de parede do tema padrão "Digital Logic" é a mesma arte.
 
 ## Como cada requisito é atendido
 - **Fácil de instalar**: ISO live + Calamares.
@@ -35,7 +29,7 @@ Vídeo de abertura em 3 cenas (`branding/intro/`): **A** boot → **B gerada na 
 - **Pouca memória**: XFCE, PipeWire, zram, earlyoom.
 - **Programas do Windows**: Wine + `dlos-win install setup.exe`; cada app em prefixo isolado, `.exe`/`.msi` abrem com duplo clique.
 - **Hibernação de apps** (`rootfs/usr/lib/dlos/hibernate.py`): app sem foco, áudio ou CPU por 5 min é congelado (CPU zero, memória vai para zram) e volta exatamente de onde estava ao focar. Configurável em `/etc/dlos/hibernate.conf`.
-- **Temas**: `dlos-theme list|apply <id>`: aurora, graphite, nord, sakura, dev.
+- **Temas**: `dlos-theme list|apply <id>` ou pela **Central DL** (`dlos-central`: temas, áudio, hibernação e atualizações): dlos, aurora, graphite, nord, sakura, dev.
 - **Dev/terminal**: kitty + zsh + tmux + neovim, gcc, python, node, go, git; Wi-Fi, Bluetooth e rede via NetworkManager/BlueZ.
 - **Áudio/mic**: PipeWire, EasyEffects (equalizador/mic), pavucontrol, Helvum; ffmpeg e todos os plugins GStreamer.
 

@@ -1,0 +1,91 @@
+#!/usr/bin/env python3
+"""Central DL: temas, áudio, hibernação de apps e atualizações num só lugar."""
+import gi, subprocess, configparser, os
+gi.require_version("Gtk", "3.0")
+from gi.repository import Gtk, GLib
+
+CONF = os.path.expanduser("~/.config/dlos/hibernate.conf")
+SYS_CONF = "/etc/dlos/hibernate.conf"
+
+def run(*cmd):
+    try:
+        return subprocess.run(cmd, capture_output=True, text=True, timeout=20).stdout.strip()
+    except Exception:
+        return ""
+
+def spawn(*cmd):
+    subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+def page(title):
+    box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12, margin=24)
+    h = Gtk.Label(xalign=0); h.set_markup(f"<span size='x-large' weight='bold'>{title}</span>")
+    box.pack_start(h, False, False, 0)
+    return box
+
+def slider(label, get, setter, lo=0, hi=150):
+    row = Gtk.Box(spacing=12); row.pack_start(Gtk.Label(label=label, xalign=0, width_chars=14), False, False, 0)
+    s = Gtk.Scale.new_with_range(Gtk.Orientation.HORIZONTAL, lo, hi, 1); s.set_value(get()); s.set_hexpand(True)
+    s.connect("value-changed", lambda w: setter(int(w.get_value()))); row.pack_start(s, True, True, 0)
+    return row
+
+def vol_get(kind):
+    out = run("pactl", f"get-{kind}-volume", f"@DEFAULT_{kind.upper()}@")
+    try: return int(out.split("/")[1].strip().rstrip("%"))
+    except Exception: return 50
+
+# ---------- Temas ----------
+def themes_page():
+    b = page("Temas")
+    cur = run("dlos-theme", "current")
+    flow = Gtk.FlowBox(selection_mode=Gtk.SelectionMode.NONE, max_children_per_line=3, row_spacing=10, column_spacing=10)
+    for t in run("dlos-theme", "list").split():
+        btn = Gtk.Button(label=("✔ " if cur.endswith(t) else "") + t.capitalize())
+        btn.connect("clicked", lambda w, t=t: (run("dlos-theme", "apply", t), w.set_label("✔ " + t.capitalize())))
+        flow.add(btn)
+    b.pack_start(flow, False, False, 0)
+    return b
+
+# ---------- Áudio ----------
+def audio_page():
+    b = page("Áudio e microfone")
+    b.pack_start(slider("Volume", lambda: vol_get("sink"), lambda v: run("pactl", "set-sink-volume", "@DEFAULT_SINK@", f"{v}%")), False, False, 0)
+    b.pack_start(slider("Microfone", lambda: vol_get("source"), lambda v: run("pactl", "set-source-volume", "@DEFAULT_SOURCE@", f"{v}%"), 0, 100), False, False, 0)
+    for txt, cmd in (("Controle completo de dispositivos", ["pavucontrol"]), ("Equalizador / efeitos do microfone", ["easyeffects"]),
+                     ("Conexões de áudio avançadas", ["helvum"]), ("Bluetooth", ["blueman-manager"])):
+        bt = Gtk.Button(label=txt); bt.connect("clicked", lambda w, c=cmd: spawn(*c)); b.pack_start(bt, False, False, 0)
+    return b
+
+# ---------- Hibernação ----------
+def hib_page():
+    b = page("Hibernação de apps")
+    b.pack_start(Gtk.Label(label="Apps sem uso são congelados (CPU zero) e voltam de onde estavam ao serem abertos.", xalign=0, wrap=True), False, False, 0)
+    cfg = configparser.ConfigParser(); cfg.read([SYS_CONF, CONF])
+    c = cfg["hibernate"] if "hibernate" in cfg else {}
+    def save(key, val):
+        u = configparser.ConfigParser(); u.read(CONF)
+        if "hibernate" not in u: u["hibernate"] = {}
+        u["hibernate"][key] = str(val); os.makedirs(os.path.dirname(CONF), exist_ok=True)
+        with open(CONF, "w") as f: u.write(f)
+        run("systemctl", "--user", "restart", "dlos-hibernate")
+    b.pack_start(slider("Minutos ocioso", lambda: int(c.get("idle_seconds", 300)) // 60, lambda v: save("idle_seconds", max(1, v) * 60), 1, 60), False, False, 0)
+    sw = Gtk.Switch(active=run("systemctl", "--user", "is-active", "dlos-hibernate") == "active", halign=Gtk.Align.START)
+    sw.connect("notify::active", lambda w, _: run("systemctl", "--user", "start" if w.get_active() else "stop", "dlos-hibernate"))
+    row = Gtk.Box(spacing=12); row.pack_start(Gtk.Label(label="Ativada"), False, False, 0); row.pack_start(sw, False, False, 0)
+    b.pack_start(row, False, False, 0)
+    return b
+
+# ---------- Sistema ----------
+def system_page():
+    b = page("Sistema")
+    info = Gtk.Label(label=run("dlos-info"), xalign=0, selectable=True); b.pack_start(info, False, False, 0)
+    for txt, cmd in (("Atualizar o DL OS (com snapshot)", ["kitty", "dlos-update"]), ("Rede (Wi-Fi)", ["nm-connection-editor"]),
+                     ("Verificar codecs de áudio e vídeo", ["kitty", "sh", "-c", "dlos-codecs; read -n1"])):
+        bt = Gtk.Button(label=txt); bt.connect("clicked", lambda w, c=cmd: spawn(*c)); b.pack_start(bt, False, False, 0)
+    return b
+
+win = Gtk.Window(title="Central DL", default_width=640, default_height=480)
+win.set_icon_name("dlos"); win.connect("destroy", Gtk.main_quit)
+nb = Gtk.Notebook(tab_pos=Gtk.PositionType.LEFT)
+for name, fn in (("Temas", themes_page), ("Áudio", audio_page), ("Hibernação", hib_page), ("Sistema", system_page)):
+    nb.append_page(fn(), Gtk.Label(label=name, margin=8))
+win.add(nb); win.show_all(); Gtk.main()
