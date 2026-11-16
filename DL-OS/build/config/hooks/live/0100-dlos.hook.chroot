@@ -29,3 +29,5 @@ gtk-update-icon-cache -f /usr/share/icons/hicolor 2>/dev/null || true
 systemctl mask NetworkManager-wait-online.service systemd-networkd-wait-online.service 2>/dev/null || true
 systemctl disable apt-daily.timer apt-daily-upgrade.timer 2>/dev/null || true
 printf 'bfq\n' > /etc/modules-load.d/dlos-bfq.conf
+# dconf (dock)
+dconf update 2>/dev/null || true

@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+# dlos-efeitos leve|equilibrado|cristal : escolhe entre desempenho máximo e visual mais rico (blur de vidro).
+N="${1:-status}"; C="$HOME/.config/picom/picom.conf"
+case "$N" in
+  leve|equilibrado|cristal) mkdir -p "$(dirname "$C")"; cp "/usr/share/dlos/picom/$N.conf" "$C"; echo "$N" > "$HOME/.config/dlos-efeitos"
+    pkill picom; (picom -b --config "$C" &) >/dev/null 2>&1; echo "efeitos: $N" ;;
+  *) echo "atual: $(cat "$HOME/.config/dlos-efeitos" 2>/dev/null || echo equilibrado)  (leve | equilibrado | cristal)" ;;
+esac

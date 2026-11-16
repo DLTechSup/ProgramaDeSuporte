@@ -43,6 +43,11 @@ def themes_page():
         btn.connect("clicked", lambda w, t=t: (run("dlos-theme", "apply", t), w.set_label("✔ " + t.capitalize())))
         flow.add(btn)
     b.pack_start(flow, False, False, 0)
+    h = Gtk.Label(xalign=0); h.set_markup("<b>Efeitos visuais</b> (beleza x desempenho)"); b.pack_start(h, False, False, 0)
+    row = Gtk.Box(spacing=8)
+    for n in ("leve", "equilibrado", "cristal"):
+        bt = Gtk.Button(label=n.capitalize()); bt.connect("clicked", lambda w, n=n: run("dlos-efeitos", n)); row.pack_start(bt, False, False, 0)
+    b.pack_start(row, False, False, 0)
     return b
 
 # ---------- Áudio ----------

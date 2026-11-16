@@ -22,6 +22,9 @@ entry, textview, treeview {{ background: {surface}; border-radius: 10px; }}
 selection, *:selected {{ background: {accent}; color: {bg}; }}
 scrollbar slider {{ border-radius: 99px; min-width: 6px; background: alpha({fg},.3); }}
 menu, .popup {{ border-radius: 12px; background: {surface}; }}
+.xfce4-panel, .xfce4-panel.background {{ background-color: alpha({surface}, 0.80); border-radius: 16px; color: {fg}; }}
+.xfce4-panel button {{ border-radius: 10px; border: none; background: transparent; padding: 2px 8px; }}
+.xfce4-panel button:hover, .xfce4-panel button:checked {{ background: alpha({accent}, 0.30); }}
 """
 KITTY = """background {bg}
 foreground {fg}

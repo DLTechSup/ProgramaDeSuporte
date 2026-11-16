@@ -29,6 +29,8 @@ fonts-jetbrains-mono
 papirus-icon-theme
 # ---- Várias telas (TV + monitor) ----
 arandr
+greybird-gtk-theme
+dconf-cli
 autorandr
 # ---- Discos / HDs ----
 udisks2

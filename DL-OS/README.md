@@ -26,6 +26,9 @@ Usam a imagem oficial (`branding/art/boot-logo.png`) com barra de progresso (Ply
 ## Versão enxuta e ágil
 Pacotes reduzidos ao essencial (sem Go/Node/CMake, EasyEffects, Flatpak nem mpc-qt; player = mpv + Celluloid). **Agilidade**: animações desligadas, compositor leve (picom, sem blur), Thunar pré-carregado (pastas abrem na hora), zram com zstd, cache de arquivos maior, escalonador de disco por tipo (NVMe/SSD/HD/USB), teclado com repetição rápida. `dlos-perf` mostra o que está lento. **Telas**: `dlos-telas estender|espelhar|so <saída>|salvar|gui`, e o autorandr reaplica o layout ao conectar monitor/TV. **HDs**: NTFS, exFAT, FAT e ext4 montam pelo Thunar. Dica: no boot do pendrive, adicione `toram` às opções para carregar o sistema na RAM (rapidíssimo; precisa de 8 GB+). O live direto do pendrive é limitado pela velocidade do pendrive: instalado em SSD fica bem mais rápido.
 
+## Visual elegante
+Cantos arredondados em janelas, painel e dock, sombras suaves, painel translúcido, dock com zoom, barra de título moderna (Greybird) e Rofi arredondado. Três níveis de efeitos: `dlos-efeitos leve|equilibrado|cristal` (cristal = blur de vidro, pede GPU razoável), também na Central DL, aba Temas.
+
 ## Como cada requisito é atendido
 - **Fácil de instalar**: ISO live + Calamares.
 - **Atualizações**: `dlos-update` (snapshot Timeshift + apt + Flatpak) e `unattended-upgrades` para segurança.
