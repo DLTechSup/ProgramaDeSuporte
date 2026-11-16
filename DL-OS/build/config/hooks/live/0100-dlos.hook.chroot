@@ -17,7 +17,7 @@ sed -i '1i [Default Applications]' /etc/xdg/mimeapps.list
 # .exe/.msi abrem com a camada Windows do DL OS
 printf 'application/x-ms-dos-executable=dlos-win.desktop\napplication/x-msi=dlos-win.desktop\n' >> /etc/xdg/mimeapps.list
 # Tema padrão e shell
-echo 'DLOS_THEME=aurora' > /etc/dlos/theme.conf
+echo 'DLOS_THEME=dlos' > /etc/dlos/theme.conf
 chsh -s /usr/bin/zsh root || true
 sed -i 's/^#\?greeter-session=.*/greeter-session=lightdm-gtk-greeter/' /etc/lightdm/lightdm.conf || true
 # Atualizações automáticas só de segurança + snapshot antes

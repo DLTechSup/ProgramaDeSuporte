@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Gera, a partir de themes/*.json: tema GTK3, cores do kitty e papel de parede SVG."""
-import argparse, json, pathlib
+import argparse, json, pathlib, shutil
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 
@@ -53,7 +53,11 @@ def main():
         (g / "index.theme").write_text(f"[Desktop Entry]\nType=X-GNOME-Metatheme\nName=DL OS {t['name']}\n\n[X-GNOME-Metatheme]\nGtkTheme=DLOS-{t['id']}\n")
         (g / "gtk-3.0" / "gtk.css").write_text(GTK.format(**d))
         (g / "kitty.conf").write_text(KITTY.format(**d))
-        (g / "wallpaper.svg").write_text(WALL.format(**d))
+        if t.get("wallpaper"):
+            shutil.copy(ROOT / t["wallpaper"], g / "wallpaper.png")
+            (g / "wallpaper.svg").write_text(WALL.format(**d))  # fallback
+        else:
+            (g / "wallpaper.svg").write_text(WALL.format(**d))
     (out / "themes.json").write_text(json.dumps(themes, indent=1))
     print(f"{len(themes)} temas gerados em {out}")
 

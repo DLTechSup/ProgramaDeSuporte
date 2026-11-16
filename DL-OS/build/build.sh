@@ -19,5 +19,10 @@ cp -r "$HERE/config/package-lists/." config/package-lists/
 mkdir -p config/hooks/live config/includes.chroot
 cp "$HERE"/config/hooks/live/* config/hooks/live/
 cp -r "$ROOT/rootfs/." config/includes.chroot/
+# menu de boot (BIOS/UEFI) com a arte do DL OS
+mkdir -p config/bootloaders && cp -r /usr/share/live/build/bootloaders/. config/bootloaders/ 2>/dev/null || true
+find config/bootloaders -name 'splash.png' | while read -r f; do
+  cp "$ROOT/branding/splash-640x480.png" "$f"; done
+find config/bootloaders -name 'splash.svg' -delete 2>/dev/null || true
 lb build
 mv -v ./*.iso "$OUT/DL-OS-$(date +%Y%m%d).iso"

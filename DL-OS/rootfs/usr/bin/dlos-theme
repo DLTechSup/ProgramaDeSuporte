@@ -11,7 +11,7 @@ case "${1:-}" in
     xfconf-query -c xsettings -p /Net/IconThemeName -s Papirus-Dark --create -t string
     cp "$D/DLOS-$id/kitty.conf" ~/.config/kitty/theme.conf
     for m in $(xfconf-query -c xfce4-desktop -l | grep last-image); do
-      xfconf-query -c xfce4-desktop -p "$m" -s "$D/DLOS-$id/wallpaper.svg"; done
+      xfconf-query -c xfce4-desktop -p "$m" -s "$(ls "$D/DLOS-$id"/wallpaper.png "$D/DLOS-$id"/wallpaper.svg 2>/dev/null | head -1)"; done
     echo "Tema '$id' aplicado." ;;
   *) sed -n '2p' "$0"; exit 1 ;;
 esac

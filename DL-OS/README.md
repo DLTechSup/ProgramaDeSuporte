@@ -20,6 +20,12 @@ A ISO é híbrida (BIOS + UEFI): grave com `sudo ./DL-OS/tools/make-usb.sh DL-OS
 ## Identidade
 Nome: **DL OS**: Digital Logic Operating System (DL também são as iniciais de Danilo Lira). Versão 1.0 "Boole". Logo e wordmark em `branding/` (para trocar pelo seu: substitua `branding/logo.svg` e `logo.png` e rode o build).
 
+## Animações
+- **Tela de boot** (Plymouth, `rootfs/usr/share/plymouth/themes/dlos`): fundo com deriva lenta, brilho pulsante no logo, feixe de luz, faíscas, barra de progresso e log `[ OK ]` estilo terminal. Prévia em `design/boot-animado.mp4`.
+- **Papel de parede animado**: `dlos-wallpaper on|off` (loop de vídeo de 10 s, desligado por padrão para poupar bateria/CPU). Arquivo: `branding/wallpaper-animado.mp4`.
+- Para regenerar as animações: `python3 tools/make_animations.py`.
+- Arte original em `branding/art/`. Imagens maiores (1920x1080 ou 4K) deixam tudo mais nítido: as atuais têm 1024 px.
+
 ## Como cada requisito é atendido
 - **Fácil de instalar**: ISO live + Calamares.
 - **Atualizações**: `dlos-update` (snapshot Timeshift + apt + Flatpak) e `unattended-upgrades` para segurança.
