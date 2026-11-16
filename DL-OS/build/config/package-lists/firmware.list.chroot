@@ -1,16 +1,2 @@
-# Requer componente non-free-firmware (ativado em build.sh)
-firmware-linux-nonfree
-firmware-iwlwifi
-firmware-realtek
-firmware-atheros
-firmware-brcm80211
-firmware-misc-nonfree
-firmware-sof-signed
-# Cobertura ampla: todos os firmwares livres e não-livres (Wi-Fi, Ethernet, Bluetooth USB)
+# Firmware: cobertura ampla de Wi-Fi USB e placas de vídeo (telas). Enxugar depois do teste (lspci/lsusb).
 firmware-linux
-wireless-regdb
-usb-modeswitch
-usb-modeswitch-data
-usbutils
-pciutils
-ethtool

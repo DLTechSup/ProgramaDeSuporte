@@ -2,18 +2,13 @@
 set -e
 chmod +x /usr/bin/dlos-* /usr/lib/dlos/*.py 2>/dev/null || true
 # Serviços
-systemctl enable NetworkManager bluetooth earlyoom zramswap unattended-upgrades lightdm || true
+systemctl enable NetworkManager bluetooth earlyoom zramswap unattended-upgrades lightdm autorandr || true
 systemctl --global enable pipewire pipewire-pulse wireplumber dlos-hibernate.service || true
-# Wine 32 bits (programas Windows antigos)
-dpkg --add-architecture i386 && apt-get update && apt-get install -y wine32 || true
-# Media Player Classic (versão nativa mpc-qt, mesmo visual do MPC-HC)
-flatpak remote-add --system --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo || true
-flatpak install --system -y flathub io.github.mpc_qt.mpc-qt || true
-# Padrões de vídeo/áudio
+# Padrões de vídeo/áudio (Celluloid = interface do mpv)
+echo '[Default Applications]' > /etc/xdg/mimeapps.list
 for m in video/mp4 video/x-matroska video/webm video/x-msvideo audio/mpeg audio/flac audio/ogg; do
-  echo "$m=io.github.mpc_qt.mpc-qt.desktop" >> /etc/xdg/mimeapps.list
+  echo "$m=io.github.celluloid_player.Celluloid.desktop" >> /etc/xdg/mimeapps.list
 done
-sed -i '1i [Default Applications]' /etc/xdg/mimeapps.list
 # .exe/.msi abrem com a camada Windows do DL OS
 printf 'application/x-ms-dos-executable=dlos-win.desktop\napplication/x-msi=dlos-win.desktop\n' >> /etc/xdg/mimeapps.list
 # Tema padrão e shell
@@ -30,3 +25,7 @@ echo 'DL OS' > /etc/dlos/name
 plymouth-set-default-theme dlos 2>/dev/null || true
 update-initramfs -u 2>/dev/null || true
 gtk-update-icon-cache -f /usr/share/icons/hicolor 2>/dev/null || true
+# ---- Agilidade ----
+systemctl mask NetworkManager-wait-online.service systemd-networkd-wait-online.service 2>/dev/null || true
+systemctl disable apt-daily.timer apt-daily-upgrade.timer 2>/dev/null || true
+printf 'bfq\n' > /etc/modules-load.d/dlos-bfq.conf

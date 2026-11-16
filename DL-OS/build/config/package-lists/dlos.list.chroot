@@ -1,6 +1,20 @@
-# ---- Desktop leve ----
-xfce4
-xfce4-goodies
+# ===== DL OS enxuto =====
+# ---- Desktop (XFCE mínimo) ----
+xfce4-session
+xfwm4
+xfdesktop4
+xfce4-panel
+xfce4-settings
+xfce4-power-manager
+xfce4-notifyd
+xfce4-pulseaudio-plugin
+xfce4-whiskermenu-plugin
+xfce4-screenshooter
+thunar
+thunar-volman
+mousepad
+file-roller
+ristretto
 lightdm
 lightdm-gtk-greeter
 picom
@@ -9,100 +23,80 @@ rofi
 xdotool
 wmctrl
 x11-utils
+x11-xserver-utils
 fonts-inter
 fonts-jetbrains-mono
-fonts-noto-color-emoji
 papirus-icon-theme
+# ---- Várias telas (TV + monitor) ----
+arandr
+autorandr
+# ---- Discos / HDs ----
+udisks2
+gvfs
+gvfs-backends
+ntfs-3g
+exfatprogs
+dosfstools
+e2fsprogs
 # ---- Instalador ----
 calamares
 calamares-settings-debian
 # ---- Rede / Wi-Fi / Bluetooth ----
 network-manager
 network-manager-gnome
-network-manager-openvpn-gnome
 wpasupplicant
 iw
+rfkill
+wireless-regdb
+usb-modeswitch
+usb-modeswitch-data
+usbutils
+pciutils
 bluez
 blueman
-rfkill
 # ---- Áudio / microfone (PipeWire) ----
 pipewire
 pipewire-pulse
 pipewire-alsa
-pipewire-jack
 libspa-0.2-bluetooth
 wireplumber
 pavucontrol
-easyeffects
-helvum
 alsa-utils
-# ---- Codecs de áudio e vídeo ----
+# ---- Mídia / codecs ----
 ffmpeg
 libavcodec-extra
-gstreamer1.0-plugins-base
 gstreamer1.0-plugins-good
-gstreamer1.0-plugins-bad
-gstreamer1.0-plugins-ugly
 gstreamer1.0-libav
 gstreamer1.0-pipewire
-libdvdnav4
 mpv
-flatpak
-# ---- Compatibilidade Windows ----
+celluloid
+# ---- Programas do Windows ----
 wine
-wine64
 winetricks
 cabextract
-innoextract
-# ---- Desenvolvimento / terminal ----
+# ---- Programação / terminal ----
 kitty
 zsh
 tmux
-neovim
 micro
 git
-build-essential
-cmake
-gdb
 python3
 python3-pip
 python3-venv
-nodejs
-npm
-golang-go
-jq
-ripgrep
-fd-find
-bat
-fzf
-btop
-htop
 curl
 wget
 openssh-client
-# ---- Memória / hibernação de apps / atualizações ----
+jq
+ripgrep
+btop
+# ---- Sistema ----
 zram-tools
 earlyoom
-criu
 unattended-upgrades
-apt-listchanges
-timeshift
-# ---- Utilitários ----
-thunar
-file-roller
-mousepad
-ristretto
-network-manager-gnome
-gvfs-backends
-firmware-linux-free
 plymouth
 plymouth-themes
-mkvtoolnix
-mediainfo
+python3-gi
+gir1.2-gtk-3.0
 live-boot
 live-config
 parted
-dosfstools
-e2fsprogs
-python3-gi
-gir1.2-gtk-3.0

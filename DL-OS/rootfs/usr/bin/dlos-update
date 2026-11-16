@@ -4,5 +4,5 @@ set -e
 [ "$(id -u)" = 0 ] || exec sudo "$0" "$@"
 command -v timeshift >/dev/null && timeshift --create --comments "antes de dlos-update" --scripted || true
 apt-get update && apt-get -y full-upgrade && apt-get -y autoremove
-flatpak update -y || true
+command -v flatpak >/dev/null && flatpak update -y || true
 echo "DL OS atualizado. Para voltar atrás: sudo timeshift --restore"

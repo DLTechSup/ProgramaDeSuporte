@@ -50,8 +50,7 @@ def audio_page():
     b = page("Áudio e microfone")
     b.pack_start(slider("Volume", lambda: vol_get("sink"), lambda v: run("pactl", "set-sink-volume", "@DEFAULT_SINK@", f"{v}%")), False, False, 0)
     b.pack_start(slider("Microfone", lambda: vol_get("source"), lambda v: run("pactl", "set-source-volume", "@DEFAULT_SOURCE@", f"{v}%"), 0, 100), False, False, 0)
-    for txt, cmd in (("Controle completo de dispositivos", ["pavucontrol"]), ("Equalizador / efeitos do microfone", ["easyeffects"]),
-                     ("Conexões de áudio avançadas", ["helvum"]), ("Bluetooth", ["blueman-manager"])):
+    for txt, cmd in (("Controle completo de dispositivos", ["pavucontrol"]), ("Bluetooth", ["blueman-manager"])):
         bt = Gtk.Button(label=txt); bt.connect("clicked", lambda w, c=cmd: spawn(*c)); b.pack_start(bt, False, False, 0)
     return b
 
@@ -78,7 +77,7 @@ def hib_page():
 def system_page():
     b = page("Sistema")
     info = Gtk.Label(label=run("dlos-info"), xalign=0, selectable=True); b.pack_start(info, False, False, 0)
-    for txt, cmd in (("Atualizar o DL OS (com snapshot)", ["kitty", "dlos-update"]), ("Rede (Wi-Fi)", ["nm-connection-editor"]), ("Diagnóstico de rede / Wi-Fi USB", ["kitty", "sh", "-c", "dlos-rede; read -n1"]),
+    for txt, cmd in (("Atualizar o DL OS (com snapshot)", ["kitty", "dlos-update"]), ("Rede (Wi-Fi)", ["nm-connection-editor"]), ("Telas (TV + monitor)", ["dlos-telas", "gui"]), ("Diagnóstico de rede / Wi-Fi USB", ["kitty", "sh", "-c", "dlos-rede; read -n1"]),
                      ("Verificar codecs de áudio e vídeo", ["kitty", "sh", "-c", "dlos-codecs; read -n1"])):
         bt = Gtk.Button(label=txt); bt.connect("clicked", lambda w, c=cmd: spawn(*c)); b.pack_start(bt, False, False, 0)
     return b

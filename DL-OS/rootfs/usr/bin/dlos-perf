@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+# dlos-perf : mostra o que está deixando o sistema lento.
+echo "== Boot =="; systemd-analyze 2>/dev/null | head -1
+echo; echo "== Serviços mais lentos no boot =="; systemd-analyze blame 2>/dev/null | head -6
+echo; echo "== Memória / zram =="; free -h | sed -n '1,3p'; zramctl 2>/dev/null
+echo; echo "== Maiores consumidores de memória =="; ps -eo comm,rss --sort=-rss | head -6
+echo; echo "== Escalonador de disco =="; for d in /sys/block/*/queue/scheduler; do echo "$(basename "$(dirname "$(dirname "$d")")"): $(cat "$d")"; done 2>/dev/null | grep -v loop
