@@ -33,6 +33,9 @@ Usam a imagem oficial (`branding/art/boot-logo.png`) com barra de progresso (Ply
 - **Dev/terminal**: kitty + zsh + tmux + neovim, gcc, python, node, go, git; Wi-Fi, Bluetooth e rede via NetworkManager/BlueZ.
 - **Áudio/mic**: PipeWire, EasyEffects (equalizador/mic), pavucontrol, Helvum; ffmpeg e todos os plugins GStreamer.
 
+## Rede (cabo e Wi-Fi USB)
+Cabo: drivers no kernel + firmwares. Wi-Fi USB: `firmware-linux` (todos os firmwares), `usb-modeswitch` e `wireless-regdb`. `dlos-rede` diagnostica. **Exceção**: alguns adaptadores Realtek (série RTL88xx) precisam de driver de terceiros (DKMS); dependem do modelo exato. Sem internet para baixar firmware depois, garanta que o chip do seu adaptador esteja na ISO testando antes.
+
 ## Limitações honestas
 1. **MPC-HC é só Windows.** O DL OS traz o **mpc-qt** (mesmo visual, nativo, Flatpak); o MPC-HC original pode rodar via `dlos-win`.
 2. **Hibernação**: congelar (SIGSTOP) é confiável; *encerrar o processo e restaurar* com CRIU costuma falhar em apps gráficos (conexão com o servidor X). O CRIU já vem instalado para a fase experimental.

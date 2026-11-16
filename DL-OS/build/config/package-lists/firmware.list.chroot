@@ -6,3 +6,11 @@ firmware-atheros
 firmware-brcm80211
 firmware-misc-nonfree
 firmware-sof-signed
+# Cobertura ampla: todos os firmwares livres e não-livres (Wi-Fi, Ethernet, Bluetooth USB)
+firmware-linux
+wireless-regdb
+usb-modeswitch
+usb-modeswitch-data
+usbutils
+pciutils
+ethtool

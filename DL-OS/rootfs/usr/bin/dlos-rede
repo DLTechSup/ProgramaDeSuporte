@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+# dlos-rede : diagnóstico de cabo, Wi-Fi (inclusive adaptador USB) e Bluetooth.
+echo "== Interfaces de rede =="; nmcli -f DEVICE,TYPE,STATE,CONNECTION device 2>/dev/null
+echo; echo "== Bloqueio de rádio (rfkill) =="; rfkill list 2>/dev/null
+echo; echo "== Adaptadores USB de rede/Wi-Fi/Bluetooth detectados =="
+lsusb 2>/dev/null | grep -iE "wireless|wlan|wi-?fi|802\.11|network|ethernet|bluetooth|realtek|ralink|mediatek|atheros|broadcom" || echo "(nenhum identificado)"
+echo; echo "== Firmware faltando (últimas ocorrências) =="
+dmesg 2>/dev/null | grep -iE "firmware.*(failed|missing|not found|-2)" | tail -8 || true
+echo; echo "Dica: se o Wi-Fi USB não aparece em 'Interfaces', conecte o cabo de rede e rode: sudo apt update && sudo apt install firmware-linux"

@@ -78,7 +78,7 @@ def hib_page():
 def system_page():
     b = page("Sistema")
     info = Gtk.Label(label=run("dlos-info"), xalign=0, selectable=True); b.pack_start(info, False, False, 0)
-    for txt, cmd in (("Atualizar o DL OS (com snapshot)", ["kitty", "dlos-update"]), ("Rede (Wi-Fi)", ["nm-connection-editor"]),
+    for txt, cmd in (("Atualizar o DL OS (com snapshot)", ["kitty", "dlos-update"]), ("Rede (Wi-Fi)", ["nm-connection-editor"]), ("Diagnóstico de rede / Wi-Fi USB", ["kitty", "sh", "-c", "dlos-rede; read -n1"]),
                      ("Verificar codecs de áudio e vídeo", ["kitty", "sh", "-c", "dlos-codecs; read -n1"])):
         bt = Gtk.Button(label=txt); bt.connect("clicked", lambda w, c=cmd: spawn(*c)); b.pack_start(bt, False, False, 0)
     return b
