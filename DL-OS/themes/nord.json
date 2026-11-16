@@ -1,0 +1,5 @@
+{
+  "id": "nord", "name": "Nord Frio", "mode": "dark",
+  "bg": "#2e3440", "surface": "#3b4252", "fg": "#eceff4",
+  "accent": "#88c0d0", "accent2": "#81a1c1", "ok": "#a3be8c"
+}

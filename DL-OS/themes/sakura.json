@@ -1,0 +1,5 @@
+{
+  "id": "sakura", "name": "Sakura", "mode": "light",
+  "bg": "#fbf4f6", "surface": "#ffffff", "fg": "#2b2330",
+  "accent": "#e0457b", "accent2": "#9b5de5", "ok": "#2a9d8f"
+}

@@ -1,0 +1,5 @@
+{
+  "id": "aurora", "name": "Aurora", "mode": "dark",
+  "bg": "#0b1020", "surface": "#121a33", "fg": "#e6ecff",
+  "accent": "#7c9cff", "accent2": "#9b7bff", "ok": "#38d9a9"
+}

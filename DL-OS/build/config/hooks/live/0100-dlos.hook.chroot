@@ -1,0 +1,24 @@
+#!/bin/sh
+set -e
+chmod +x /usr/bin/dlos-* /usr/lib/dlos/*.py 2>/dev/null || true
+# Serviços
+systemctl enable NetworkManager bluetooth earlyoom zramswap unattended-upgrades lightdm || true
+systemctl --global enable pipewire pipewire-pulse wireplumber dlos-hibernate.service || true
+# Wine 32 bits (programas Windows antigos)
+dpkg --add-architecture i386 && apt-get update && apt-get install -y wine32 || true
+# Media Player Classic (versão nativa mpc-qt, mesmo visual do MPC-HC)
+flatpak remote-add --system --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo || true
+flatpak install --system -y flathub io.github.mpc_qt.mpc-qt || true
+# Padrões de vídeo/áudio
+for m in video/mp4 video/x-matroska video/webm video/x-msvideo audio/mpeg audio/flac audio/ogg; do
+  echo "$m=io.github.mpc_qt.mpc-qt.desktop" >> /etc/xdg/mimeapps.list
+done
+sed -i '1i [Default Applications]' /etc/xdg/mimeapps.list
+# .exe/.msi abrem com a camada Windows do DL OS
+printf 'application/x-ms-dos-executable=dlos-win.desktop\napplication/x-msi=dlos-win.desktop\n' >> /etc/xdg/mimeapps.list
+# Tema padrão e shell
+echo 'DLOS_THEME=aurora' > /etc/dlos/theme.conf
+chsh -s /usr/bin/zsh root || true
+sed -i 's/^#\?greeter-session=.*/greeter-session=lightdm-gtk-greeter/' /etc/lightdm/lightdm.conf || true
+# Atualizações automáticas só de segurança + snapshot antes
+sed -i 's|//\s*"origin=Debian,codename=${distro_codename}-updates"|"origin=Debian,codename=${distro_codename}-updates"|' /etc/apt/apt.conf.d/50unattended-upgrades || true

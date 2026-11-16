@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+# dlos-win: instala e abre programas do Windows, cada um com seu próprio prefixo isolado.
+#   dlos-win install setup.exe [nome]   instala e cria atalho no menu
+#   dlos-win run app.exe                abre um .exe/.msi
+#   dlos-win tricks <nome> <pacote>     winetricks (vcrun2022, dotnet48...)
+#   dlos-win list | remove <nome>
+set -euo pipefail
+BASE="${XDG_DATA_HOME:-$HOME/.local/share}/dlos/prefixes"; mkdir -p "$BASE"
+export WINEDEBUG=-all WINEARCH=win64
+pfx() { export WINEPREFIX="$BASE/$1"; }
+case "${1:-}" in
+  install) f="${2:?arquivo do instalador}"; n="${3:-$(basename "${f%.*}" | tr ' ' '_')}"; pfx "$n"
+    case "$f" in *.msi) wine msiexec /i "$f";; *) wine "$f";; esac
+    echo "Instalado no prefixo '$n'. O atalho aparece no menu de aplicativos." ;;
+  run) f="${2:?arquivo}"; pfx "default"
+    case "$f" in *.msi) exec wine msiexec /i "$f";; *) exec wine start /unix "$f";; esac ;;
+  tricks) pfx "${2:?nome}"; shift 2; winetricks -q "$@" ;;
+  list) ls "$BASE" ;;
+  remove) rm -rf "${BASE:?}/${2:?nome}"; echo removido ;;
+  *) sed -n '2,7p' "$0"; exit 1 ;;
+esac

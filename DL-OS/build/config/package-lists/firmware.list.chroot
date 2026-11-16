@@ -1,0 +1,8 @@
+# Requer componente non-free-firmware (ativado em build.sh)
+firmware-linux-nonfree
+firmware-iwlwifi
+firmware-realtek
+firmware-atheros
+firmware-brcm80211
+firmware-misc-nonfree
+firmware-sof-signed
