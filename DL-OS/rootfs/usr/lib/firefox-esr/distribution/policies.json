@@ -1,7 +1,0 @@
-{"policies":{
- "DisableTelemetry":true,"DisableFirefoxStudies":true,"DisablePocket":true,
- "HttpsOnlyMode":"enabled",
- "EnableTrackingProtection":{"Value":true,"Cryptomining":true,"Fingerprinting":true},
- "DNSOverHTTPS":{"Enabled":false},
- "Preferences":{"browser.safebrowsing.malware.enabled":{"Value":true,"Status":"locked"},"browser.safebrowsing.phishing.enabled":{"Value":true,"Status":"locked"},"browser.safebrowsing.downloads.enabled":{"Value":true,"Status":"locked"}}
-}}

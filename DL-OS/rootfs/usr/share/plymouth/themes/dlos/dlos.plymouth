@@ -1,7 +1,0 @@
-[Plymouth Theme]
-Name=DL OS
-Description=Tela de boot do DL OS
-ModuleName=script
-[script]
-ImageDir=/usr/share/plymouth/themes/dlos
-ScriptFile=/usr/share/plymouth/themes/dlos/dlos.script

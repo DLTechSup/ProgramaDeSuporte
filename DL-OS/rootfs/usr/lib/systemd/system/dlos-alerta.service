@@ -1,9 +1,0 @@
-[Unit]
-Description=DL OS detector de intrusão (avisa na tela)
-After=nftables.service systemd-journald.service
-[Service]
-ExecStart=/usr/bin/python3 /usr/lib/dlos/alerta.py
-Restart=always
-Nice=10
-[Install]
-WantedBy=multi-user.target

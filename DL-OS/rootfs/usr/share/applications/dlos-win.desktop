@@ -1,7 +1,0 @@
-[Desktop Entry]
-Type=Application
-Name=Programa Windows (DL OS)
-Exec=dlos-win run %f
-MimeType=application/x-ms-dos-executable;application/x-msi;
-Icon=wine
-NoDisplay=true

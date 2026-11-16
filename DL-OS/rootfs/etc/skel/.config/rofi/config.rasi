@@ -1,6 +1,0 @@
-configuration { modi: "drun,run"; show-icons: true; font: "Inter 12"; }
-* { bg: #0a1630ee; fg: #e6f4ff; ac: #22b8ff; }
-window { width: 38%; border-radius: 18px; border: 1px; border-color: @ac; background-color: @bg; }
-mainbox { padding: 14px; } inputbar { padding: 10px 14px; border-radius: 12px; background-color: #ffffff12; text-color: @fg; }
-listview { margin: 10px 0 0; lines: 8; } element { padding: 8px 12px; border-radius: 10px; text-color: @fg; }
-element selected { background-color: @ac; text-color: #040a18; }

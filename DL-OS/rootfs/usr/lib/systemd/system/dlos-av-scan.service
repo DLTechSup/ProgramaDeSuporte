@@ -1,8 +1,0 @@
-[Unit]
-Description=DL OS varredura semanal completa
-[Service]
-Type=oneshot
-Nice=19
-IOSchedulingClass=idle
-ExecStart=/usr/bin/clamscan -r -i --move=/var/lib/dlos/quarentena --exclude-dir=^/proc --exclude-dir=^/sys --exclude-dir=/.cache /home /media /mnt
-ExecStartPost=/usr/bin/rkhunter --check --sk --nocolors --quiet

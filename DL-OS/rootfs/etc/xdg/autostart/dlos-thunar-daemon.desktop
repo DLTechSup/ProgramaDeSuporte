@@ -1,5 +1,0 @@
-[Desktop Entry]
-Type=Application
-Name=Gerenciador de arquivos (pré-carregado)
-Exec=thunar --daemon
-X-GNOME-Autostart-Delay=0

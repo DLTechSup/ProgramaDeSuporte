@@ -1,5 +1,0 @@
-[Desktop Entry]
-Type=Application
-Name=Telas
-Exec=autorandr --change
-X-GNOME-Autostart-Delay=0
