@@ -31,6 +31,6 @@ printf 'bfq\n' > /etc/modules-load.d/dlos-bfq.conf
 # dconf (dock)
 dconf update 2>/dev/null || true
 # ---- Segurança ----
-systemctl enable nftables apparmor clamav-freshclam systemd-resolved dlos-av.service dlos-av-scan.timer apt-daily-upgrade.timer 2>/dev/null || true
+systemctl enable dlos-alerta.service nftables apparmor clamav-freshclam systemd-resolved dlos-av.service dlos-av-scan.timer apt-daily-upgrade.timer 2>/dev/null || true
 ln -sf /run/systemd/resolve/stub-resolv.conf /etc/resolv.conf
 mkdir -p /var/lib/dlos/quarentena && chmod 700 /var/lib/dlos/quarentena

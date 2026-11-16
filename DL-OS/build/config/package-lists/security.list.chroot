@@ -13,3 +13,5 @@ systemd-resolved
 xfce4-screensaver
 firefox-esr
 webext-ublock-origin-firefox
+sound-theme-freedesktop
+pulseaudio-utils

@@ -95,6 +95,8 @@ def security_page():
     for txt, cmd in (("Atualizar banco de vírus", ["kitty", "sh", "-c", "dlos-seguranca atualizar; read -n1"]),
                      ("Escanear a pasta Downloads", ["kitty", "sh", "-c", "dlos-seguranca scan ~/Downloads; read -n1"]),
                      ("Auditoria de segurança (Lynis)", ["kitty", "sh", "-c", "dlos-seguranca auditar; read -n1"]),
+                     ("Ver alertas de invasão", ["kitty", "sh", "-c", "dlos-seguranca alertas; read -n1"]),
+                     ("Testar o aviso de intrusão", ["dlos-seguranca", "testar-alerta"]),
                      ("Ver quarentena e registros", ["kitty", "sh", "-c", "dlos-seguranca quarentena; read -n1"])):
         bt = Gtk.Button(label=txt); bt.connect("clicked", lambda w, c=cmd: spawn(*c)); b.pack_start(bt, False, False, 0)
     rb = Gtk.Button(label="Atualizar status"); rb.connect("clicked", refresh); b.pack_start(rb, False, False, 0)
